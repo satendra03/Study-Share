@@ -1,0 +1,181 @@
+# StudyShare - Data Flow Diagrams (DFD) Complete Documentation
+
+## 📊 Overview
+
+This document contains all Data Flow Diagrams for the StudyShare Notes Sharing Platform, organized by level of detail.
+
+---
+
+## 🎯 DFD Hierarchy
+
+### **Context Diagram (Level 0)**
+- Shows the entire system as a single process
+- Displays external entities (Admin, Student)
+- Shows data stores (Database, File Storage)
+- High-level data flows
+
+### **Level 1 DFD**
+- Breaks down the system into 7 major processes:
+  1. Authentication Process
+  2. User Management
+  3. Subject Management
+  4. Notes Upload
+  5. Notes Browsing
+  6. Like Management
+  7. PDF Deletion
+- Shows data stores (Users, Subjects, Notes, PDF Files)
+- Shows data flows between processes and stores
+
+### **Level 2 DFDs**
+Detailed breakdowns of critical processes:
+- **Authentication Process (1.0)** - 6 sub-processes
+- **User Management (2.0)** - 6 sub-processes
+- **Notes Upload (4.0)** - 6 sub-processes
+- **Notes Browsing (5.0)** - 6 sub-processes
+- **Like Management (6.0)** - 5 sub-processes
+
+---
+
+## 📁 Files Provided
+
+| File | Description | Processes |
+|------|-------------|-----------|
+| `level-0.png` | Context Diagram | Shows entire system |
+| `level-1.png` | Level 1 DFD | 7 major processes |
+| `authentication-management.png` | Authentication Details | 6 sub-processes |
+| `user-management.png` | User Management Details | 6 sub-processes |
+| `notes-upload.png` | Notes Upload Details | 6 sub-processes |
+| `notes-browsing.png` | Notes Browsing Details | 6 sub-processes |
+| `like-management.png` | Like Management Details | 5 sub-processes |
+
+---
+
+## 🔑 Key Components
+
+### **External Entities**
+- **Admin User**: Faculty members or class representatives
+- **Regular User**: Students
+
+### **Major Processes**
+1. **Authentication (1.0)**: Login validation and JWT generation
+2. **User Management (2.0)**: Admin creates new users
+3. **Subject Management (3.0)**: Admin adds subjects
+4. **Notes Upload (4.0)**: Upload PDF files
+5. **Notes Browsing (5.0)**: View and download notes
+6. **Like Management (6.0)**: Like/unlike notes
+7. **PDF Deletion (7.0)**: Admin deletes PDFs
+
+### **Data Stores**
+- **D1: Users** - User accounts (enrollment, password, role)
+- **D2: Subjects** - Subject information
+- **D3: Notes** - Notes metadata (title, likes, uploader)
+- **D4: PDF Files** - Actual PDF file storage
+
+---
+
+## 🔄 Critical Data Flows
+
+### **Authentication Flow**
+```
+User → Credentials → Validate → Verify → Hash → Compare → JWT → Response
+```
+
+### **Upload Flow**
+```
+User → Authenticate → Validate File → Validate Metadata → Save PDF → Create Record → Response
+```
+
+### **Browse Flow**
+```
+User → Authenticate → Parse Query → Query DB → Sort by Likes → Populate User → Format → Response
+```
+
+### **Like Flow**
+```
+User → Authenticate → Validate Notes → Check Existing → Add/Remove → Response
+```
+
+---
+
+## 📐 DFD Symbols Used
+
+| Symbol | Type | Color | Purpose |
+|--------|------|-------|---------|
+| Rectangle (rounded) | External Entity | Blue | Users (Admin/Student) |
+| Circle/Ellipse | Process | Yellow | System processes |
+| Open Rectangle | Data Store | Green | Databases/Files |
+| Arrow (solid) | Data Flow | Black | Input data |
+| Arrow (dashed) | Data Flow | Black | Output/Response data |
+| Arrow (red dashed) | Error Flow | Red | Error responses |
+
+---
+
+## 💡 Best Practices
+
+### **When Implementing Backend:**
+1. Each **process** becomes a **controller function**
+2. Each **data store** becomes a **Mongoose model**
+3. Each **data flow** becomes an **API request/response**
+
+### **Mapping to Code:**
+
+```javascript
+// Process 1.2: Verify Credentials
+// Controller: authController.js → login()
+
+// Data Store D1: Users
+// Model: models/User.js
+
+// Data Flow: Enrollment No + Password
+// Request Body: { enrollmentNumber, password }
+```
+
+### **API Endpoints from DFDs :**
+
+| Process | HTTP Method | Endpoint |
+|---------|-------------|----------|
+| 1.0 Authentication | POST | `/api/auth/login` |
+| 2.0 User Management | POST | `/api/admin/users` |
+| 3.0 Subject Management | POST | `/api/admin/subjects` |
+| 4.0 Notes Upload | POST | `/api/notes/upload` |
+| 5.0 Notes Browsing | GET | `/api/notes?semester=1&subject=xyz` |
+| 6.0 Like Management | PUT | `/api/notes/:id/like` |
+| 7.0 PDF Deletion | DELETE | `/api/admin/notes/:id` |
+
+---
+
+## ✅ Validation Checklist
+
+Use these DFDs to ensure:
+- [ ] All user inputs are validated
+- [ ] Authentication is checked for every protected route
+- [ ] Admin authorization is verified for admin actions
+- [ ] Passwords are hashed before storage
+- [ ] Notes are sorted by likes before display
+- [ ] File paths are stored correctly
+- [ ] Error responses are handled at each process
+
+---
+
+## 🚀 Next Steps
+
+1. **Review** each DFD to understand data flows
+2. **Map** processes to controller functions
+3. **Design** API endpoints based on data flows
+4. **Implement** models matching data stores
+5. **Create** middleware for authentication flows
+6. **Build** frontend components for user interactions
+
+---
+
+## 🎓 Educational Value
+
+These DFDs help you:
+- Visualize complete system architecture
+- Understand data transformations
+- Plan database schema
+- Design API structure
+- Implement security checks
+- Document system behavior
+
+Perfect for academic projects, documentation, and system design!

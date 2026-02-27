@@ -7,7 +7,7 @@
 
 ![alt text](image.png)
 
-[Features](#-features) • [Tech Stack](#-tech-stack) • [Getting Started](#-getting-started) • [Workflow](#-workflow) • [Contributing](#-contributing)
+[Features](#-features) • [Technologies](#technologies) • [Getting Started](#-getting-started) • [Workflow](#-workflow) • [Contributing](#-contributing)
 <!-- </div> -->
 
 ## 📊 Project Status
@@ -69,7 +69,7 @@ StudyShare addresses these challenges by providing a **single source of truth** 
 
 ---
 
-## 🛠️ Tech Stack
+## Technologies
 
 <img src="https://skillicons.dev/icons?i=nextjs,typescript,nodejs,express,mongodb,tailwindcss,firebase,googlecloud" />
 

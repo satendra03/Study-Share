@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing/Coverage
+coverage/
+.nyc_output
+
+# Build/Runtime
+dist/
+build/
+.cache/
+.parcel-cache
+.next/
+.nuxt/
+.env*
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# IDE/System
+.DS_Store
+.vscode/
+.idea/
+
+# env files
+.env
+.env.local
+
+# firebase admin sdk
+studyshare-firebase-adminsdk.json

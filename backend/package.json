@@ -1,0 +1,52 @@
+{
+  "name": "study-share",
+  "version": "0.0.1",
+  "description": "Backend services for StudyShare — a platform to share and discover study resources.",
+  "license": "MIT",
+  "author": {
+    "name": "Satendra Kumar Parteti",
+    "url": "https://github.com/satendra03"
+  },
+  "keywords": [
+    "study-share",
+    "education",
+    "resources",
+    "typescript",
+    "nodejs",
+    "backend"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/satendra03/Study-Share.git"
+  },
+  "bugs": {
+    "url": "https://github.com/satendra03/Study-Share/issues"
+  },
+  "homepage": "https://github.com/satendra03/Study-Share#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.3.3",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "cloudinary": "^2.9.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "firebase-admin": "^13.7.0",
+    "mongodb": "^7.1.0",
+    "mongoose": "^9.2.3"
+  }
+}

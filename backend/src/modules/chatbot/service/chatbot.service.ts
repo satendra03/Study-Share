@@ -17,19 +17,20 @@ export class ChatbotService implements ChatbotServiceInterface {
     if (!message) throw new BadRequestError("Message is required");
 
     const pdfId = (req.pdfId ?? "").trim();
-    if (!pdfId) throw new BadRequestError("pdfId is required");
-
     const history = normalizeHistory(req.history ?? ([] as ChatTurn[]));
 
-    let context: RetrievedContext[] | undefined;
-    try {
-      const retrieveRes = await embeddingService.retrieve({
-        question: message,
-        pdfId,
-      });
-      context = retrieveRes?.context ?? [];
-    } catch {
-      context = []; // ✅ gracefully degrade — chat still works without context
+    let context: RetrievedContext[] | undefined = [];
+    if (pdfId) {
+      try {
+        const retrieveRes = await embeddingService.retrieve({
+          question: message,
+          pdfId,
+        });
+        context = retrieveRes?.context ?? [];
+      } catch (err) {
+        console.error("[RAG] Context retrieval failed, answering without context:", err);
+        context = [];
+      }
     }
 
     const prompt = buildPrompt({ message, history, context });

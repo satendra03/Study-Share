@@ -5,18 +5,22 @@ import { upload } from "@/config/multer.config.js";
 
 const materialRouter = Router();
 
-// Publicly readable endpoints
+// Publicly readable endpoints — static paths BEFORE dynamic /:id
 materialRouter.get("/", materialController.getAllMaterials);
-materialRouter.get("/:materialId", materialController.getMaterialById);
-materialRouter.post("/:materialId/download", materialController.recordDownload);
 materialRouter.get("/search", materialController.searchMaterials);
 
-// Protected endpoints (needs fully logged in app user)
-materialRouter.post("/", verifyFirebaseToken, requireAppUser, upload.single("file"), materialController.createMaterial);
-materialRouter.delete("/:materialId", verifyFirebaseToken, requireAppUser, materialController.deleteMaterialById);
-materialRouter.get("/status/:materialId", verifyFirebaseToken, requireAppUser, materialController.getProcessingStatus);
+// Protected static paths BEFORE dynamic /:id
+materialRouter.get("/status/:id", verifyFirebaseToken, requireAppUser, materialController.getProcessingStatus);
 materialRouter.get("/user/:userId", verifyFirebaseToken, requireAppUser, materialController.getMyUploads);
-materialRouter.post("/chat/:materialId", verifyFirebaseToken, requireAppUser, materialController.chatWithMaterial);
+
+// Dynamic /:id routes
+materialRouter.get("/:id", materialController.getMaterialById);
+materialRouter.post("/:id/download", materialController.recordDownload);
+materialRouter.delete("/:id", verifyFirebaseToken, requireAppUser, materialController.deleteMaterialById);
+materialRouter.post("/chat/:id", verifyFirebaseToken, requireAppUser, materialController.chatWithMaterial);
+
+// Upload
+materialRouter.post("/", verifyFirebaseToken, requireAppUser, upload.single("file"), materialController.createMaterial);
 
 export const materialRoute = {
     path: "materials",

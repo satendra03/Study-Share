@@ -1,47 +1,27 @@
 import type { Metadata } from "next";
-import "./globals.css";
-import { AuthProvider } from "@/src/context/AuthContext";
-import { Navbar } from "@/src/components/Navbar";
-import { AnalyticsProvider } from "@/src/components/AnalyticsProvider";
-import TopLoader from "@/components/TopLoader";
-import { Suspense } from "react";
 import { Inter } from "next/font/google";
-import { cn } from "@/lib/utils";
+import "./globals.css";
+import { AuthProvider } from "@/context/AuthContext";
+import { QueryProvider } from "@/components/QueryProvider";
+import { Toaster } from "@/components/ui/sonner";
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Study Share — Collaborative Learning Platform",
-  description: "Share, learn, and collaborate with AI assistance. Your modern platform for organized study, file management, and AI-powered conversations.",
-  keywords: "study, collaboration, learning, AI, file sharing, education",
+  title: "StudyShare",
+  description: "Share and discover study materials",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={cn("font-sans", inter.variable)}>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="antialiased">
-        <div className="orb orb-1" />
-        <div className="orb orb-2" />
-        <AuthProvider>
-          <AnalyticsProvider>
-            <Navbar />
-            <main style={{ minHeight: '100vh', position: 'relative', zIndex: 1 }}>
-              {children}
-            </main>
-          </AnalyticsProvider>
-        </AuthProvider>
+    <html lang="en">
+      <body className={`${inter.className} bg-gray-950 text-white min-h-screen`}>
+        <QueryProvider>
+          <AuthProvider>
+            {children}
+            <Toaster />
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );

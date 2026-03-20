@@ -1,33 +1,40 @@
-'use client';
-
-import React from 'react';
-import { ProtectedRoute } from '@/src/components/ProtectedRoute';
-import { useAuth } from '@/src/hooks/useAuth';
+"use client";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import Navbar from "@/components/Navbar";
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
-  const { isLoading } = useAuth();
+  const { firebaseUser, appUser, loading } = useAuth();
+  const router = useRouter();
 
-  // Don't render anything while auth is loading to prevent flash
-  if (isLoading) {
+  useEffect(() => {
+    if (!loading) {
+      if (!firebaseUser) {
+        router.push("/");
+      } else if (appUser && !appUser.isProfileComplete) {
+        router.push("/complete-profile");
+      }
+    }
+  }, [loading, firebaseUser, appUser, router]);
+
+  if (loading) {
     return (
-      <div
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'var(--bg-primary)',
-        }}
-      >
-        <div style={{ textAlign: 'center' }}>
-          <div className="spinner" style={{ margin: '0 auto' }} />
-          <p style={{ marginTop: '16px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-            Loading...
-          </p>
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-gray-400 text-sm">Loading...</p>
         </div>
       </div>
     );
   }
 
-  return <ProtectedRoute>{children}</ProtectedRoute>;
+  if (!firebaseUser) return null;
+
+  return (
+    <div className="min-h-screen bg-gray-950">
+      <Navbar />
+      <main className="max-w-7xl mx-auto px-4 py-6">{children}</main>
+    </div>
+  );
 }

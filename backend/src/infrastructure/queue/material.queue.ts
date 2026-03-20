@@ -22,14 +22,19 @@ new Worker(
       const buffer = Buffer.from(fileBuffer);
       const structured = await ocrService.extractTextFromPDFWithOCR(buffer);
 
-      // Step 2: send to Python embedding service
+      // Step 2: send to Python embedding service (skip sections with no content)
       for (const yearPaper of structured.papers) {
         for (const section of yearPaper.sections) {
+          const hasQuestions = Array.isArray(section.questions) && section.questions.some((q: string) => q?.trim());
+          const hasText = typeof (section as any).text === "string" && (section as any).text.trim();
+          if (!hasQuestions && !hasText) continue;
+
           await embeddingService.processPage({
             pdfId: materialId,
             year: yearPaper.year,
             sectionTitle: section.title,
-            questions: section.questions,  // ✅ send as array, not joined string
+            questions: section.questions ?? [],
+            ...(hasText && !hasQuestions ? { text: (section as any).text } : {}),
           });
         }
       }

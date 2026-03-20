@@ -1,297 +1,118 @@
-'use client';
-
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { chatbotApi, type ChatMessage, type ChatSession } from '@/src/api/chatbot';
-import { useRequireAuth } from '@/src/hooks/useRequireAuth';
+"use client";
+import { useState, useRef, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import api from "@/lib/api";
+import { ChatMessage } from "@/types";
+import { Send, Bot, User, Trash2 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export default function ChatbotPage() {
-  const { ready } = useRequireAuth();
-
-  const [sessions, setSessions] = useState<ChatSession[]>([]);
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  const [newTitle, setNewTitle] = useState('Test chat');
-  const [input, setInput] = useState('');
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    { role: "assistant", content: "Hi! I'm your AI study assistant. Ask me anything about your subjects, concepts, or study tips!" }
+  ]);
+  const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
-
-  const endRef = useRef<HTMLDivElement>(null);
-
-  const activeSession = useMemo(
-    () => sessions.find((s) => s._id === activeSessionId) || null,
-    [sessions, activeSessionId]
-  );
-
-  const loadSessions = async () => {
-    setError('');
-    setLoading(true);
-    try {
-      const res = await chatbotApi.getSessions();
-      setSessions(res.sessions);
-      const first = res.sessions[0]?._id || null;
-      setActiveSessionId((prev) => prev || first);
-    } catch (e: any) {
-      setError(e?.response?.data?.message || e?.message || 'Failed to load sessions');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadMessages = async (sessionId: string) => {
-    try {
-      const res = await chatbotApi.getMessages(sessionId);
-      setMessages(res.messages);
-    } catch (e) {
-      // keep silent; user can retry by switching sessions
-      setMessages([]);
-    }
-  };
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!ready) return;
-    loadSessions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready]);
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
-  useEffect(() => {
-    if (!ready) return;
-    if (!activeSessionId) return;
-    loadMessages(activeSessionId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, activeSessionId]);
-
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, sending]);
-
-  const createSession = async () => {
-    const title = newTitle.trim();
-    if (!title) return;
-    setError('');
-    try {
-      const res = await chatbotApi.createSession({ title });
-      setSessions((prev) => [res.session, ...prev]);
-      setActiveSessionId(res.session._id);
-      setNewTitle('Test chat');
-    } catch (e: any) {
-      setError(e?.response?.data?.message || e?.message || 'Failed to create session');
-    }
-  };
-
-  const deleteSession = async (sessionId: string) => {
-    setError('');
-    try {
-      await chatbotApi.deleteSession(sessionId);
-      setSessions((prev) => prev.filter((s) => s._id !== sessionId));
-      setMessages((prev) => (activeSessionId === sessionId ? [] : prev));
-      setActiveSessionId((prev) => (prev === sessionId ? null : prev));
-    } catch (e: any) {
-      setError(e?.response?.data?.message || e?.message || 'Failed to delete session');
-    }
-  };
-
-  const send = async () => {
-    const content = input.trim();
-    if (!content || !activeSessionId || sending) return;
-
+  const sendMessage = async () => {
+    if (!input.trim() || sending) return;
+    const userMsg = input.trim();
+    setInput("");
+    setMessages(prev => [...prev, { role: "user", content: userMsg }]);
     setSending(true);
-    setError('');
-    setInput('');
-
-    const optimistic: ChatMessage = {
-      _id: `tmp-${Date.now()}`,
-      sessionId: activeSessionId,
-      role: 'user',
-      content,
-      createdAt: new Date().toISOString(),
-    };
-    setMessages((prev) => [...prev, optimistic]);
-
     try {
-      const res = await chatbotApi.sendMessage(activeSessionId, { content });
-      setMessages((prev) => [...prev, res.message]);
-    } catch (e: any) {
-      setError(e?.response?.data?.message || e?.message || 'Failed to send message');
+      const res = await api.post("/chatbot/chat", { message: userMsg, history: messages });
+      const reply = res.data.data?.reply || "No response";
+      setMessages(prev => [...prev, { role: "assistant", content: reply }]);
+    } catch {
+      setMessages(prev => [...prev, { role: "assistant", content: "Sorry, I couldn't process that. Please try again." }]);
     } finally {
       setSending(false);
     }
   };
 
-  if (!ready) return null;
-
   return (
-    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '88px 24px 48px', minHeight: '100vh' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+    <div className="max-w-3xl mx-auto flex flex-col h-[calc(100vh-7rem)]">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <p className="section-label">Chat</p>
-          <h1 className="page-title">Backend test chatbot</h1>
-          <p style={{ color: 'var(--text-secondary)', marginTop: '10px', fontSize: '0.95rem' }}>
-            Sessions + messages using `/chatbot/*` endpoints.
-          </p>
+          <h1 className="text-2xl font-bold text-white">AI Chatbot</h1>
+          <p className="text-gray-400 text-sm">Your general-purpose study assistant</p>
         </div>
-        <button className="btn-ghost" onClick={loadSessions} disabled={loading || sending}>
-          ↻ Refresh
-        </button>
+        <Button variant="ghost" size="sm" onClick={() => setMessages([{ role: "assistant", content: "Hi! How can I help you study today?" }])}
+          className="text-gray-500 hover:text-red-400">
+          <Trash2 className="w-4 h-4 mr-1" /> Clear
+        </Button>
       </div>
 
-      <div className="divider" />
-
-      {error && (
-        <div className="alert-error" style={{ marginBottom: '16px' }}>
-          <span>⚠</span>
-          {error}
-          <button
-            onClick={() => setError('')}
-            style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#fca5a5', fontSize: '18px' }}
-            aria-label="Dismiss error"
-          >
-            ×
-          </button>
-        </div>
-      )}
-
-      <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '16px' }}>
-        {/* Sidebar */}
-        <div className="glass-card" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: '520px' }}>
-          <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <input className="input-field" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="New session title" />
-              <button className="btn-primary" onClick={createSession} style={{ padding: '10px 14px' }}>
-                +
-              </button>
-            </div>
-          </div>
-
-          <div style={{ padding: '10px', overflowY: 'auto', flex: 1 }}>
-            {loading ? (
-              <div style={{ padding: '24px', textAlign: 'center' }}>
-                <div className="spinner" style={{ margin: '0 auto 10px', width: '28px', height: '28px' }} />
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Loading…</p>
+      <div className="flex-1 bg-gray-900 border border-gray-800 rounded-xl flex flex-col overflow-hidden">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {messages.map((msg, i) => (
+            <div key={i} className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                msg.role === "user" ? "bg-indigo-600" : "bg-gray-700"
+              }`}>
+                {msg.role === "user" ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
               </div>
-            ) : sessions.length === 0 ? (
-              <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                No sessions yet.
-              </div>
-            ) : (
-              sessions.map((s) => {
-                const active = s._id === activeSessionId;
-                return (
-                  <div
-                    key={s._id}
-                    onClick={() => setActiveSessionId(s._id)}
-                    style={{
-                      padding: '10px 12px',
-                      borderRadius: '12px',
-                      cursor: 'pointer',
-                      background: active ? 'rgba(99,102,241,0.12)' : 'transparent',
-                      border: active ? '1px solid rgba(99,102,241,0.3)' : '1px solid transparent',
-                      display: 'flex',
-                      gap: '10px',
-                      alignItems: 'center',
-                      marginBottom: '6px',
+              <div className={`rounded-2xl px-4 py-2.5 text-sm max-w-[80%] ${
+                msg.role === "user" ? "bg-indigo-600 text-white" : "bg-gray-800 text-gray-200"
+              }`}>
+                {msg.role === "user" ? msg.content : (
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                      h1: ({ children }) => <h1 className="text-base font-bold mt-3 mb-1">{children}</h1>,
+                      h2: ({ children }) => <h2 className="text-sm font-bold mt-3 mb-1">{children}</h2>,
+                      h3: ({ children }) => <h3 className="text-sm font-semibold mt-2 mb-1">{children}</h3>,
+                      ul: ({ children }) => <ul className="list-disc pl-5 mb-2 space-y-1">{children}</ul>,
+                      ol: ({ children }) => <ol className="list-decimal pl-5 mb-2 space-y-1">{children}</ol>,
+                      li: ({ children }) => <li>{children}</li>,
+                      code: ({ children, className }) => className
+                        ? <pre className="bg-gray-900 rounded-lg p-3 text-xs overflow-x-auto my-2 text-green-300"><code>{children}</code></pre>
+                        : <code className="bg-gray-900 px-1.5 py-0.5 rounded text-indigo-300 text-xs">{children}</code>,
+                      strong: ({ children }) => <strong className="font-bold text-white">{children}</strong>,
+                      hr: () => <hr className="border-gray-600 my-3" />,
+                      blockquote: ({ children }) => <blockquote className="border-l-2 border-indigo-500 pl-3 italic text-gray-400 my-2">{children}</blockquote>,
                     }}
                   >
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, color: active ? '#a5b4fc' : 'var(--text-primary)', fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {s.title}
-                      </div>
-                      <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                        {new Date(s.createdAt).toLocaleDateString()}
-                      </div>
-                    </div>
-                    <button
-                      className="btn-danger"
-                      style={{ padding: '6px 10px' }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteSession(s._id);
-                      }}
-                      title="Delete"
-                    >
-                      🗑
-                    </button>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-
-        {/* Chat panel */}
-        <div className="glass-card" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: '520px' }}>
-          <div style={{ padding: '16px 18px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ fontWeight: 800, color: 'var(--text-primary)' }}>
-              {activeSession ? activeSession.title : 'No session selected'}
-            </div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-              {activeSessionId ? `Session: ${activeSessionId}` : ''}
-            </div>
-          </div>
-
-          <div style={{ flex: 1, overflowY: 'auto', padding: '18px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {!activeSessionId ? (
-              <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-muted)' }}>
-                Create or select a session to start chatting.
+                    {msg.content}
+                  </ReactMarkdown>
+                )}
               </div>
-            ) : messages.length === 0 ? (
-              <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-muted)' }}>
-                No messages yet.
+            </div>
+          ))}
+          {sending && (
+            <div className="flex gap-3">
+              <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0">
+                <Bot className="w-4 h-4" />
               </div>
-            ) : (
-              messages.map((m) => {
-                const mine = m.role === 'user';
-                return (
-                  <div key={m._id} style={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start' }}>
-                    <div
-                      style={{
-                        maxWidth: '75%',
-                        padding: '10px 12px',
-                        borderRadius: mine ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
-                        background: mine ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'rgba(255,255,255,0.06)',
-                        border: mine ? 'none' : '1px solid rgba(255,255,255,0.08)',
-                        color: mine ? 'white' : 'var(--text-primary)',
-                        whiteSpace: 'pre-wrap',
-                        lineHeight: 1.5,
-                        fontSize: '0.95rem',
-                      }}
-                    >
-                      {m.content}
-                    </div>
-                  </div>
-                );
-              })
-            )}
-            {sending && (
-              <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                <div style={{ padding: '10px 12px', borderRadius: '14px 14px 14px 4px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--text-muted)' }}>
-                  …
+              <div className="bg-gray-800 rounded-2xl px-4 py-3">
+                <div className="flex gap-1.5">
+                  {[0,1,2].map(i => <div key={i} className="w-2 h-2 rounded-full bg-gray-500 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />)}
                 </div>
               </div>
-            )}
-            <div ref={endRef} />
-          </div>
+            </div>
+          )}
+          <div ref={chatEndRef} />
+        </div>
 
-          <div style={{ padding: '14px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: '10px' }}>
-            <input
-              className="input-field"
-              placeholder={activeSessionId ? 'Type message…' : 'Create/select session first…'}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  send();
-                }
-              }}
-              disabled={!activeSessionId || sending}
-            />
-            <button className="btn-primary" onClick={send} disabled={!activeSessionId || sending || !input.trim()} style={{ padding: '10px 16px' }}>
-              Send
-            </button>
-          </div>
+        <div className="p-3 border-t border-gray-800 flex gap-2">
+          <Input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
+            placeholder="Ask anything about your studies..."
+            className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
+          />
+          <Button onClick={sendMessage} disabled={sending || !input.trim()} className="bg-indigo-600 hover:bg-indigo-700 px-3">
+            <Send className="w-4 h-4" />
+          </Button>
         </div>
       </div>
     </div>

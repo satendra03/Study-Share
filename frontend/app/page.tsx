@@ -1,89 +1,72 @@
-'use client';
+"use client";
+import { useAuth } from "@/context/AuthContext";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { BookOpen, Users, Zap, Shield } from "lucide-react";
 
-import Link from 'next/link';
-import { useAuth } from '@/src/hooks/useAuth';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-
-export default function Home() {
-  const { isAuthenticated, isLoading } = useAuth();
+export default function LandingPage() {
+  const { firebaseUser, appUser, loading, signInWithGoogle } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      router.push('/files');
+    if (!loading && firebaseUser && appUser?.isProfileComplete) {
+      router.push("/dashboard");
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [loading, firebaseUser, appUser, router]);
 
-  if (isLoading) {
-    return (
-      <div
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'var(--bg-primary)',
-        }}
-      >
-        <div style={{ textAlign: 'center' }}>
-          <div className="spinner" style={{ margin: '0 auto' }} />
-          <p style={{ marginTop: '16px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-            Loading...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (isAuthenticated) {
-    return null;
-  }
+  const handleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
-      <section
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '88px 24px 48px',
-          textAlign: 'center',
-          background:
-            'radial-gradient(ellipse at 50% 40%, rgba(99,102,241,0.16) 0%, transparent 65%), radial-gradient(ellipse at 80% 80%, rgba(139,92,246,0.10) 0%, transparent 55%)',
-        }}
-      >
-        <div style={{ width: '100%', maxWidth: '720px' }}>
-          <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 800, fontSize: 'clamp(2.2rem, 5vw, 3.6rem)', lineHeight: 1.1 }}>
-            Study Share <span className="gradient-text">Test Frontend</span>
-          </div>
-          <p style={{ color: 'var(--text-secondary)', marginTop: '14px', fontSize: '1.05rem', lineHeight: 1.65 }}>
-            Minimal UI to test backend endpoints: <strong>auth</strong>, <strong>materials upload</strong>, and <strong>chat</strong>.
+    <main className="min-h-screen bg-gray-950 flex flex-col">
+      {/* Navbar */}
+      <nav className="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <BookOpen className="text-indigo-400 w-6 h-6" />
+          <span className="text-xl font-bold text-white">StudyShare</span>
+        </div>
+        <Button onClick={handleSignIn} variant="outline" className="border-indigo-500 text-indigo-400 hover:bg-indigo-950">
+          Sign In
+        </Button>
+      </nav>
+
+      {/* Hero */}
+      <section className="flex-1 flex flex-col items-center justify-center px-6 text-center py-20">
+        <div className="max-w-3xl">
+          <h1 className="text-5xl font-extrabold text-white mb-4 leading-tight">
+            Share Knowledge,<br />
+            <span className="text-indigo-400">Ace Together</span>
+          </h1>
+          <p className="text-gray-400 text-lg mb-8 max-w-xl mx-auto">
+            Upload notes, PYQs, and materials. Chat with documents using AI. Run code in the sandbox.
           </p>
-
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap', marginTop: '28px' }}>
-            <Link href="/auth" className="btn-primary">
-              Login / Sign up →
-            </Link>
-            <Link href="/files" className="btn-ghost">
-              Go to Upload
-            </Link>
-            <Link href="/chatbot" className="btn-ghost">
-              Go to Chat
-            </Link>
-          </div>
-
-          <div style={{ marginTop: '28px' }} className="glass-card">
-            <div style={{ padding: '18px 18px', color: 'var(--text-secondary)', fontSize: '0.92rem', lineHeight: 1.6 }}>
-              <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: '6px' }}>What’s included</div>
-              <div>1) Google login/signup (Firebase token → backend)</div>
-              <div>2) Upload material + list materials</div>
-              <div>3) Chat sessions + messages</div>
-            </div>
-          </div>
+          <Button onClick={handleSignIn} size="lg" className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 text-base">
+            Get Started with Google
+          </Button>
         </div>
       </section>
-    </div>
+
+      {/* Features */}
+      <section className="grid grid-cols-1 md:grid-cols-4 gap-6 px-6 pb-16 max-w-5xl mx-auto w-full">
+        {[
+          { icon: <BookOpen />, title: "Materials", desc: "Browse PYQs, notes, and more by branch & semester" },
+          { icon: <Zap />, title: "AI Chat", desc: "Ask questions about any document using AI" },
+          { icon: <Shield />, title: "Code Sandbox", desc: "Run Python, JS and more right in the browser" },
+          { icon: <Users />, title: "Community", desc: "Students and teachers sharing knowledge together" },
+        ].map((f) => (
+          <div key={f.title} className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+            <div className="text-indigo-400 mb-3">{f.icon}</div>
+            <h3 className="font-semibold text-white mb-1">{f.title}</h3>
+            <p className="text-gray-400 text-sm">{f.desc}</p>
+          </div>
+        ))}
+      </section>
+    </main>
   );
 }

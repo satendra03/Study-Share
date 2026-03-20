@@ -36,11 +36,18 @@
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/multer": "^2.1.0",
     "@types/node": "^25.3.3",
+    "@types/pdf-parse": "^1.1.5",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@google/genai": "^1.45.0",
+    "@pinecone-database/pinecone": "^7.1.0",
+    "axios": "^1.13.6",
+    "bullmq": "^5.71.0",
+    "canvas": "^3.2.1",
     "cloudinary": "^2.9.0",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
@@ -48,6 +55,10 @@
     "firebase-admin": "^13.7.0",
     "mongodb": "^7.1.0",
     "mongoose": "^9.2.3",
+    "multer": "^2.1.1",
+    "pdf-parse": "^1.1.1",
+    "pdf2pic": "^3.1.0",
+    "pdfjs-dist": "^3.11.174",
     "zod": "^4.3.6"
   }
 }

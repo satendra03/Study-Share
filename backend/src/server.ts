@@ -3,6 +3,7 @@ import { env } from "./config/env.config.js";
 import "./config/firebase.config.js";
 import "./config/cloudinary.config.js";
 import { connectMongoDB } from "./config/mongodb.config.js";
+import { connectRedis } from "./config/redis.config.js";
 
 import app from "./app.js";
 
@@ -11,10 +12,11 @@ import app from "./app.js";
  */
 async function startServer() {
   try {
-    // Connect to MongoDB
+    // Connect to databases / services
     console.log();
     console.log("📡 Initializing database connections...");
     await connectMongoDB();
+    await connectRedis();
 
     // Start Express server
     app.listen(env.PORT, () => {

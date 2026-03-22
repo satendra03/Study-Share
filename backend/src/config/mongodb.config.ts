@@ -17,9 +17,10 @@ async function connectMongoDB(): Promise<Connection> {
   }
 
   try {
-    const mongoUri = process.env.NODE_ENV === "production"
-      ? process.env.MONGODB_ATLAS
-      : process.env.MONGODB_COMPASS;
+    // const mongoUri = process.env.NODE_ENV === "production"
+    //   ? process.env.MONGODB_ATLAS
+    //   : process.env.MONGODB_COMPASS;
+    const mongoUri = process.env.MONGODB_ATLAS
     
     if (!mongoUri) {
       console.error("❌ MONGODB_URI is undefined in environment variables");

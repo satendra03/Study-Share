@@ -22,12 +22,12 @@ export class MaterialService implements MaterialServiceInterface {
     const material = await this.materialRepository.create({
       title: data.title,
       description: data.description || "",
-      fileUrl: "", // Will be updated by worker
+      fileUrl: "pending", // Will be updated by worker
       fileName: data.fileName,
       fileType: data.fileType,
       fileSize: data.fileSize,
       uploaderId: data.uploaderId,
-      cloudinaryPublicId: "", // Will be updated by worker
+      cloudinaryPublicId: "pending", // Will be updated by worker
       status: "processing",   // ✅ set immediately so frontend can start polling
     });
 

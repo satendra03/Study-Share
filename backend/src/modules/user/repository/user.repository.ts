@@ -8,7 +8,6 @@ const usersCollection = db.collection("users");
 export class UserRepository implements UserRepositoryInterface {
     /** Find a user by their Firebase UID */
     findByFirebaseUid = async (firebaseUid: string): Promise<User | null> => {
-        console.log("Firebase UID: ", firebaseUid);
         const doc = await usersCollection.doc(firebaseUid).get();
         if (!doc.exists) return null;
         const data = doc.data() as User;

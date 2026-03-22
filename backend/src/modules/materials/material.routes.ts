@@ -15,6 +15,8 @@ materialRouter.get("/user/:userId", verifyFirebaseToken, requireAppUser, materia
 
 // Dynamic /:id routes
 materialRouter.get("/:id", materialController.getMaterialById);
+materialRouter.get("/:id/pages", materialController.getMaterialPages);
+materialRouter.get("/:id/pages/:pageNumber", materialController.getMaterialPage);
 materialRouter.post("/:id/download", materialController.recordDownload);
 materialRouter.delete("/:id", verifyFirebaseToken, requireAppUser, materialController.deleteMaterialById);
 materialRouter.post("/chat/:id", verifyFirebaseToken, requireAppUser, materialController.chatWithMaterial);

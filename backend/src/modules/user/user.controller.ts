@@ -46,9 +46,7 @@ export class UserController {
             if(!firebaseUid){
                 throw new BadRequestError("Firebase UID is required");
             }
-            console.log("Firebase UID: (from controller)", firebaseUid);
             const user = await this.userService.getUserByFirebaseUid(firebaseUid);
-            console.log("User: (from controller)", user);
             res.status(200).json(ApiResponse.success({
                 message: "User fetched successfully",
                 data: user

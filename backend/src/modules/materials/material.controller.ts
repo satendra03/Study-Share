@@ -164,15 +164,49 @@ export class MaterialController {
             }
 
             const materialId = req.params["id"] as string;
-            const { message, history } = req.body;
+            const { message, history, pageNumber } = req.body;
 
             if (!materialId) throw new BadRequestError("Material ID is required");
             if (!message) throw new BadRequestError("Message is required");
+            if (typeof pageNumber !== "number") throw new BadRequestError("pageNumber is required and must be a number");
 
-            const response = await this.materialService.chatWithMaterial(materialId, message, history || []);
+            const response = await this.materialService.chatWithMaterial(materialId, message, history || [], pageNumber);
             res.status(200).json(ApiResponse.success({
                 message: "Chat response fetched successfully",
                 data: response
+            }));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    getMaterialPages = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const materialId = req.params["id"] as string;
+            if (!materialId) throw new BadRequestError("Material ID is required");
+
+            const pages = await this.materialService.getMaterialPages(materialId);
+            res.status(200).json(ApiResponse.success({
+                message: "Material pages fetched successfully",
+                data: pages
+            }));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    getMaterialPage = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const materialId = req.params["id"] as string;
+            const pageNumber = parseInt(req.params["pageNumber"] as string);
+
+            if (!materialId) throw new BadRequestError("Material ID is required");
+            if (isNaN(pageNumber)) throw new BadRequestError("Valid pageNumber is required");
+
+            const page = await this.materialService.getMaterialPage(materialId, pageNumber);
+            res.status(200).json(ApiResponse.success({
+                message: "Material page fetched successfully",
+                data: page
             }));
         } catch (error) {
             next(error);

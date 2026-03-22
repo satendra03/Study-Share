@@ -13,21 +13,12 @@ export interface ChatWithContextRequest {
    */
   history?: ChatTurn[];
   /**
-   * When provided, the backend will retrieve relevant context from the embedding service
-   * for this specific material (pdfId == materialId in Mongo).
+   * Automatically fetch context via pdfId and pageNumber.
    */
   pdfId: string;
-  pageNumber?: number;
+  pageNumber: number;
 }
 
 export interface ChatWithContextResponse {
   reply: string;
-  context?: RetrievedContext[];
-}
-
-export interface RetrievedContext {
-  text: string;
-  score?: number;
-  unit?: string;
-  year?: string;
 }

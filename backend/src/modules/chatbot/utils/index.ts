@@ -1,4 +1,4 @@
-import type { ChatTurn, RetrievedContext } from "../chatbot.types.js";
+import type { ChatTurn } from "../chatbot.types.js";
 
 export const normalizeHistory = (history: ChatTurn[]): ChatTurn[] => {
     if (!history?.length) {
@@ -12,13 +12,15 @@ export const normalizeHistory = (history: ChatTurn[]): ChatTurn[] => {
 export const buildPrompt = (input: {
     message: string;
     history: ChatTurn[];
-    context?: RetrievedContext[];
+    context: {
+        pageNumber: number;
+        unit?: string;
+        questions: string[];
+    };
 }): string => {
-    const contextText = input.context?.length
-        ? input.context
-              .map((c, i) => `Context ${i + 1}:\n${typeof c.text === "string" ? c.text : JSON.stringify(c)}`)
-              .join("\n\n")
-        : "No external context available.";
+    const contextText = input.context.questions?.length
+        ? `Unit/Section: ${input.context.unit || "N/A"}\nQuestions on this page:\n${input.context.questions.map((q, i) => `${i + 1}. ${q}`).join("\n")}`
+        : "No questions found on this page.";
 
     const historyText = input.history.length
         ? input.history.map((t) => `${t.role.toUpperCase()}: ${t.content}`).join("\n")
@@ -30,8 +32,8 @@ export const buildPrompt = (input: {
         "CONTEXT INSTRUCTIONS:",
         "- The context below is extracted from the student's uploaded exam paper / study material.",
         "- It contains exam questions organised by module and year.",
-        "- Use the context to find the exact question the student is asking about.",
-        "- Then write a COMPLETE, DETAILED answer to that question using your knowledge.",
+        "- Use the context to find the question the student is asking about.",
+        "- Then write a COMPLETE answer to that question using your knowledge.",
         "- Structure your answer with headings, bullet points, and examples where helpful.",
         "- Do NOT say 'the document does not contain answers'. The document has the question — you provide the answer.",
         "- If no matching context is found, still answer the question from your knowledge.",

@@ -6,8 +6,6 @@ import { NotFoundError } from "@/shared/ApiError.js";
 import { chatbotService } from "@/modules/chatbot/chatbot.module.js";
 import { materialQueue } from "@/infrastructure/queue/material.queue.js";
 import { type ChatTurn } from "@/modules/chatbot/chatbot.types.js";
-import { embeddingService } from "@/modules/embeddings/embeddings.module.js";
-import { type QdrantSearchResult } from "@/modules/embeddings/service/embedding.service.js";
 
 interface ChatResult {
   reply: string;
@@ -20,29 +18,36 @@ export class MaterialService implements MaterialServiceInterface {
     data: Omit<Material, "id" | "createdAt" | "updatedAt" | "downloads" | "fileUrl">,
     file: Express.Multer.File,
   ): Promise<Material> => {
-    // Step 1: upload to cloudinary
-    const cloudFile = await uploadFile(file.buffer);
-
-    // Step 2: save to MongoDB immediately with status "processing"
+    // Step 1: save to MongoDB immediately with status "processing"
     const material = await this.materialRepository.create({
       title: data.title,
       description: data.description || "",
-      fileUrl: cloudFile.url,
+      fileUrl: "", // Will be updated by worker
       fileName: data.fileName,
       fileType: data.fileType,
       fileSize: data.fileSize,
       uploaderId: data.uploaderId,
-      cloudinaryPublicId: cloudFile.publicId,
+      cloudinaryPublicId: "", // Will be updated by worker
       status: "processing",   // ✅ set immediately so frontend can start polling
     });
 
-    // Step 3: push to queue and return — do NOT await OCR here
-    await materialQueue.add("process-material", {
-      materialId: material._id!.toString(),
-      fileBuffer: Array.from(file.buffer),  // ✅ Buffer → Array for BullMQ serialization
-    });
+    // Step 2: push to queue and return — Cloudinary upload and OCR run in background
+    await materialQueue.add(
+      "process-material",
+      {
+        materialId: material._id!.toString(),
+        fileBuffer: Array.from(file.buffer),  // ✅ Buffer → Array for BullMQ serialization
+      },
+      {
+        attempts: 3,
+        backoff: {
+          type: "exponential",
+          delay: 5000, // 5s, 10s, 20s
+        },
+      }
+    );
 
-    return material;  // ✅ returns in <1s, OCR runs in background
+    return material;  // ✅ returns in <50ms
   };
 
   getAllMaterials = async (): Promise<Material[]> => {
@@ -62,9 +67,6 @@ export class MaterialService implements MaterialServiceInterface {
       await deleteFile(material.cloudinaryPublicId);
     }
 
-    // ✅ delete embeddings from Qdrant
-    await embeddingService.deleteByPdfId(id);
-
     // ✅ delete record from MongoDB
     await this.materialRepository.delete(id);
   };
@@ -79,36 +81,8 @@ export class MaterialService implements MaterialServiceInterface {
     filters: { branch?: string; subject?: string; semester?: string },
     limit: number
   ): Promise<Material[]> => {
-    if (!query) {
-      return await this.materialRepository.findByFilters(filters, limit);
-    }
-
-    const qdrantResults: QdrantSearchResult[] = await embeddingService.search({
-      query,
-      filters,
-      limit,
-    });
-
-    const pdfIds = qdrantResults.map((r) => r.pdfId);
-    const materials = await this.materialRepository.findByIds(pdfIds);
-
-    // ✅ Deduplicate and attach similarity score, preserving Qdrant ranking order
-    const materialMap = new Map(
-      materials.map((m) => [m._id!.toString(), m])
-    );
-
-    const seen = new Set<string>();
-    const result: (Material & { similarity?: number })[] = [];
-
-    for (const r of qdrantResults) {
-      const material = materialMap.get(r.pdfId);
-      if (material && !seen.has(r.pdfId)) {
-        seen.add(r.pdfId);
-        result.push({ ...material, similarity: r.similarity });
-      }
-    }
-
-    return result;
+    // Basic search fallback since Qdrant is removed
+    return await this.materialRepository.findByFilters(filters, limit);
   };
 
   getProcessingStatus = async (id: string): Promise<{
@@ -138,17 +112,33 @@ export class MaterialService implements MaterialServiceInterface {
     return await this.materialRepository.findByUploaderPaginated(uid, page, limit);
   };
 
+  getMaterialPages = async (id: string) => {
+    const material = await this.getMaterialById(id);
+    return material.pages || [];
+  };
+
+  getMaterialPage = async (id: string, pageNumber: number) => {
+    const material = await this.getMaterialById(id);
+    const page = material.pages?.find(p => p.pageNumber === pageNumber);
+    if (!page) throw new NotFoundError("Page not found");
+    return page;
+  };
+
   chatWithMaterial = async (
     id: string,
     message: string,
-    history: ChatTurn[]
+    history: ChatTurn[],
+    pageNumber: number,
   ): Promise<{ reply: string; history: ChatTurn[] }> => {
-    const material = await this.getMaterialById(id);
+    // Validate material exists
+    await this.getMaterialById(id);
+
     const trimmedHistory = history.slice(-6);
     const result: ChatResult = await chatbotService.chat({
       message,
       history: trimmedHistory,
-      pdfId: material._id!.toString(),
+      pdfId: id,
+      pageNumber,
     });
 
     return {

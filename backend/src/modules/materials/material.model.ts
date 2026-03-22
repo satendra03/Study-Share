@@ -16,6 +16,19 @@ const MaterialSchema = new Schema<Material & Document>({
     branch: { type: String },
     semester: { type: String },
     cloudinaryPublicId: { type: String },
+    structuredData: { type: Object },
+    pages: {
+        type: Array,
+        default: [],
+        of: {
+            pageNumber: { type: Number, required: true },
+            rawText: { type: String, required: true },
+            structured: {
+                unit: { type: String, required: true },
+                questions: { type: [String], default: [] }
+            }
+        }
+    },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
 });

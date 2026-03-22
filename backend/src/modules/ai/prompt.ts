@@ -1,4 +1,4 @@
-export const getPrompt = (text: string) => {
+export const getStructurePrompt = (text: string) => {
     return `You are a question paper parser. This document may contain question papers from MULTIPLE YEARS combined in one PDF.
   
   Return ONLY a JSON object, no explanation, no markdown, no code fences.
@@ -39,3 +39,13 @@ export const getPrompt = (text: string) => {
   Raw text:
   ${text}`;
   }
+
+export const getPageStructuringPrompt = (rawText: string, pageNumber: number) => {
+    return `Extract the unit/section title and a flat array of questions from the following single page text.
+Fix any obvious OCR errors. Do not extract sub-parts as nested arrays, each part must be its own string in the 'questions' array.
+Return ONLY a valid JSON object matching this structure exactly (no markdown, no backticks):
+{ "unit": "must be one of [Module-1, Module-2, Module-3, Module-4, Module-5]", "questions": ["Question 1", "Question 2"] }
+
+Text (Page ${pageNumber}):
+${rawText}`;
+}

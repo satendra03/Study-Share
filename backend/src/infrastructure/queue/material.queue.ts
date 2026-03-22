@@ -1,8 +1,9 @@
 import { Queue, Worker } from "bullmq";
 import { ocrService } from "@/modules/ocr/ocr.module.js";
 import { MaterialModel } from "@/modules/materials/material.model.js";
-import { embeddingService } from "@/modules/embeddings/embeddings.module.js";
 import { getRedisOptions } from "@/config/redis.config.js";
+import { AIService } from "@/modules/ai/ai.service.js";
+import { uploadFile } from "@/config/cloudinary.config.js";
 
 // BullMQ expects a Redis connection config object (it manages the client lifecycle internally)
 const connection = getRedisOptions();
@@ -18,34 +19,44 @@ new Worker(
     console.log(`Processing material ${materialId}...`);
 
     try {
-      // Step 1: OCR + AI structuring
       const buffer = Buffer.from(fileBuffer);
-      const structured = await ocrService.extractTextFromPDFWithOCR(buffer);
+      
+      // Step 1: Upload to Cloudinary
+      console.log(`Material ${materialId}: Uploading to Cloudinary...`);
+      const cloudFile = await uploadFile(buffer);
+      await MaterialModel.findByIdAndUpdate(materialId, {
+        fileUrl: cloudFile.url,
+        cloudinaryPublicId: cloudFile.publicId,
+      });
 
-      // Step 2: send to Python embedding service (skip sections with no content)
-      for (const yearPaper of structured.papers) {
-        for (const section of yearPaper.sections) {
-          const hasQuestions = Array.isArray(section.questions) && section.questions.some((q: string) => q?.trim());
-          const hasText = typeof (section as any).text === "string" && (section as any).text.trim();
-          if (!hasQuestions && !hasText) continue;
+      // Step 2: Extract pages using OCR
+      console.log(`Material ${materialId}: Extracting pages...`);
+      const pagesResult = await ocrService.extractPagesFromPDF(buffer);
 
-          await embeddingService.processPage({
-            pdfId: materialId,
-            year: yearPaper.year,
-            sectionTitle: section.title,
-            questions: section.questions ?? [],
-            ...(hasText && !hasQuestions ? { text: (section as any).text } : {}),
-          });
-        }
+      // Step 2: Structure each page individually
+      console.log(`Material ${materialId}: Structuring ${pagesResult.length} pages independently...`);
+      const pages = [];
+      for (const page of pagesResult) {
+        const structured = await AIService.structurePageWithAI(page.rawText, page.pageNumber);
+        pages.push({
+          pageNumber: page.pageNumber,
+          rawText: page.rawText,
+          structured
+        });
       }
 
-      // Step 3: update MongoDB with extracted metadata + status done
+      // Step 3: Run the existing full-PDF structuring to get subject, semester, etc.
+      console.log(`Material ${materialId}: Running full PDF structure for metadata...`);
+      const structuredData = await ocrService.structurePagesWithAI(pagesResult);
+
+      // Step 4: update MongoDB with extracted metadata + status done
       await MaterialModel.findByIdAndUpdate(materialId, {
-        structuredData: structured,
-        subject: structured.subject,
-        subjectCode: structured.subjectCode,
-        branch: structured.branch,
-        semester: structured.semester,
+        structuredData: structuredData,
+        pages: pages,
+        subject: structuredData.subject,
+        subjectCode: structuredData.subjectCode,
+        branch: structuredData.branch,
+        semester: structuredData.semester,
         status: "done",
       });
 

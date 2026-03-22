@@ -1,5 +1,14 @@
 import { type Types } from "mongoose";
 
+export interface PageData {
+  pageNumber: number;
+  rawText: string;
+  structured: {
+    unit: string;
+    questions: string[];
+  };
+}
+
 export interface Material {
   _id?: Types.ObjectId | string;
   title: string;
@@ -18,4 +27,6 @@ export interface Material {
   branch?: string;
   semester?: string;
   cloudinaryPublicId?: string;
+  structuredData?: any;
+  pages?: PageData[];
 }

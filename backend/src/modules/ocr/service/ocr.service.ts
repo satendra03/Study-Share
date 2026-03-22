@@ -23,6 +23,11 @@ const ocrHeaders = {
 };
 
 // ---------------- SERVICE ----------------
+export interface PageResult {
+  pageNumber: number;
+  rawText: string;
+}
+
 export class OCRService {
   // -------- 1. CHECK IF PAGE HAS SELECTABLE TEXT --------
   private async isPageTextBased(page: any, pageNum: number): Promise<boolean> {
@@ -113,8 +118,8 @@ export class OCRService {
     return "";
   }
 
-  // -------- 5. MAIN ENTRY POINT --------
-  async extractTextFromPDFWithOCR(pdfBuffer: Buffer): Promise<StructuredPaper> {
+  // -------- 5. EXTRACT ALL PAGES TEXT --------
+  async extractPagesFromPDF(pdfBuffer: Buffer): Promise<PageResult[]> {
     const loadingTask = pdfjs.getDocument({
       data: new Uint8Array(pdfBuffer),
       useSystemFonts: true,
@@ -122,7 +127,7 @@ export class OCRService {
     });
     const pdf = await loadingTask.promise;
 
-    const pageTexts: string[] = [];
+    const pages: PageResult[] = [];
 
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
@@ -133,7 +138,7 @@ export class OCRService {
       if (textBased) {
         console.log(`Page ${i}: text-based → direct extraction`);
         const text = await this.extractTextFromPage(page);
-        pageTexts.push(text);
+        pages.push({ pageNumber: i, rawText: text });
       } else {
         console.log(`Page ${i}: scanned → OCR`);
         try {
@@ -155,22 +160,31 @@ export class OCRService {
           }
 
           const text = await this.ocrImage(imageBuffer);
-          pageTexts.push(text);
+          pages.push({ pageNumber: i, rawText: text });
         } catch (err) {
           console.error(`Page ${i} OCR failed:`, err);
-          pageTexts.push(""); // don't let one page failure kill the whole PDF
+          pages.push({ pageNumber: i, rawText: "" }); // don't let one page failure kill the whole PDF
         }
+
       }
     }
 
-    // ✅ Concatenate all pages with page markers, then do ONE AI call for the whole PDF
-    const fullRawText = pageTexts
-      .map((text, idx) => `[Page ${idx + 1}]\n${text}`)
+    return pages;
+  }
+
+  // -------- 6. STRUCTURE FULL PDF --------
+  async structurePagesWithAI(pages: PageResult[]): Promise<StructuredPaper> {
+    const fullRawText = pages
+      .map((p) => `[Page ${p.pageNumber}]\n${p.rawText}`)
       .join("\n\n");
 
     console.log("Raw text extracted, sending to AI structuring...");
-
-    // ✅ One AI call per PDF — not per page, keeps token cost low
     return await AIService.structureWithAI(fullRawText);
+  }
+
+  // -------- 7. MAIN ENTRY POINT (Full PDF) --------
+  async extractTextFromPDFWithOCR(pdfBuffer: Buffer): Promise<StructuredPaper> {
+    const pages = await this.extractPagesFromPDF(pdfBuffer);
+    return await this.structurePagesWithAI(pages);
   }
 }

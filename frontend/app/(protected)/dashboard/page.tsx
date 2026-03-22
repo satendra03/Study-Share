@@ -10,7 +10,10 @@ import { Search, FileText, Download, Eye } from "lucide-react";
 import Link from "next/link";
 
 function MaterialCard({ material }: { material: Material }) {
+  const isProcessing = material.status === "processing";
+
   const handleDownload = async () => {
+    if (isProcessing) return;
     try {
       await api.post(`/materials/${material._id}/download`);
       window.open(material.fileUrl, "_blank");
@@ -20,32 +23,39 @@ function MaterialCard({ material }: { material: Material }) {
   };
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 hover:border-indigo-800 transition-all">
+    <div className={`bg-gray-900 border border-gray-800 rounded-xl p-4 transition-all ${isProcessing ? 'opacity-70' : 'hover:border-indigo-800'}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 flex-1 min-w-0">
-          <FileText className="w-8 h-8 text-indigo-400 flex-shrink-0 mt-0.5" />
+          <FileText className={`w-8 h-8 shrink-0 mt-0.5 ${isProcessing ? 'text-gray-500' : 'text-indigo-400'}`} />
           <div className="min-w-0">
             <h3 className="font-semibold text-white text-sm truncate">{material.title}</h3>
             <p className="text-gray-400 text-xs mt-0.5 line-clamp-2">{material.description}</p>
             <div className="flex flex-wrap gap-1.5 mt-2">
+              {isProcessing && <Badge variant="outline" className="text-xs border-amber-800 text-amber-500 bg-amber-950/30">Processing...</Badge>}
               {material.branch && <Badge variant="outline" className="text-xs border-gray-700 text-gray-400">{material.branch}</Badge>}
               {material.semester && <Badge variant="outline" className="text-xs border-gray-700 text-gray-400">Sem {material.semester}</Badge>}
-              {material.subject && <Badge variant="outline" className="text-xs border-indigo-800 text-indigo-400">{material.subject}</Badge>}
+              {!isProcessing && material.subject && <Badge variant="outline" className="text-xs border-indigo-800 text-indigo-400">{material.subject}</Badge>}
             </div>
           </div>
         </div>
       </div>
       <div className="flex items-center gap-2 mt-3">
-        <Link href={`/materials/${material._id}`} className="flex-1">
-          <Button size="sm" variant="outline" className="w-full border-gray-700 text-gray-300 hover:bg-gray-800 text-xs">
-            <Eye className="w-3 h-3 mr-1" /> View & Chat
+        {isProcessing ? (
+          <Button size="sm" variant="outline" disabled className="w-full border-gray-700 text-gray-500 text-xs bg-gray-800/50">
+            Processing...
           </Button>
-        </Link>
-        <Button size="sm" onClick={handleDownload} className="bg-indigo-600 hover:bg-indigo-700 text-xs px-3">
+        ) : (
+          <Link href={`/materials/${material._id}`} className="flex-1">
+            <Button size="sm" variant="outline" className="w-full border-gray-700 text-gray-300 hover:bg-gray-800 text-xs">
+              <Eye className="w-3 h-3 mr-1" /> View & Chat
+            </Button>
+          </Link>
+        )}
+        <Button size="sm" onClick={handleDownload} disabled={isProcessing} className="bg-indigo-600 hover:bg-indigo-700 text-xs px-3 disabled:bg-gray-700 disabled:text-gray-500">
           <Download className="w-3 h-3 mr-1" /> Download
         </Button>
       </div>
-      {material.downloads !== undefined && (
+      {material.downloads !== undefined && !isProcessing && (
         <p className="text-gray-600 text-xs mt-2 flex items-center gap-1">
           <Download className="w-3 h-3" /> {material.downloads} downloads
         </p>
@@ -66,6 +76,10 @@ export default function DashboardPage() {
         : "/materials";
       const res = await api.get(url);
       return res.data.data || res.data;
+    },
+    refetchInterval: (query) => {
+      const ms = query.state.data as Material[] | undefined;
+      return ms?.some((m) => m.status === "processing") ? 3000 : false;
     },
   });
 

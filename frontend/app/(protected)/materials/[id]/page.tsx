@@ -5,10 +5,15 @@ import api from "@/lib/api";
 import { Material, ChatMessage } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Bot, User, FileText, Download, Loader2 } from "lucide-react";
+import { Send, Bot, User, FileText, Download, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useParams } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
+
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 export default function MaterialPage() {
   const { id } = useParams<{ id: string }>();
@@ -18,6 +23,8 @@ export default function MaterialPage() {
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [pdfError, setPdfError] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [numPages, setNumPages] = useState<number>();
+  const [pageNumber, setPageNumber] = useState(1);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const { data: material, isLoading } = useQuery<Material>({
@@ -43,7 +50,6 @@ export default function MaterialPage() {
         return res.blob();
       })
       .then(blob => {
-        // Force MIME type so browser renders instead of downloads
         const pdfBlob = new Blob([blob], { type: "application/pdf" });
         url = URL.createObjectURL(pdfBlob);
         setBlobUrl(url);
@@ -67,7 +73,7 @@ export default function MaterialPage() {
     setMessages(prev => [...prev, { role: "user", content: userMsg }]);
     setSending(true);
     try {
-      const res = await api.post(`/materials/chat/${id}`, { message: userMsg, history: messages });
+      const res = await api.post(`/materials/chat/${id}`, { message: userMsg, history: messages, pageNumber });
       const reply = res.data.data?.reply || "No response";
       setMessages(prev => [...prev, { role: "assistant", content: reply }]);
     } catch {
@@ -85,6 +91,11 @@ export default function MaterialPage() {
     a.click();
   };
 
+  function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
+    setNumPages(numPages);
+    setPageNumber(1);
+  }
+
   if (isLoading) return (
     <div className="flex items-center justify-center h-64">
       <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
@@ -94,12 +105,40 @@ export default function MaterialPage() {
   return (
     <div className="flex gap-4 h-[calc(100vh-7rem)]">
       {/* PDF Viewer */}
-      <div className="flex-1 bg-gray-900 border border-gray-800 rounded-xl overflow-hidden flex flex-col">
+      <div className="flex-1 bg-gray-900 border border-gray-800 rounded-xl flex flex-col items-center">
         {material?.fileUrl ? (
           <>
             {/* Toolbar */}
-            <div className="flex items-center justify-between px-3 py-2 border-b border-gray-800 flex-shrink-0">
+            <div className="w-full flex items-center justify-between px-3 py-2 border-b border-gray-800 shrink-0">
               <p className="text-xs text-gray-400 truncate max-w-xs">{material.title}</p>
+              
+              {/* Pagination Controls */}
+              {numPages && (
+                <div className="flex items-center gap-2">
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    disabled={pageNumber <= 1} 
+                    onClick={() => setPageNumber(p => Math.max(1, p - 1))}
+                    className="h-6 w-6 text-gray-400 shrink-0"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="text-gray-300 text-xs">
+                    Page {pageNumber} of {numPages}
+                  </span>
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    disabled={pageNumber >= numPages} 
+                    onClick={() => setPageNumber(p => Math.min(numPages, p + 1))}
+                    className="h-6 w-6 text-gray-400 shrink-0"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+
               <Button
                 size="sm"
                 variant="ghost"
@@ -111,34 +150,50 @@ export default function MaterialPage() {
             </div>
 
             {/* PDF area */}
-            {pdfLoading && (
-              <div className="flex-1 flex items-center justify-center">
-                <Loader2 className="w-6 h-6 text-indigo-400 animate-spin" />
-                <span className="text-gray-400 text-sm ml-2">Loading PDF...</span>
-              </div>
-            )}
+            <div className="flex-1 w-full overflow-y-auto flex items-center justify-center hide-scrollbar">
+              {pdfLoading && (
+                <div className="flex flex-col items-center justify-center">
+                  <Loader2 className="w-6 h-6 text-indigo-400 animate-spin mb-2" />
+                  <span className="text-gray-400 text-sm">Loading PDF...</span>
+                </div>
+              )}
 
-            {!pdfLoading && blobUrl && (
-              <iframe
-                src={blobUrl}
-                className="w-full flex-1 border-0"
-                title={material.title}
-              />
-            )}
-
-            {!pdfLoading && pdfError && (
-              <div className="flex-1 flex flex-col items-center justify-center gap-4 text-gray-500">
-                <FileText className="w-12 h-12 opacity-30" />
-                <p className="text-sm">Could not load PDF preview.</p>
-                <Button
-                  size="sm"
-                  onClick={handleDownload}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
+              {!pdfLoading && blobUrl && (
+                <Document
+                  file={blobUrl}
+                  onLoadSuccess={onDocumentLoadSuccess}
+                  onLoadError={() => setPdfError(true)}
+                  loading={
+                    <div className="flex flex-col items-center justify-center pt-20">
+                      <Loader2 className="w-6 h-6 text-indigo-400 animate-spin mb-2" />
+                      <span className="text-gray-400 text-sm">Rendering document...</span>
+                    </div>
+                  }
                 >
-                  <Download className="w-4 h-4 mr-2" /> Download PDF
-                </Button>
-              </div>
-            )}
+                  <Page 
+                    pageNumber={pageNumber} 
+                    renderTextLayer={true}
+                    renderAnnotationLayer={true}
+                    width={typeof window !== "undefined" ? Math.min(window.innerWidth * 0.5, 800) : 600}
+                    className="shadow-xl"
+                  />
+                </Document>
+              )}
+
+              {!pdfLoading && pdfError && (
+                <div className="flex flex-col items-center justify-center gap-4 text-gray-500 m-auto">
+                  <FileText className="w-12 h-12 opacity-30" />
+                  <p className="text-sm">Could not load PDF preview.</p>
+                  <Button
+                    size="sm"
+                    onClick={handleDownload}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                  >
+                    <Download className="w-4 h-4 mr-2" /> Download PDF
+                  </Button>
+                </div>
+              )}
+            </div>
           </>
         ) : (
           <div className="flex items-center justify-center h-full text-gray-500">

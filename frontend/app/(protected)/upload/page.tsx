@@ -14,10 +14,8 @@ export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [form, setForm] = useState({ title: "", description: "", subject: "", subjectCode: "", branch: "", semester: "" });
   const [status, setStatus] = useState<Status>("idle");
-  const [statusMsg, setStatusMsg] = useState("");
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,31 +28,10 @@ export default function UploadPage() {
     Object.entries(form).forEach(([k, v]) => v && formData.append(k, v));
 
     try {
-      const res = await api.post("/materials", formData, {
+      await api.post("/materials", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      const materialId = res.data.data?._id || res.data.data?.id;
-      setStatus("processing");
-
-      // Poll for processing status
-      pollRef.current = setInterval(async () => {
-        try {
-          const statusRes = await api.get(`/materials/status/${materialId}`);
-          const s = statusRes.data.data?.status || statusRes.data.status;
-          setStatusMsg(s);
-          if (s === "done") {
-            if (pollRef.current) clearInterval(pollRef.current);
-            setStatus("done");
-          } else if (s === "failed") {
-            if (pollRef.current) clearInterval(pollRef.current);
-            setStatus("failed");
-            setError("Processing failed");
-          }
-        } catch {
-          if (pollRef.current) clearInterval(pollRef.current);
-          setStatus("done"); // assume done if polling fails
-        }
-      }, 3000);
+      setStatus("done");
     } catch (err: unknown) {
       setStatus("failed");
       const error = err as { response?: { data?: { message?: string } } };
@@ -63,27 +40,17 @@ export default function UploadPage() {
   };
 
   const reset = () => {
-    setFile(null); setStatus("idle"); setStatusMsg(""); setError("");
+    setFile(null); setStatus("idle"); setError("");
     setForm({ title: "", description: "", subject: "", subjectCode: "", branch: "", semester: "" });
     if (fileRef.current) fileRef.current.value = "";
-    if (pollRef.current) clearInterval(pollRef.current);
   };
 
   if (status === "done") return (
     <div className="max-w-lg mx-auto text-center py-20">
       <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
-      <h2 className="text-xl font-bold text-white mb-2">Upload Successful!</h2>
-      <p className="text-gray-400 mb-6">Your material has been processed and is now available.</p>
+      <h2 className="text-xl font-bold text-white mb-2">Upload Initiated!</h2>
+      <p className="text-gray-400 mb-6">Your material is being processed in the background and will be available shortly on your dashboard.</p>
       <Button onClick={reset} className="bg-indigo-600 hover:bg-indigo-700">Upload Another</Button>
-    </div>
-  );
-
-  if (status === "processing") return (
-    <div className="max-w-lg mx-auto text-center py-20">
-      <Loader className="w-16 h-16 text-indigo-400 mx-auto mb-4 animate-spin" />
-      <h2 className="text-xl font-bold text-white mb-2">Processing...</h2>
-      <p className="text-gray-400 mb-2">We&apos;re extracting text and generating embeddings.</p>
-      {statusMsg && <Badge className="bg-indigo-900 text-indigo-300">{statusMsg}</Badge>}
     </div>
   );
 

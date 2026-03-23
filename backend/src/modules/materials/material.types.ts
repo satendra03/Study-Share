@@ -1,17 +1,21 @@
 import { type Types } from "mongoose";
 
+export interface PageGroup {
+  unit: string;
+  questions: string[];
+}
+
 export interface PageData {
   pageNumber: number;
   rawText: string;
   structured: {
-    unit: string;
-    questions: string[];
+    groups: PageGroup[];
   };
 }
 
 export interface Material {
   _id?: Types.ObjectId | string;
-  title: string;
+  year: string;
   description: string;
   fileUrl: string;
   fileName: string;

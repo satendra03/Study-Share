@@ -33,21 +33,23 @@ new Worker(
       console.log(`Material ${materialId}: Extracting pages...`);
       const pagesResult = await ocrService.extractPagesFromPDF(buffer);
 
-      // Step 2: Structure each page individually
+      // Step 3: Run full-PDF structuring FIRST to get subject — used as context for page structuring
+      console.log(`Material ${materialId}: Running full PDF structure for metadata...`);
+      const structuredData = await ocrService.structurePagesWithAI(pagesResult);
+      const subject = structuredData.subject || null;
+      console.log(`Material ${materialId}: Detected subject: ${subject}`);
+
+      // Step 4: Structure each page individually using subject as context for better OCR correction
       console.log(`Material ${materialId}: Structuring ${pagesResult.length} pages independently...`);
       const pages = [];
       for (const page of pagesResult) {
-        const structured = await AIService.structurePageWithAI(page.rawText, page.pageNumber);
+        const structured = await AIService.structurePageWithAI(page.rawText, page.pageNumber, subject);
         pages.push({
           pageNumber: page.pageNumber,
           rawText: page.rawText,
           structured
         });
       }
-
-      // Step 3: Run the existing full-PDF structuring to get subject, semester, etc.
-      console.log(`Material ${materialId}: Running full PDF structure for metadata...`);
-      const structuredData = await ocrService.structurePagesWithAI(pagesResult);
 
       // Step 4: update MongoDB with extracted metadata + status done
       await MaterialModel.findByIdAndUpdate(materialId, {

@@ -24,13 +24,12 @@ export class ChatbotService implements ChatbotServiceInterface {
     }
 
     const page = material.pages?.find((p: any) => p.pageNumber === req.pageNumber);
-    const contextQuestions = page?.structured?.questions || [];
-    const contextUnit = page?.structured?.unit || "";
+    const groups: { unit: string; questions: string[] }[] = page?.structured?.groups || [];
 
     const context = {
       pageNumber: req.pageNumber,
-      unit: contextUnit,
-      questions: contextQuestions,
+      groups,
+      subject: (material as any).subject || null,
     };
 
     const history = normalizeHistory(req.history ?? ([] as ChatTurn[]));

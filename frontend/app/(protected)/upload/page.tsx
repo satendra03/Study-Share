@@ -12,7 +12,7 @@ type Status = "idle" | "uploading" | "processing" | "done" | "failed";
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
-  const [form, setForm] = useState({ title: "", description: "", subject: "", subjectCode: "", branch: "", semester: "" });
+  const [form, setForm] = useState({ year: "", description: "", subject: "", subjectCode: "", branch: "", semester: "" });
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -41,7 +41,7 @@ export default function UploadPage() {
 
   const reset = () => {
     setFile(null); setStatus("idle"); setError("");
-    setForm({ title: "", description: "", subject: "", subjectCode: "", branch: "", semester: "" });
+    setForm({ year: "", description: "", subject: "", subjectCode: "", branch: "", semester: "" });
     if (fileRef.current) fileRef.current.value = "";
   };
 
@@ -90,9 +90,9 @@ export default function UploadPage() {
 
         <div className="grid grid-cols-1 gap-4">
           <div>
-            <Label className="text-gray-300">Title *</Label>
-            <Input className="bg-gray-800 border-gray-700 text-white mt-1" placeholder="e.g. Data Structures PYQ 2023"
-              value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} required />
+            <Label className="text-gray-300">Year *</Label>
+            <Input className="bg-gray-800 border-gray-700 text-white mt-1" placeholder="e.g. 2023"
+              value={form.year} onChange={e => setForm(p => ({ ...p, year: e.target.value }))} required />
           </div>
           <div>
             <Label className="text-gray-300">Description</Label>

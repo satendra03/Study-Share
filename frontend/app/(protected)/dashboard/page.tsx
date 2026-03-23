@@ -28,7 +28,7 @@ function MaterialCard({ material }: { material: Material }) {
         <div className="flex items-start gap-3 flex-1 min-w-0">
           <FileText className={`w-8 h-8 shrink-0 mt-0.5 ${isProcessing ? 'text-gray-500' : 'text-indigo-400'}`} />
           <div className="min-w-0">
-            <h3 className="font-semibold text-white text-sm truncate">{material.title}</h3>
+            <h3 className="font-semibold text-white text-sm truncate">{material.year ? `${material.year}` : "Unknown Year"}</h3>
             <p className="text-gray-400 text-xs mt-0.5 line-clamp-2">{material.description}</p>
             <div className="flex flex-wrap gap-1.5 mt-2">
               {isProcessing && <Badge variant="outline" className="text-xs border-amber-800 text-amber-500 bg-amber-950/30">Processing...</Badge>}

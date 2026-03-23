@@ -2,7 +2,7 @@ import mongoose, { Schema, type Document } from 'mongoose';
 import type { Material } from './material.types.js';
 
 const MaterialSchema = new Schema<Material & Document>({
-    title: { type: String, required: true },
+    year: { type: String, required: true },
     description: { type: String, required: true },
     fileUrl: { type: String, required: true },
     fileName: { type: String, required: true },
@@ -24,8 +24,14 @@ const MaterialSchema = new Schema<Material & Document>({
             pageNumber: { type: Number, required: true },
             rawText: { type: String, required: true },
             structured: {
-                unit: { type: String, required: true },
-                questions: { type: [String], default: [] }
+                groups: {
+                    type: Array,
+                    default: [],
+                    of: {
+                        unit: { type: String, required: true },
+                        questions: { type: [String], default: [] }
+                    }
+                }
             }
         }
     },

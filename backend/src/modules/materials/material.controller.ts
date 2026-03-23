@@ -13,21 +13,21 @@ export class MaterialController {
                 return;
             }
 
-            const { title, description } = req.body;
+            const { year, description } = req.body;
             const file = req.file;
 
             if (!file) {
                 throw new BadRequestError("Missing required fields: file");
             }
-            if (!title) {
-                throw new BadRequestError("Missing required fields: title");
+            if (!year) {
+                throw new BadRequestError("Missing required fields: year");
             }
 
             const safeName = file.originalname.replace(/[^a-zA-Z0-9]/g, "_");
 
             const material = await this.materialService.createMaterial(
                 {
-                    title,
+                    year,
                     description: description || "",
                     fileName: safeName,
                     fileType: file.mimetype || "application/pdf",

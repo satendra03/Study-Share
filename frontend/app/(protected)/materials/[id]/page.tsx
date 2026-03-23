@@ -110,7 +110,7 @@ export default function MaterialPage() {
           <>
             {/* Toolbar */}
             <div className="w-full flex items-center justify-between px-3 py-2 border-b border-gray-800 shrink-0">
-              <p className="text-xs text-gray-400 truncate max-w-xs">{material.title}</p>
+              <p className="text-xs text-gray-400 truncate max-w-xs">{material.year ? `Year: ${material.year}` : "Unknown Year"}</p>
               
               {/* Pagination Controls */}
               {numPages && (
@@ -209,7 +209,7 @@ export default function MaterialPage() {
       <div className="w-80 flex flex-col bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
         <div className="p-3 border-b border-gray-800">
           <h3 className="text-sm font-semibold text-white">Chat with Document</h3>
-          <p className="text-xs text-gray-500 truncate">{material?.title}</p>
+          <p className="text-xs text-gray-500 truncate">{material?.year ? `Year: ${material.year}` : "Unknown Year"}</p>
         </div>
         <div className="flex-1 overflow-y-auto p-3 space-y-3">
           {messages.length === 0 && (

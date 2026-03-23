@@ -20,7 +20,7 @@ export class MaterialService implements MaterialServiceInterface {
   ): Promise<Material> => {
     // Step 1: save to MongoDB immediately with status "processing"
     const material = await this.materialRepository.create({
-      title: data.title,
+      year: data.year,
       description: data.description || "",
       fileUrl: "pending", // Will be updated by worker
       fileName: data.fileName,
@@ -87,7 +87,7 @@ export class MaterialService implements MaterialServiceInterface {
 
   getProcessingStatus = async (id: string): Promise<{
     status: string;
-    title: string;
+    year: string;
     subject?: string;
     subjectCode?: string;
     branch?: string;
@@ -96,7 +96,7 @@ export class MaterialService implements MaterialServiceInterface {
     const material = await this.getMaterialById(id);
     return {
       status: material.status || "processing",
-      title: material.title,
+      year: material.year,
       subject: material.subject,
       subjectCode: material.subjectCode,
       branch: material.branch,

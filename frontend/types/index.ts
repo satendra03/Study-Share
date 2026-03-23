@@ -28,7 +28,7 @@ export interface User {
 
 export interface Material {
   _id?: string;
-  title: string;
+  year: string;
   description: string;
   fileUrl: string;
   fileName: string;

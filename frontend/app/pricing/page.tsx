@@ -1,8 +1,5 @@
 "use client";
 
-import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { LandingNavbar } from "@/components/LandingNavbar";
 import { InteractiveGridPattern } from "@/components/ui/interactive-grid-pattern";
 
@@ -12,23 +9,6 @@ import { FaqSection } from "@/components/FaqSection";
 import { faqs } from "@/lib/data";
 
 export default function PricingPage() {
-  const { firebaseUser, appUser, loading, signInWithGoogle } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && firebaseUser && appUser?.isProfileComplete) {
-      router.push("/dashboard");
-    }
-  }, [loading, firebaseUser, appUser, router]);
-
-  const handleSignIn = async () => {
-    try {
-      await signInWithGoogle();
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   return (
     <main className="min-h-screen relative bg-[#030303] text-white font-sans selection:bg-indigo-500/30">
       <div className="relative w-full overflow-hidden pb-12">
@@ -46,7 +26,7 @@ export default function PricingPage() {
         </div>
 
         {/* Navbar */}
-        <LandingNavbar onSignIn={handleSignIn} />
+        <LandingNavbar />
 
         {/* Pricing Component (Acts as Hero here) */}
         <Pricing noBorderTop={true} />

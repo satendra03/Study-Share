@@ -1,45 +1,80 @@
 "use client";
 
-import Link from "next/link";
-import { Layers, Menu, X } from "lucide-react";
+import { CustomLink } from "@/components/CustomLink";
+import { Layers, Menu, X, LayoutDashboard, UserCircle } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 
-export interface LandingNavbarProps {
-  onSignIn: () => void;
-}
-
-export function LandingNavbar({ onSignIn }: LandingNavbarProps) {
+export function LandingNavbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { firebaseUser, appUser, loading, signInWithGoogle } = useAuth();
+
+  const onSignIn = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const authActions = loading ? (
+    <span className="text-sm text-gray-500 px-4">…</span>
+  ) : !firebaseUser ? (
+    <button
+      type="button"
+      onClick={onSignIn}
+      className="hidden md:flex items-center justify-center px-6 py-2.5 rounded-full border border-gray-600/50 text-sm font-medium hover:bg-white/5 transition-all text-white backdrop-blur-sm cursor-pointer"
+    >
+      Sign In
+    </button>
+  ) : appUser?.isProfileComplete ? (
+    <CustomLink
+      href="/dashboard"
+      className="hidden md:flex items-center gap-2 justify-center px-6 py-2.5 rounded-full bg-primary text-white text-sm font-medium hover:bg-[#4d46db] transition-colors shadow-[0_0_24px_-6px_var(--primary)]"
+    >
+      <LayoutDashboard className="w-4 h-4" />
+      Dashboard
+    </CustomLink>
+  ) : (
+    <CustomLink
+      href="/complete-profile"
+      className="hidden md:flex items-center gap-2 justify-center px-6 py-2.5 rounded-full border border-indigo-500/50 text-sm font-medium text-indigo-200 hover:bg-indigo-500/10 transition-colors"
+    >
+      <UserCircle className="w-4 h-4" />
+      Complete profile
+    </CustomLink>
+  );
 
   return (
-    <nav className="relative z-50 flex items-center justify-between px-6 md:px-12 py-6 max-w-[1400px] mx-auto w-full">
+    <nav className="relative z-50 flex items-center justify-between px-6 md:px-12 py-6 max-w-350 mx-auto w-full">
       <div className="flex items-center gap-12">
-        <Link href="/" className="flex items-center gap-3 group cursor-pointer">
+        <CustomLink href="/" className="flex items-center gap-3 group cursor-pointer">
           <div className="bg-white p-1.5 rounded-xl group-hover:scale-105 transition-transform flex items-center justify-center">
             <Layers className="text-[#030303] w-5 h-5" strokeWidth={2.5} />
           </div>
           <span className="text-xl font-bold tracking-tight text-white hidden md:block">StudyShare</span>
-        </Link>
-        {/* Desktop Links */}
+        </CustomLink>
         <div className="hidden md:flex items-center gap-8 text-sm text-gray-400 font-medium z-50">
-          <Link href="/docs" className="hover:text-white transition-colors">Docs</Link>
-          <Link href="/about" className="hover:text-white transition-colors">About</Link>
-          <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>
-          <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
+          <CustomLink href="/docs" className="hover:text-white transition-colors">
+            Docs
+          </CustomLink>
+          <CustomLink href="/about" className="hover:text-white transition-colors">
+            About
+          </CustomLink>
+          <CustomLink href="/pricing" className="hover:text-white transition-colors">
+            Pricing
+          </CustomLink>
+          <CustomLink href="/contact" className="hover:text-white transition-colors">
+            Contact
+          </CustomLink>
         </div>
       </div>
 
       <div className="flex items-center gap-4">
-        {/* Desktop Button */}
-        <button
-          onClick={onSignIn}
-          className="hidden md:flex items-center justify-center px-6 py-2.5 rounded-full border border-gray-600/50 text-sm font-medium hover:bg-white/5 transition-all text-white backdrop-blur-sm cursor-pointer"
-        >
-          Sign In
-        </button>
+        {authActions}
 
-        {/* Mobile Menu Toggle */}
-        <button 
+        <button
+          type="button"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className="md:hidden flex items-center justify-center p-2 rounded-full border border-gray-600/50 text-white bg-white/5 backdrop-blur-sm transition-colors"
         >
@@ -47,28 +82,58 @@ export function LandingNavbar({ onSignIn }: LandingNavbarProps) {
         </button>
       </div>
 
-      {/* Mobile Menu Dropdown */}
       {isMobileMenuOpen && (
         <div className="absolute top-full left-0 right-0 mt-2 px-4 md:hidden">
           <div className="bg-[#050e1d]/95 backdrop-blur-xl border border-blue-900/30 rounded-2xl p-6 flex flex-col gap-6 shadow-2xl">
             <div className="flex flex-col gap-4">
-              <Link href="/docs" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-gray-300 hover:text-white transition-colors">Docs</Link>
-              <Link href="/about" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-gray-300 hover:text-white transition-colors">About</Link>
-              <Link href="/pricing" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-gray-300 hover:text-white transition-colors">Pricing</Link>
-              <Link href="/contact" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-gray-300 hover:text-white transition-colors">Contact</Link>
+              <CustomLink href="/docs" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-gray-300 hover:text-white transition-colors">
+                Docs
+              </CustomLink>
+              <CustomLink href="/about" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-gray-300 hover:text-white transition-colors">
+                About
+              </CustomLink>
+              <CustomLink href="/pricing" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-gray-300 hover:text-white transition-colors">
+                Pricing
+              </CustomLink>
+              <CustomLink href="/contact" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-gray-300 hover:text-white transition-colors">
+                Contact
+              </CustomLink>
             </div>
-            
-            <div className="h-px w-full bg-white/10 my-1"></div>
-            
-            <button
-              onClick={() => {
-                setIsMobileMenuOpen(false);
-                onSignIn();
-              }}
-              className="flex items-center justify-center w-full px-6 py-3.5 rounded-xl bg-primary text-white font-medium hover:bg-[#4d46db] transition-colors"
-            >
-              Sign In
-            </button>
+
+            <div className="h-px w-full bg-white/10 my-1" />
+
+            {!loading && firebaseUser && appUser?.isProfileComplete && (
+              <CustomLink
+                href="/dashboard"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center justify-center w-full px-6 py-3.5 rounded-xl bg-primary text-white font-medium hover:bg-[#4d46db] transition-colors gap-2"
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                Dashboard
+              </CustomLink>
+            )}
+            {!loading && firebaseUser && appUser && !appUser.isProfileComplete && (
+              <CustomLink
+                href="/complete-profile"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center justify-center w-full px-6 py-3.5 rounded-xl border border-indigo-500/40 text-indigo-200 font-medium hover:bg-indigo-500/10 transition-colors gap-2"
+              >
+                <UserCircle className="w-4 h-4" />
+                Complete profile
+              </CustomLink>
+            )}
+            {!loading && !firebaseUser && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  void onSignIn();
+                }}
+                className="flex items-center justify-center w-full px-6 py-3.5 rounded-xl bg-primary text-white font-medium hover:bg-[#4d46db] transition-colors"
+              >
+                Sign In
+              </button>
+            )}
           </div>
         </div>
       )}

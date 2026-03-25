@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuth } from "@/context/AuthContext";
 import { LandingNavbar } from "@/components/LandingNavbar";
 import { InteractiveGridPattern } from "@/components/ui/interactive-grid-pattern";
 import { Footer } from "@/components/footer";
@@ -8,16 +7,6 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 export default function NotFoundPage() {
-  const { signInWithGoogle } = useAuth();
-
-  const handleSignIn = async () => {
-    try {
-      await signInWithGoogle();
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   return (
     <main className="min-h-screen relative bg-[#030303] text-white font-sans selection:bg-indigo-500/30 flex flex-col">
       <div className="relative w-full overflow-hidden flex-1 pb-24">
@@ -35,7 +24,7 @@ export default function NotFoundPage() {
         </div>
 
         {/* Navbar */}
-        <LandingNavbar onSignIn={handleSignIn} />
+        <LandingNavbar />
 
         {/* 404 Content */}
         <section className="relative z-10 flex flex-col justify-center items-center text-center px-4 pt-32 pb-24 h-full min-h-[50vh]">

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { CustomLink } from "@/components/CustomLink";
 import { Layers } from "lucide-react";
 
 export function Footer() {
@@ -36,15 +36,15 @@ export function Footer() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:col-span-7 lg:pl-16 pt-2">
             <div className="flex flex-col gap-4">
               <h4 className="text-white text-sm font-medium mb-2">Resources</h4>
-              <Link href="/docs" className="text-gray-400 hover:text-white transition-colors text-sm font-light">Docs</Link>
-              <Link href="/about" className="text-gray-400 hover:text-white transition-colors text-sm font-light">About Us</Link>
-              <Link href="/pricing" className="text-gray-400 hover:text-white transition-colors text-sm font-light">Pricing</Link>
-              <Link href="/contact" className="text-gray-400 hover:text-white transition-colors text-sm font-light">Contact</Link>
+              <CustomLink href="/docs" className="text-gray-400 hover:text-white transition-colors text-sm font-light">Docs</CustomLink>
+              <CustomLink href="/about" className="text-gray-400 hover:text-white transition-colors text-sm font-light">About Us</CustomLink>
+              <CustomLink href="/pricing" className="text-gray-400 hover:text-white transition-colors text-sm font-light">Pricing</CustomLink>
+              <CustomLink href="/contact" className="text-gray-400 hover:text-white transition-colors text-sm font-light">Contact</CustomLink>
             </div>
             <div className="flex flex-col gap-4">
               <h4 className="text-white text-sm font-medium mb-2">Legal</h4>
-              <Link href="/privacy-policy" className="text-gray-400 hover:text-white transition-colors text-sm font-light">Privacy Policy</Link>
-              <Link href="/term-of-service" className="text-gray-400 hover:text-white transition-colors text-sm font-light">Terms of Service</Link>
+              <CustomLink href="/privacy-policy" className="text-gray-400 hover:text-white transition-colors text-sm font-light">Privacy Policy</CustomLink>
+              <CustomLink href="/term-of-service" className="text-gray-400 hover:text-white transition-colors text-sm font-light">Terms of Service</CustomLink>
               {/* <Link href="#" className="text-gray-400 hover:text-white transition-colors text-sm font-light">Cookie Policy</Link> */}
             </div>
           </div>

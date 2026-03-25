@@ -12,7 +12,7 @@ interface AuthContextType {
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
-  setAppUser: (user: User) => void;
+  setAppUser: (user: User | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -27,16 +27,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setFirebaseUser(user);
       if (user) {
+        setLoading(true);
         try {
           const res = await api.get("/auth/me");
-          setAppUser(res.data.data);
+          setAppUser(res.data.data ?? null);
         } catch {
           setAppUser(null);
+        } finally {
+          setLoading(false);
         }
       } else {
         setAppUser(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
     return unsubscribe;
   }, []);
@@ -46,16 +49,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const result = await signInWithPopup(auth, googleProvider);
       const idToken = await result.user.getIdToken();
       const res = await api.post("/auth/signin", { idToken });
-      const { data } = res.data;
-      if (data.status === "existing_user" || data.isProfileComplete) {
-        setAppUser(data.user || data);
+      const userData = res.data.data as User & {
+        firebaseUid?: string;
+        email?: string;
+        name?: string;
+      };
+
+      if (userData?.isProfileComplete === true) {
+        setAppUser(userData as User);
         router.push("/dashboard");
-      } else {
-        // new_user — store idToken in session for complete-profile page
-        sessionStorage.setItem("pendingIdToken", idToken);
-        sessionStorage.setItem("pendingUser", JSON.stringify(data));
-        router.push("/complete-profile");
+        return;
       }
+
+      if (userData?.isProfileComplete === false) {
+        setAppUser(userData as User);
+        router.push("/complete-profile");
+        return;
+      }
+
+      sessionStorage.setItem("pendingIdToken", idToken);
+      sessionStorage.setItem("pendingUser", JSON.stringify(userData));
+      setAppUser(null);
+      router.push("/complete-profile");
     } catch (error) {
       console.error("Sign in error:", error);
       throw error;
@@ -65,6 +80,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     await signOut(auth);
     setAppUser(null);
+    sessionStorage.removeItem("pendingIdToken");
+    sessionStorage.removeItem("pendingUser");
     router.push("/");
   };
 

@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuth } from "@/context/AuthContext";
 import { LandingNavbar } from "@/components/LandingNavbar";
 import { Footer } from "@/components/footer";
 import { InteractiveGridPattern } from "@/components/ui/interactive-grid-pattern";
@@ -13,8 +12,6 @@ export interface LegalLayoutProps {
 }
 
 export function LegalLayout({ title, lastUpdated, children }: LegalLayoutProps) {
-  const { signInWithGoogle } = useAuth();
-  
   return (
     <main className="min-h-screen relative bg-[#030303] text-white font-sans selection:bg-indigo-500/30">
         <div className="absolute top-0 left-0 z-0 h-[500px] w-full pointer-events-auto bg-[#030303]">
@@ -29,7 +26,7 @@ export function LegalLayout({ title, lastUpdated, children }: LegalLayoutProps) 
           <div className="absolute inset-0 bg-linear-to-t from-[#030303] via-[#030303]/80 to-transparent pointer-events-none" />
         </div>
 
-        <LandingNavbar onSignIn={signInWithGoogle} />
+        <LandingNavbar />
 
         <div className="relative z-10 max-w-4xl mx-auto px-6 pt-20 pb-32">
           <div className="mb-16 border-b border-white/10 pb-10">

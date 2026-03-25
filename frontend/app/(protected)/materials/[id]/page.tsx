@@ -5,8 +5,9 @@ import api from "@/lib/api";
 import { Material, ChatMessage } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Bot, User, FileText, Download, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Send, Bot, User, FileText, Download, Loader2, ChevronLeft, ChevronRight, Bookmark } from "lucide-react";
 import { useParams } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Document, Page, pdfjs } from "react-pdf";
@@ -17,6 +18,8 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 
 export default function MaterialPage() {
   const { id } = useParams<{ id: string }>();
+  const { appUser, setAppUser } = useAuth();
+  const bookmarked = Boolean(id && appUser?.bookmarkedMaterialIds?.includes(id));
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -80,6 +83,16 @@ export default function MaterialPage() {
       setMessages(prev => [...prev, { role: "assistant", content: "Sorry, something went wrong." }]);
     } finally {
       setSending(false);
+    }
+  };
+
+  const toggleBookmark = async () => {
+    if (!id) return;
+    try {
+      const res = await api.patch("/user/me/bookmarks", { materialId: id, add: !bookmarked });
+      if (res.data.data) setAppUser(res.data.data);
+    } catch {
+      /* ignore */
     }
   };
 
@@ -207,9 +220,21 @@ export default function MaterialPage() {
 
       {/* Chat Sidebar */}
       <div className="w-80 flex flex-col bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-        <div className="p-3 border-b border-gray-800">
-          <h3 className="text-sm font-semibold text-white">Chat with Document</h3>
-          <p className="text-xs text-gray-500 truncate">{material?.year ? `Year: ${material.year}` : "Unknown Year"}</p>
+        <div className="p-3 border-b border-gray-800 flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold text-white">Chat with Document</h3>
+            <p className="text-xs text-gray-500 truncate">{material?.year ? `Year: ${material.year}` : "Unknown Year"}</p>
+          </div>
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            title={bookmarked ? "Remove bookmark" : "Bookmark"}
+            onClick={() => void toggleBookmark()}
+            className={`h-8 w-8 shrink-0 ${bookmarked ? "text-amber-400 hover:text-amber-300" : "text-gray-400 hover:text-white"}`}
+          >
+            <Bookmark className={`w-4 h-4 ${bookmarked ? "fill-current" : ""}`} />
+          </Button>
         </div>
         <div className="flex-1 overflow-y-auto p-3 space-y-3">
           {messages.length === 0 && (
@@ -220,7 +245,7 @@ export default function MaterialPage() {
           )}
           {messages.map((msg, i) => (
             <div key={i} className={`flex gap-2 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
                 msg.role === "user" ? "bg-indigo-600" : "bg-gray-700"
               }`}>
                 {msg.role === "user" ? <User className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
@@ -254,7 +279,7 @@ export default function MaterialPage() {
           ))}
           {sending && (
             <div className="flex gap-2">
-              <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0">
+              <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center shrink-0">
                 <Bot className="w-3 h-3" />
               </div>
               <div className="bg-gray-800 rounded-xl px-3 py-2">

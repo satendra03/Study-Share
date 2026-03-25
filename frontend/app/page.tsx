@@ -1,8 +1,6 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Zap, ArrowRight, BookOpen, Layers, Search, MessageSquare, Shield, Clock, HelpCircle, FileText } from "lucide-react";
 import Link from "next/link";
 import { InteractiveGridPattern } from "@/components/ui/interactive-grid-pattern";
@@ -20,28 +18,43 @@ import { LandingNavbar } from "@/components/LandingNavbar";
 
 export default function LandingPage() {
   const { firebaseUser, appUser, loading, signInWithGoogle } = useAuth();
-  const router = useRouter();
 
-  useEffect(() => {
-    if (!loading && firebaseUser && appUser?.isProfileComplete) {
-      router.push("/dashboard");
-    }
-  }, [loading, firebaseUser, appUser, router]);
-
-  const handleSignIn = async () => {
-    try {
-      await signInWithGoogle();
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  const heroActions =
+    loading ? null : !firebaseUser ? (
+      <button
+        type="button"
+        onClick={() => void signInWithGoogle()}
+        className="flex items-center gap-3 bg-primary cursor-pointer hover:bg-[#4d46db] text-white px-7 py-3.5 rounded-full font-medium transition-all shadow-[0_0_30px_-5px_var(--primary)] text-sm md:text-base"
+      >
+        Get Started{" "}
+        <div className="bg-white rounded-full p-0.5 flex items-center justify-center">
+          <ArrowRight className="w-4 h-4 text-[#5C55F9]" strokeWidth={3} />
+        </div>
+      </button>
+    ) : appUser?.isProfileComplete ? (
+      <Link
+        href="/dashboard"
+        className="flex items-center gap-3 bg-primary hover:bg-[#4d46db] text-white px-7 py-3.5 rounded-full font-medium transition-all shadow-[0_0_30px_-5px_var(--primary)] text-sm md:text-base"
+      >
+        Dashboard
+        <div className="bg-white rounded-full p-0.5 flex items-center justify-center">
+          <ArrowRight className="w-4 h-4 text-[#5C55F9]" strokeWidth={3} />
+        </div>
+      </Link>
+    ) : (
+      <Link
+        href="/complete-profile"
+        className="flex items-center gap-3 bg-indigo-600 hover:bg-indigo-500 text-white px-7 py-3.5 rounded-full font-medium transition-all text-sm md:text-base"
+      >
+        Complete your profile
+        <ArrowRight className="w-4 h-4" strokeWidth={3} />
+      </Link>
+    );
 
   return (
-    <main className="min-h-screen relative bg-[#030303] text-white font-sans selection:bg-indigo-500/30">
-      {/* Hero Wrapper with Animated Grid Background */}
+    <main className="min-h-screen relative bg-[#030303] text-white font-sans selection:bg-indigo-500/30 antialiased">
       <div className="relative w-full overflow-hidden">
-        {/* Background Grid strictly for Hero with Fade-in Animation */}
-        <div className="absolute top-0 left-0 z-0 h-[700px] w-full pointer-events-auto bg-[#030303]">
+        <div className="absolute top-0 left-0 z-0 h-175 w-full pointer-events-auto bg-[#030303]">
           <InteractiveGridPattern
             className="absolute inset-0 h-full w-full opacity-35 mix-blend-screen animate-in fade-in duration-1500 ease-in-out"
             width={60}
@@ -53,48 +66,61 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-linear-to-t from-[#030303] via-[#030303]/80 to-transparent pointer-events-none" />
         </div>
 
-        {/* Navbar */}
-        <LandingNavbar onSignIn={handleSignIn} />
+        <LandingNavbar />
 
-        {/* Hero Section */}
-        <Hero 
+        <Hero
           badgeText="AI-Driven Learning Clarity"
-          title={<>Learning moves smarter <span className="text-gray-300">with you</span></>}
+          title={
+            <>
+              Learning moves smarter <span className="text-gray-300">with you</span>
+            </>
+          }
           description="Manage, track, and grow your knowledge with ease. Whether you're studying, researching, or coding, we've got you covered. Built to empower every kind of student."
-          primaryActionText="Get Started"
-          onPrimaryAction={handleSignIn}
+          heroActions={heroActions}
           trustMetrics={{
             amount: "20K+",
             text: "Trusted Students",
             avatars: [
               "https://i.pravatar.cc/100?img=33",
               "https://i.pravatar.cc/100?img=47",
-              "https://i.pravatar.cc/100?img=12"
-            ]
+              "https://i.pravatar.cc/100?img=12",
+            ],
           }}
           logos={[
-            <div key="google" className="text-2xl font-bold flex items-center gap-2">Google</div>,
-            <div key="microsoft" className="text-xl font-bold tracking-tight">Microsoft</div>,
-            <div key="stanford" className="text-xl font-extrabold tracking-tighter">STANFORD</div>,
-            <div key="harvard" className="text-xl font-semibold">Harvard</div>,
-            <div key="mit" className="text-xl font-bold flex items-center gap-1">MIT <span className="text-sm font-light">Press</span></div>
+            <div key="google" className="text-2xl font-bold flex items-center gap-2">
+              Google
+            </div>,
+            <div key="microsoft" className="text-xl font-bold tracking-tight">
+              Microsoft
+            </div>,
+            <div key="stanford" className="text-xl font-extrabold tracking-tighter">
+              STANFORD
+            </div>,
+            <div key="harvard" className="text-xl font-semibold">
+              Harvard
+            </div>,
+            <div key="mit" className="text-xl font-bold flex items-center gap-1">
+              MIT <span className="text-sm font-light">Press</span>
+            </div>,
           ]}
         />
       </div>
 
-      {/* Features Section */}
-      <FeatureCards 
+      <FeatureCards
         title={<>Transform Your Studies with Smart, Seamless, and AI-Powered Tools</>}
         description="Harness the power of AI to analyze your notes, track progress, and uncover growth opportunities. We simplify complex data so you can make clear, confident learning choices."
         cards={[
           {
             title: "Instant Doc Upload",
-            description: "Upload long PDFs and let our background worker extract the data.",
+            description:
+              "Upload long PDFs and let our background worker extract the data.",
             visual: (
               <div className="mt-auto bg-[#1a1c29] border border-gray-800 rounded-2xl h-56 relative overflow-hidden flex flex-col items-center justify-center shadow-inner">
                 <div className="bg-white/5 border border-white/10 p-5 rounded-xl w-[85%] shadow-lg backdrop-blur-sm transform -translate-y-2">
                   <div className="flex items-center gap-2 mb-4">
-                    <div className="bg-indigo-500/20 p-1.5 rounded flex items-center justify-center"><Zap className="w-3 h-3 text-indigo-400 fill-indigo-400/50" /></div>
+                    <div className="bg-indigo-500/20 p-1.5 rounded flex items-center justify-center">
+                      <Zap className="w-3 h-3 text-indigo-400 fill-indigo-400/50" />
+                    </div>
                     <div className="text-[11px] font-semibold tracking-wide text-gray-200 uppercase">Processing</div>
                   </div>
                   <div className="space-y-3 w-full">
@@ -103,13 +129,16 @@ export default function LandingPage() {
                     <div className="h-1.5 w-[85%] bg-gray-600/50 rounded-full"></div>
                   </div>
                 </div>
-                <div className="absolute top-4 right-4 bg-gray-900 border border-gray-700 text-gray-400 text-[9px] font-bold px-2 py-0.5 rounded shadow">1.2s</div>
+                <div className="absolute top-4 right-4 bg-gray-900 border border-gray-700 text-gray-400 text-[9px] font-bold px-2 py-0.5 rounded shadow">
+                  1.2s
+                </div>
               </div>
-            )
+            ),
           },
           {
             title: "Context-Aware AI Chat",
-            description: "Don't just read—converse. Ask questions and get answers extracted directly from materials.",
+            description:
+              "Don't just read—converse. Ask questions and get answers extracted directly from materials.",
             visual: (
               <div className="mt-auto bg-[#1a1c29] border border-gray-800 rounded-2xl h-56 relative overflow-hidden flex flex-col p-5 shadow-inner">
                 <div className="flex flex-col gap-3 w-full mt-auto mb-4">
@@ -135,11 +164,12 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
-            )
+            ),
           },
           {
             title: "Code Sandbox",
-            description: "Write, test, and execute Python and JavaScript code right in your browser next to your notes.",
+            description:
+              "Write, test, and execute Python and JavaScript code right in your browser next to your notes.",
             className: "bg-linear-to-br from-[#0c1328] to-[#040814] border-[#1a2342] relative overflow-hidden",
             visual: (
               <>
@@ -151,58 +181,85 @@ export default function LandingPage() {
                   <div className="text-6xl md:text-7xl font-extralight text-white mb-4 font-mono tracking-tighter opacity-90">{`</>`}</div>
                 </div>
               </>
-            )
-          }
+            ),
+          },
         ]}
       />
 
-      {/* Steps Section */}
-      <Steps 
+      <Steps
         title="Your Learning Journey, Simplified in 3 Steps"
         description="Harness the power of AI to analyze your materials, track progress, and uncover growth opportunities. We simplify complex data so you can make clear, confident decisions."
         steps={[
-          { title: "Upload Materials", description: "Link your notes, papers, and PDFs securely to get a full knowledge picture.", icon: <BookOpen className="w-7 h-7 text-gray-300/80" strokeWidth={1.5} /> },
-          { title: "Get Smart Insights", description: "Our AI breaks down your documents and surfaces what matters—so you can focus on learning.", icon: <Search className="w-7 h-7 text-gray-300/80" strokeWidth={1.5} /> },
-          { title: "Take Action", description: "Chat with your documents seamlessly to extract insights and clarify concepts.", icon: <Zap className="w-7 h-7 text-gray-300/80" strokeWidth={1.5} /> },
+          {
+            title: "Upload Materials",
+            description: "Link your notes, papers, and PDFs securely to get a full knowledge picture.",
+            icon: <BookOpen className="w-7 h-7 text-gray-300/80" strokeWidth={1.5} />,
+          },
+          {
+            title: "Get Smart Insights",
+            description:
+              "Our AI breaks down your documents and surfaces what matters—so you can focus on learning.",
+            icon: <Search className="w-7 h-7 text-gray-300/80" strokeWidth={1.5} />,
+          },
+          {
+            title: "Take Action",
+            description: "Chat with your documents seamlessly to extract insights and clarify concepts.",
+            icon: <Zap className="w-7 h-7 text-gray-300/80" strokeWidth={1.5} />,
+          },
         ]}
       />
 
-      {/* Feature Grid Section */}
-      <FeatureGrid 
+      <FeatureGrid
         title="Powering Your Learning Future"
         description="Explore the key features designed to simplify, secure, and supercharge your study journey."
         features={[
-          { icon: <Shield className="w-6 h-6 text-white" strokeWidth={1.5} />, title: "Secure Access", desc: "Your data is protected with cutting-edge encryption and secure authentication." },
-          { icon: <Clock className="w-6 h-6 text-white" strokeWidth={1.5} />, title: "Instant Access", desc: "Get to your reading materials instantly, anytime, anywhere—no delays, no hassle." },
-          { icon: <Search className="w-6 h-6 text-white" strokeWidth={1.5} />, title: "Smart Search", desc: "Instantly pinpoint the exact paragraphs and topics you need across all your files." },
-          { icon: <MessageSquare className="w-6 h-6 text-white" strokeWidth={1.5} />, title: "Easy Organization", desc: "Track your tasks effortlessly and stay on top of your study goals with AI assistance." },
-          { icon: <FileText className="w-6 h-6 text-white" strokeWidth={1.5} />, title: "Flexible Materials", desc: "Access notes tailored to your courses with complete syllabus coverage." },
-          { icon: <HelpCircle className="w-6 h-6 text-white" strokeWidth={1.5} />, title: "24/7 AI Support", desc: "Our AI tutor is here to help you anytime, ensuring peace of mind and 24/7 assistance." }
+          {
+            icon: <Shield className="w-6 h-6 text-white" strokeWidth={1.5} />,
+            title: "Secure Access",
+            desc: "Your data is protected with cutting-edge encryption and secure authentication.",
+          },
+          {
+            icon: <Clock className="w-6 h-6 text-white" strokeWidth={1.5} />,
+            title: "Instant Access",
+            desc: "Get to your reading materials instantly, anytime, anywhere—no delays, no hassle.",
+          },
+          {
+            icon: <Search className="w-6 h-6 text-white" strokeWidth={1.5} />,
+            title: "Smart Search",
+            desc: "Instantly pinpoint the exact paragraphs and topics you need across all your files.",
+          },
+          {
+            icon: <MessageSquare className="w-6 h-6 text-white" strokeWidth={1.5} />,
+            title: "Easy Organization",
+            desc: "Track your tasks effortlessly and stay on top of your study goals with AI assistance.",
+          },
+          {
+            icon: <FileText className="w-6 h-6 text-white" strokeWidth={1.5} />,
+            title: "Flexible Materials",
+            desc: "Access notes tailored to your courses with complete syllabus coverage.",
+          },
+          {
+            icon: <HelpCircle className="w-6 h-6 text-white" strokeWidth={1.5} />,
+            title: "24/7 AI Support",
+            desc: "Our AI tutor is here to help you anytime, ensuring peace of mind and 24/7 assistance.",
+          },
         ]}
       />
 
-      {/* Pricing Section */}
       <Pricing />
 
-      {/* Testimonials */}
-      <TestimonialsSection 
-        title="What Our Students Say"
-        items={testimonials}
-      />
+      <TestimonialsSection title="What Our Students Say" items={testimonials} />
 
-      {/* FAQ Section */}
-      <FaqSection 
+      <FaqSection
         title="Have Questions About Our Platform? Explore Answers to Your Most Common Concerns"
         description="Find quick solutions to common queries and learn more about how our learning platform works."
         items={faqs}
         contactText="My question is not here."
         contactActionLabel="Contact Us"
-        onContactAction={() => console.log('Contact Us')}
+        onContactAction={() => console.log("Contact Us")}
       />
 
-      {/* Footer */}
       <Footer />
-
     </main>
   );
 }

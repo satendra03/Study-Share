@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+import { CustomLink } from "@/components/CustomLink";
 import { useAuth } from "@/context/AuthContext";
 import { BookOpen, LayoutDashboard, Upload, Terminal, MessageSquare, LogOut, User } from "lucide-react";
 import {
@@ -26,7 +26,7 @@ export default function Navbar() {
 
       <div className="hidden md:flex items-center gap-1">
         {navLinks.map(({ href, label, icon: Icon }) => (
-          <Link key={href} href={href}
+          <CustomLink key={href} href={href}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors text-sm">
             <Icon className="w-4 h-4" />
             {label}

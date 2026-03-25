@@ -5,6 +5,8 @@ export interface HeroProps {
   badgeText: string;
   title: ReactNode;
   description: string;
+  /** When set, replaces the default primary CTA (e.g. Dashboard link vs Get Started). */
+  heroActions?: ReactNode;
   primaryActionText?: string;
   onPrimaryAction?: () => void;
   trustMetrics?: {
@@ -15,7 +17,7 @@ export interface HeroProps {
   logos?: ReactNode[];
 }
 
-export function Hero({ badgeText, title, description, primaryActionText, onPrimaryAction, trustMetrics, logos }: HeroProps) {
+export function Hero({ badgeText, title, description, heroActions, primaryActionText, onPrimaryAction, trustMetrics, logos }: HeroProps) {
   return (
     <>
       <section className="relative z-10 flex flex-col justify-center items-center text-center px-4 pt-28 pb-16">
@@ -32,14 +34,19 @@ export function Hero({ badgeText, title, description, primaryActionText, onPrima
         </p>
 
         <div className="flex flex-col sm:flex-row items-center gap-6">
-          {primaryActionText && onPrimaryAction && (
-            <button
-              onClick={onPrimaryAction}
-              className="flex items-center gap-3 bg-primary cursor-pointer hover:bg-[#4d46db] text-white px-7 py-3.5 rounded-full font-medium transition-all shadow-[0_0_30px_-5px_var(--primary)] text-sm md:text-base"
-            >
-              {primaryActionText} <div className="bg-white rounded-full p-0.5 flex items-center justify-center"><ArrowRight className="w-4 h-4 text-[#5C55F9]" strokeWidth={3} /></div>
-            </button>
-          )}
+          {heroActions ??
+            (primaryActionText && onPrimaryAction ? (
+              <button
+                type="button"
+                onClick={onPrimaryAction}
+                className="flex items-center gap-3 bg-primary cursor-pointer hover:bg-[#4d46db] text-white px-7 py-3.5 rounded-full font-medium transition-all shadow-[0_0_30px_-5px_var(--primary)] text-sm md:text-base"
+              >
+                {primaryActionText}{" "}
+                <div className="bg-white rounded-full p-0.5 flex items-center justify-center">
+                  <ArrowRight className="w-4 h-4 text-[#5C55F9]" strokeWidth={3} />
+                </div>
+              </button>
+            ) : null)}
 
           {trustMetrics && (
             <div className="flex items-center gap-3">

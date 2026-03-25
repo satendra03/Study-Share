@@ -22,6 +22,7 @@ export interface User {
   studentProfile?: StudentProfile | null;
   teacherProfile?: TeacherProfile | null;
   displayName?: string;
+  bookmarkedMaterialIds?: string[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -43,6 +44,7 @@ export interface Material {
   semester?: string;
   createdAt?: string;
   updatedAt?: string;
+  title?: string;
 }
 
 export interface ChatMessage {

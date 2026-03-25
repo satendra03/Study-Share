@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuth } from "@/context/AuthContext";
 import { LandingNavbar } from "@/components/LandingNavbar";
 import { Footer } from "@/components/footer";
 import Link from "next/link";
@@ -8,16 +7,7 @@ import { Search, ChevronRight, Book, Code, Bot, FolderUp } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
-  const { signInWithGoogle } = useAuth();
   const pathname = usePathname();
-
-  const handleSignIn = async () => {
-    try {
-      await signInWithGoogle();
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
   const navItems = [
     { title: "Introduction", href: "/docs", icon: Book },
@@ -37,7 +27,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
       
       {/* Top Navigation */}
       <div className="sticky top-0 z-50 bg-[#030303]/80 backdrop-blur-xl border-b border-white/5 mx-auto">
-        <LandingNavbar onSignIn={handleSignIn} />
+        <LandingNavbar />
       </div>
 
       <div className="max-w-7xl mx-auto px-6 w-full flex relative z-10 transition-all">

@@ -1,8 +1,5 @@
 "use client";
 
-import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { LandingNavbar } from "@/components/LandingNavbar";
 import { Hero } from "@/components/Hero";
 import { TeamGrid } from "@/components/TeamGrid";
@@ -52,28 +49,11 @@ const teamMembers = [
 ];
 
 export default function AboutPage() {
-  const { firebaseUser, appUser, loading, signInWithGoogle } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && firebaseUser && appUser?.isProfileComplete) {
-      router.push("/dashboard");
-    }
-  }, [loading, firebaseUser, appUser, router]);
-
-  const handleSignIn = async () => {
-    try {
-      await signInWithGoogle();
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   return (
     <main className="min-h-screen relative bg-[#030303] text-white font-sans selection:bg-indigo-500/30">
       <div className="relative w-full overflow-hidden pb-12">
         {/* Background Grid strictly for Hero */}
-        <div className="absolute top-0 left-0 z-0 h-[700px] w-full pointer-events-auto bg-[#030303]">
+        <div className="absolute top-0 left-0 z-0 h-175 w-full pointer-events-auto bg-[#030303]">
           <InteractiveGridPattern
             className="absolute inset-0 h-full w-full opacity-35 mix-blend-screen animate-in fade-in duration-1500 ease-in-out"
             width={60}
@@ -86,7 +66,7 @@ export default function AboutPage() {
         </div>
 
         {/* Navbar */}
-        <LandingNavbar onSignIn={handleSignIn} />
+        <LandingNavbar />
 
         {/* Hero Section */}
         <Hero 

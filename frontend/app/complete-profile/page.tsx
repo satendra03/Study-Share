@@ -28,7 +28,7 @@ export default function CompleteProfilePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
-  const { firebaseUser, appUser, loading: authLoading, setAppUser } = useAuth();
+  const { firebaseUser, appUser, loading: authLoading, backendError, setAppUser } = useAuth();
 
   const [studentForm, setStudentForm] = useState({
     fullName: "",
@@ -49,10 +49,15 @@ export default function CompleteProfilePage() {
       router.replace("/");
       return;
     }
+    // Backend is down — complete-profile can't work, go home
+    if (backendError && !appUser) {
+      router.replace("/");
+      return;
+    }
     if (appUser?.isProfileComplete) {
       router.replace("/dashboard");
     }
-  }, [authLoading, firebaseUser, appUser, router]);
+  }, [authLoading, firebaseUser, appUser, backendError, router]);
 
   const handleStudentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,7 +109,7 @@ export default function CompleteProfilePage() {
     }
   };
 
-  if (authLoading || (firebaseUser && appUser?.isProfileComplete)) {
+  if (authLoading || (firebaseUser && appUser?.isProfileComplete) || (backendError && !appUser)) {
     return (
       <div className="min-h-screen bg-[#030303] flex items-center justify-center">
         <div className="w-10 h-10 border-2 border-[#5C55F9] border-t-transparent rounded-full animate-spin" />

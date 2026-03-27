@@ -6,25 +6,33 @@ import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardFooter from "@/components/DashboardFooter";
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
-  const { firebaseUser, appUser, loading } = useAuth();
+  const { firebaseUser, appUser, loading, backendError } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
     if (!loading) {
+      // Not signed in at all → go home
       if (!firebaseUser) {
         router.push("/");
-      } else {
-        const profileComplete = Boolean(
-          appUser?.isProfileComplete || appUser?.studentProfile || appUser?.teacherProfile,
-        );
-        if (!appUser || !profileComplete) {
-          router.push("/complete-profile");
-        }
+        return;
+      }
+
+      // Backend is down → redirect to home (protected routes can't function)
+      if (backendError && !appUser) {
+        router.push("/");
+        return;
+      }
+
+      // Profile genuinely not complete (appUser exists but incomplete)
+      if (appUser && !appUser.isProfileComplete && !appUser.studentProfile && !appUser.teacherProfile) {
+        router.push("/complete-profile");
+        return;
       }
     }
-  }, [loading, firebaseUser, appUser, router]);
+  }, [loading, firebaseUser, appUser, backendError, router]);
 
+  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-[#030303] flex flex-col items-center justify-center relative overflow-hidden">
@@ -52,7 +60,14 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
     );
   }
 
+  // Not signed in → render nothing (useEffect redirects)
   if (!firebaseUser) return null;
+
+  // Backend is down → render nothing (useEffect redirects)
+  if (backendError && !appUser) return null;
+
+  // Profile not complete → render nothing (useEffect redirects)
+  if (appUser && !appUser.isProfileComplete && !appUser.studentProfile && !appUser.teacherProfile) return null;
 
   const isMaterialViewer = pathname?.startsWith("/materials/");
 

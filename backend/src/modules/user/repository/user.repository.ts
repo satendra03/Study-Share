@@ -1,5 +1,4 @@
 import { db } from "@/config/firebase.config.js";
-import { FieldValue } from "firebase-admin/firestore";
 import type { User } from "@/modules/user/user.model.js";
 import { getDisplayName } from "@/modules/user/user.model.js";
 import type { UserRepositoryInterface } from "./user.repository.interface.js";
@@ -7,11 +6,6 @@ import type { UserRepositoryInterface } from "./user.repository.interface.js";
 const usersCollection = db.collection("users");
 
 export class UserRepository implements UserRepositoryInterface {
-    getUserCount = async (): Promise<number> => {
-        const snapshot = await usersCollection.count().get();
-        return snapshot.data().count;
-    }
-
     /** Find a user by their Firebase UID */
     findByFirebaseUid = async (firebaseUid: string): Promise<User | null> => {
         console.log("Firebase UID: ", firebaseUid);
@@ -162,14 +156,19 @@ export class UserRepository implements UserRepositoryInterface {
         });
     }
 
-    /** Add or remove a material bookmark */
+    /** Get total user count */
+    getUserCount = async (): Promise<number> => {
+        const snapshot = await usersCollection.count().get();
+        return snapshot.data().count;
+    }
+
+    /** Toggle bookmark for a material */
     toggleBookmark = async (userId: string, materialId: string, add: boolean): Promise<void> => {
-        const updatedMaterials = add
-            ? FieldValue.arrayUnion(materialId)
-            : FieldValue.arrayRemove(materialId);
-        
+        const { FieldValue } = await import("firebase-admin/firestore");
         await usersCollection.doc(userId).update({
-            bookmarkedMaterialIds: updatedMaterials,
+            bookmarkedMaterialIds: add
+                ? FieldValue.arrayUnion(materialId)
+                : FieldValue.arrayRemove(materialId),
             updatedAt: new Date(),
         });
     }

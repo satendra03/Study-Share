@@ -11,6 +11,7 @@ interface AuthContextType {
   appUser: User | null;
   loading: boolean;
   profileLoaded: boolean;
+  backendError: boolean;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   setAppUser: (user: User | null) => void;
@@ -23,6 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [appUser, setAppUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileLoaded, setProfileLoaded] = useState(false);
+  const [backendError, setBackendError] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -30,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setFirebaseUser(user);
       if (user) {
         setLoading(true);
+        setBackendError(false);
         try {
         const token = await user.getIdToken();
         const res = await api.get("/auth/me", {
@@ -38,9 +41,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           },
         });
         setAppUser(res.data.data ?? null);
-      } catch (error) {
+        setBackendError(false);
+      } catch (error: unknown) {
         console.error("Error fetching profile on auth state change:", error);
         setAppUser(null);
+
+        // Only mark backendError if the server is genuinely unreachable (network error).
+        // HTTP errors (401, 404, 500, etc.) mean the backend IS running — just the 
+        // request failed for auth/routing reasons, so backendError stays false.
+        const axiosErr = error as { response?: { status?: number }; code?: string };
+        const isNetworkError = !axiosErr.response || axiosErr.code === "ERR_NETWORK";
+        setBackendError(isNetworkError);
       } finally {
         setLoading(false);
         setProfileLoaded(true);
@@ -102,6 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         appUser,
         loading,
         profileLoaded,
+        backendError,
         signInWithGoogle,
         logout,
         setAppUser,

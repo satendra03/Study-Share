@@ -20,7 +20,7 @@ import { Footer } from "@/components/footer";
 import { LandingNavbar } from "@/components/LandingNavbar";
 
 export default function LandingPage() {
-  const { firebaseUser, appUser, loading, profileLoaded, signInWithGoogle } = useAuth();
+  const { firebaseUser, appUser, loading, profileLoaded, backendError, signInWithGoogle } = useAuth();
 
   const [stats, setStats] = useState<{users: number; status: "online" | "offline" | "checking"}>({ 
     users: 0, 
@@ -31,13 +31,19 @@ export default function LandingPage() {
     api.get("/user/stats/public")
       .then(res => {
         const data = res.data;
+        console.log("this is data", data);
         if (data.status === "online") {
           setStats({ users: data.users || 0, status: "online" });
         } else {
           setStats(s => ({ ...s, status: "offline" }));
         }
       })
-      .catch(() => setStats(s => ({ ...s, status: "offline" })));
+      .catch((err) => {
+        // Only show "Under Maintenance" for genuine network errors (backend unreachable).
+        // HTTP errors (404, 500, etc.) mean backend IS running — just hide the badge.
+        const isNetworkError = !err.response || err.code === "ERR_NETWORK";
+        setStats(s => ({ ...s, status: isNetworkError ? "offline" : "online" }));
+      });
   }, []);
 
   const heroProfileComplete = Boolean(
@@ -46,33 +52,53 @@ export default function LandingPage() {
 
   const heroLoading = loading || (firebaseUser !== null && !profileLoaded);
 
-  const heroActions =
-    heroLoading ? (
-      <div className="flex items-center gap-3 bg-gray-700/50 cursor-not-allowed text-gray-400 px-7 py-3.5 rounded-full font-medium transition-all text-sm md:text-base">
-        <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-        Loading...
-      </div>
-    ) : !firebaseUser ? (
-      <Link
-        href="/auth"
-        className="flex items-center gap-3 bg-primary cursor-pointer hover:bg-[#4d46db] text-white px-7 py-3.5 rounded-full font-medium transition-all shadow-[0_0_30px_-5px_var(--primary)] text-sm md:text-base"
-      >
-        Get Started{" "}
-        <div className="bg-white rounded-full p-0.5 flex items-center justify-center">
-          <ArrowRight className="w-4 h-4 text-[#5C55F9]" strokeWidth={3} />
+  // Determine the correct hero action button:
+  // 1. Loading → spinner
+  // 2. Not logged in / backend down → "Get Started" (no authenticated features work)
+  // 3. Profile complete → "Dashboard"
+  // 4. Profile genuinely not complete → "Complete your profile"
+  const getHeroActions = () => {
+    if (heroLoading) {
+      return (
+        <div className="flex items-center gap-3 bg-gray-700/50 cursor-not-allowed text-gray-400 px-7 py-3.5 rounded-full font-medium transition-all text-sm md:text-base">
+          <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+          Loading...
         </div>
-      </Link>
-    ) : heroProfileComplete ? (
-      <Link
-        href="/dashboard"
-        className="flex items-center gap-3 bg-primary hover:bg-[#4d46db] text-white px-7 py-3.5 rounded-full font-medium transition-all shadow-[0_0_30px_-5px_var(--primary)] text-sm md:text-base"
-      >
-        Dashboard
-        <div className="bg-white rounded-full p-0.5 flex items-center justify-center">
-          <ArrowRight className="w-4 h-4 text-[#5C55F9]" strokeWidth={3} />
-        </div>
-      </Link>
-    ) : (
+      );
+    }
+
+    // Not logged in OR backend is down (nothing works without backend)
+    if (!firebaseUser || (backendError && !appUser)) {
+      return (
+        <Link
+          href="/auth"
+          className="flex items-center gap-3 bg-primary cursor-pointer hover:bg-[#4d46db] text-white px-7 py-3.5 rounded-full font-medium transition-all shadow-[0_0_30px_-5px_var(--primary)] text-sm md:text-base"
+        >
+          Get Started{" "}
+          <div className="bg-white rounded-full p-0.5 flex items-center justify-center">
+            <ArrowRight className="w-4 h-4 text-[#5C55F9]" strokeWidth={3} />
+          </div>
+        </Link>
+      );
+    }
+
+    // Profile is complete
+    if (heroProfileComplete) {
+      return (
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-3 bg-primary hover:bg-[#4d46db] text-white px-7 py-3.5 rounded-full font-medium transition-all shadow-[0_0_30px_-5px_var(--primary)] text-sm md:text-base"
+        >
+          Dashboard
+          <div className="bg-white rounded-full p-0.5 flex items-center justify-center">
+            <ArrowRight className="w-4 h-4 text-[#5C55F9]" strokeWidth={3} />
+          </div>
+        </Link>
+      );
+    }
+
+    // Profile genuinely not complete
+    return (
       <Link
         href="/complete-profile"
         className="flex items-center gap-3 bg-indigo-600 hover:bg-indigo-500 text-white px-7 py-3.5 rounded-full font-medium transition-all text-sm md:text-base"
@@ -81,6 +107,9 @@ export default function LandingPage() {
         <ArrowRight className="w-4 h-4" strokeWidth={3} />
       </Link>
     );
+  };
+
+  const heroActions = getHeroActions();
 
   return (
     <main className="min-h-screen relative bg-[#030303] text-white font-sans selection:bg-indigo-500/30 antialiased">

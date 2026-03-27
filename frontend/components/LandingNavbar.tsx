@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 
 export function LandingNavbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { firebaseUser, appUser, loading, profileLoaded, signInWithGoogle } = useAuth();
+  const { firebaseUser, appUser, loading, profileLoaded, backendError, signInWithGoogle } = useAuth();
 
   const isProfileComplete = Boolean(
     appUser?.isProfileComplete ||
@@ -18,6 +18,11 @@ export function LandingNavbar() {
 
   const isLoadingState = loading || (firebaseUser !== null && !profileLoaded);
 
+  // Effective sign-in state: user is "signed in" only if Firebase auth is present
+  // AND backend is reachable. If backend is down, treat as not signed in
+  // since no authenticated features work anyway.
+  const isEffectivelySignedIn = Boolean(firebaseUser && !backendError);
+
   const authActions = isLoadingState ? (
     <div className="hidden md:flex items-center justify-center px-6 py-2.5 rounded-full border border-gray-600/50 text-sm font-medium text-gray-400 backdrop-blur-sm cursor-not-allowed">
       <div className="flex items-center gap-2">
@@ -25,7 +30,7 @@ export function LandingNavbar() {
         Loading...
       </div>
     </div>
-  ) : !firebaseUser ? (
+  ) : !isEffectivelySignedIn ? (
     <CustomLink
       href="/auth"
       className="hidden md:flex items-center justify-center px-6 py-2.5 rounded-full border border-gray-600/50 text-sm font-medium hover:bg-white/5 transition-all text-white backdrop-blur-sm cursor-pointer"
@@ -112,7 +117,7 @@ export function LandingNavbar() {
                 <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
                 Loading...
               </div>
-            ) : !firebaseUser ? (
+            ) : !isEffectivelySignedIn ? (
               <CustomLink
                 href="/auth"
                 onClick={() => setIsMobileMenuOpen(false)}

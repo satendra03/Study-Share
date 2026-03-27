@@ -5,6 +5,9 @@ import { Zap, ArrowRight, BookOpen, Layers, Search, MessageSquare, Shield, Clock
 import Link from "next/link";
 import { InteractiveGridPattern } from "@/components/ui/interactive-grid-pattern";
 import { testimonials, faqs } from "@/lib/data";
+import { useState, useEffect } from "react";
+
+import api from "@/lib/api";
 
 import { Hero } from "@/components/Hero";
 import { FeatureCards } from "@/components/FeatureCards";
@@ -19,6 +22,24 @@ import { LandingNavbar } from "@/components/LandingNavbar";
 export default function LandingPage() {
   const { firebaseUser, appUser, loading, profileLoaded, signInWithGoogle } = useAuth();
 
+  const [stats, setStats] = useState<{users: number; status: "online" | "offline" | "checking"}>({ 
+    users: 0, 
+    status: "checking" 
+  });
+
+  useEffect(() => {
+    api.get("/user/stats/public")
+      .then(res => {
+        const data = res.data;
+        if (data.status === "online") {
+          setStats({ users: data.users || 0, status: "online" });
+        } else {
+          setStats(s => ({ ...s, status: "offline" }));
+        }
+      })
+      .catch(() => setStats(s => ({ ...s, status: "offline" })));
+  }, []);
+
   const heroProfileComplete = Boolean(
     appUser?.isProfileComplete || appUser?.studentProfile || appUser?.teacherProfile,
   );
@@ -32,16 +53,15 @@ export default function LandingPage() {
         Loading...
       </div>
     ) : !firebaseUser ? (
-      <button
-        type="button"
-        onClick={() => void signInWithGoogle()}
+      <Link
+        href="/auth"
         className="flex items-center gap-3 bg-primary cursor-pointer hover:bg-[#4d46db] text-white px-7 py-3.5 rounded-full font-medium transition-all shadow-[0_0_30px_-5px_var(--primary)] text-sm md:text-base"
       >
         Get Started{" "}
         <div className="bg-white rounded-full p-0.5 flex items-center justify-center">
           <ArrowRight className="w-4 h-4 text-[#5C55F9]" strokeWidth={3} />
         </div>
-      </button>
+      </Link>
     ) : heroProfileComplete ? (
       <Link
         href="/dashboard"
@@ -80,6 +100,7 @@ export default function LandingPage() {
         <LandingNavbar />
 
         <Hero
+          serverStatus={stats.status}
           badgeText="AI-Driven Learning Clarity"
           title={
             <>
@@ -89,7 +110,7 @@ export default function LandingPage() {
           description="Manage, track, and grow your knowledge with ease. Whether you're studying, researching, or coding, we've got you covered. Built to empower every kind of student."
           heroActions={heroActions}
           trustMetrics={{
-            amount: "20K+",
+            amount: stats.users < 1000 ? stats.users.toString() : `${(stats.users / 1000).toFixed(1).replace('.0', '')}K+`,
             text: "Trusted Students",
             avatars: [
               "https://i.pravatar.cc/100?img=33",
@@ -267,7 +288,7 @@ export default function LandingPage() {
         items={faqs}
         contactText="My question is not here."
         contactActionLabel="Contact Us"
-        onContactAction={() => console.log("Contact Us")}
+        contactActionHref="/contact"
       />
 
       <Footer />

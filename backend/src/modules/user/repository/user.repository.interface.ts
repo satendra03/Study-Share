@@ -1,6 +1,7 @@
 import { type User } from "../user.model.js";
 
 export interface UserRepositoryInterface {
+    getUserCount(): Promise<number>;
     findByFirebaseUid(firebaseUid: string): Promise<User | null>;
     findByEmail(email: string): Promise<User | null>;
     findById(id: string): Promise<User | null>;

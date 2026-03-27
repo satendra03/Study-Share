@@ -1,6 +1,7 @@
 import { type User } from "../user.model.js";
 
 export interface UserServiceInterface {
+    getPublicStats(): Promise<{ users: number; status: string }>;
     getUserByFirebaseUid(firebaseUid: string): Promise<User>;
     getUserByFirebaseUidOrNull(firebaseUid: string): Promise<User | null>;
     getUserByEmail(email: string): Promise<User>;

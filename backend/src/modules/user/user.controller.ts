@@ -10,6 +10,15 @@ export class UserController {
         private materialService: MaterialServiceInterface
     ) { }
 
+    getPublicStats = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const stats = await this.userService.getPublicStats();
+            res.status(200).json(stats);
+        } catch (error) {
+            next(error);
+        }
+    }
+
     getById = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const userId = req.params.id as string;

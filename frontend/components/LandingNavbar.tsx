@@ -9,14 +9,6 @@ export function LandingNavbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { firebaseUser, appUser, loading, profileLoaded, signInWithGoogle } = useAuth();
 
-  const onSignIn = async () => {
-    try {
-      await signInWithGoogle();
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
   const isProfileComplete = Boolean(
     appUser?.isProfileComplete ||
       appUser?.studentProfile ||
@@ -34,13 +26,12 @@ export function LandingNavbar() {
       </div>
     </div>
   ) : !firebaseUser ? (
-    <button
-      type="button"
-      onClick={onSignIn}
+    <CustomLink
+      href="/auth"
       className="hidden md:flex items-center justify-center px-6 py-2.5 rounded-full border border-gray-600/50 text-sm font-medium hover:bg-white/5 transition-all text-white backdrop-blur-sm cursor-pointer"
     >
       Sign In
-    </button>
+    </CustomLink>
   ) : isProfileComplete ? (
     <CustomLink
       href="/dashboard"
@@ -122,16 +113,13 @@ export function LandingNavbar() {
                 Loading...
               </div>
             ) : !firebaseUser ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  void onSignIn();
-                }}
+              <CustomLink
+                href="/auth"
+                onClick={() => setIsMobileMenuOpen(false)}
                 className="flex items-center justify-center w-full px-6 py-3.5 rounded-xl bg-primary text-white font-medium hover:bg-[#4d46db] transition-colors"
               >
                 Sign In
-              </button>
+              </CustomLink>
             ) : isProfileComplete ? (
               <CustomLink
                 href="/dashboard"

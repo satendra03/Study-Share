@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { ChevronUp } from "lucide-react";
 
+import { CustomLink } from "@/components/CustomLink";
+
 export interface FaqItem {
   q: string;
   a: string;
@@ -15,9 +17,10 @@ export interface FaqSectionProps {
   contactText?: string;
   contactActionLabel?: string;
   onContactAction?: () => void;
+  contactActionHref?: string;
 }
 
-export function FaqSection({ title, description, items, contactText, contactActionLabel, onContactAction }: FaqSectionProps) {
+export function FaqSection({ title, description, items, contactText, contactActionLabel, onContactAction, contactActionHref }: FaqSectionProps) {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   return (
@@ -61,9 +64,15 @@ export function FaqSection({ title, description, items, contactText, contactActi
             {contactText && contactActionLabel && (
               <div className="flex flex-col sm:flex-row items-center justify-end gap-4 mt-8 pt-4">
                 <span className="text-sm font-light text-blue-200">{contactText}</span>
-                <button onClick={onContactAction} className="bg-white text-black px-6 py-2.5 rounded-full text-sm font-medium hover:bg-gray-100 transition-colors shadow-lg">
-                  {contactActionLabel}
-                </button>
+                {contactActionHref ? (
+                  <CustomLink href={contactActionHref} className="bg-white text-black px-6 py-2.5 rounded-full text-sm font-medium hover:bg-gray-100 transition-colors shadow-lg cursor-pointer inline-flex items-center justify-center">
+                    {contactActionLabel}
+                  </CustomLink>
+                ) : (
+                  <button onClick={onContactAction} className="bg-white text-black px-6 py-2.5 rounded-full text-sm font-medium hover:bg-gray-100 transition-colors shadow-lg cursor-pointer">
+                    {contactActionLabel}
+                  </button>
+                )}
               </div>
             )}
           </div>

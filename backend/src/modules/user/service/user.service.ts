@@ -5,6 +5,15 @@ import { type User } from "@/modules/user/user.model.js";
 export class UserService implements UserServiceInterface {
     constructor(private userRepository: UserRepositoryInterface) { }
     
+    async getPublicStats(): Promise<{ users: number; status: string }> {
+        const usersCount = await this.userRepository.getUserCount();
+        const baseOffset = 0;
+        return {
+            users: usersCount + baseOffset,
+            status: "online"
+        };
+    }
+
     async getUserById(userId: string): Promise<User> {
         const user = await this.userRepository.findById(userId);
         if (!user) {

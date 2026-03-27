@@ -7,6 +7,11 @@ import type { UserRepositoryInterface } from "./user.repository.interface.js";
 const usersCollection = db.collection("users");
 
 export class UserRepository implements UserRepositoryInterface {
+    getUserCount = async (): Promise<number> => {
+        const snapshot = await usersCollection.count().get();
+        return snapshot.data().count;
+    }
+
     /** Find a user by their Firebase UID */
     findByFirebaseUid = async (firebaseUid: string): Promise<User | null> => {
         console.log("Firebase UID: ", firebaseUid);

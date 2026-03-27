@@ -2,7 +2,8 @@ import { ReactNode } from "react";
 import { ArrowRight, Zap } from "lucide-react";
 
 export interface HeroProps {
-  badgeText: string;
+  serverStatus?: "online" | "offline" | "checking";
+  badgeText?: string;
   title: ReactNode;
   description: string;
   /** When set, replaces the default primary CTA (e.g. Dashboard link vs Get Started). */
@@ -17,12 +18,28 @@ export interface HeroProps {
   logos?: ReactNode[];
 }
 
-export function Hero({ badgeText, title, description, heroActions, primaryActionText, onPrimaryAction, trustMetrics, logos }: HeroProps) {
+export function Hero({ serverStatus, badgeText, title, description, heroActions, primaryActionText, onPrimaryAction, trustMetrics, logos }: HeroProps) {
   return (
     <>
       <section className="relative z-10 flex flex-col justify-center items-center text-center px-4 pt-28 pb-16">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-gray-300 mb-8 backdrop-blur-sm shadow-sm">
-          <span>{badgeText}</span>
+        <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-gray-300 mb-8 backdrop-blur-sm shadow-sm">
+          {serverStatus && (
+            <div className={`flex items-center gap-1.5 ${badgeText ? "border-r border-white/10 pr-3" : ""}`}>
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  serverStatus === "online" ? "bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" : 
+                  serverStatus === "checking" ? "bg-amber-500 animate-pulse" : "bg-red-500"
+                }`}
+              />
+              <span className={`font-semibold tracking-wide uppercase text-[10px] ${
+                serverStatus === "online" ? "text-emerald-400" : 
+                serverStatus === "checking" ? "text-amber-400" : "text-red-400"
+              }`}>
+                {serverStatus === "online" ? "Systems Online" : serverStatus === "checking" ? "Checking Status..." : "Under Maintenance"}
+              </span>
+            </div>
+          )}
+          {badgeText && <span>{badgeText}</span>}
         </div>
 
         <h1 className="text-5xl md:text-7xl font-medium tracking-tight text-white mb-6 max-w-4xl leading-[1.1]">
@@ -58,7 +75,7 @@ export function Hero({ badgeText, title, description, heroActions, primaryAction
                 ))}
               </div>
               <div className="text-left leading-tight">
-                <div className="text-white font-semibold flex items-center gap-1 text-sm"><Zap className="w-3 h-3 fill-current" /> {trustMetrics.amount}</div>
+                <div className="text-white font-semibold flex items-center gap-1 text-sm"><Zap className="w-3 h-3 fill-current" /> {trustMetrics.amount}+</div>
                 <div className="text-gray-500 text-xs font-medium">{trustMetrics.text}</div>
               </div>
             </div>

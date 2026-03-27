@@ -9,4 +9,6 @@ export interface MaterialRepositoryInterface {
     findByIds(ids: string[]): Promise<Material[]>;
     findByFilters(filters: { branch?: string; subject?: string; semester?: string }, limit: number): Promise<Material[]>;
     findByUploaderPaginated(uid: string, page: number, limit: number): Promise<{ materials: Material[]; total: number; page: number; limit: number }>;
+    searchFullText(text: string, filters: { branch?: string; subject?: string; semester?: string }, limit: number): Promise<Material[]>;
+    update(id: string, data: Partial<Material>): Promise<Material | null>;
 }

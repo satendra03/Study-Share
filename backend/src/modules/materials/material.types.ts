@@ -15,6 +15,7 @@ export interface PageData {
 
 export interface Material {
   _id?: Types.ObjectId | string;
+  title?: string;
   year: string;
   description: string;
   fileUrl: string;
@@ -22,6 +23,7 @@ export interface Material {
   fileType: string;
   fileSize: number;
   uploaderId: string;
+  uploaderName?: string;
   downloads?: number;
   createdAt?: Date;
   updatedAt?: Date;

@@ -21,6 +21,8 @@ export interface User {
     isProfileComplete: boolean;
     studentProfile?: StudentProfile | null;
     teacherProfile?: TeacherProfile | null;
+    /** Material document IDs saved by the user */
+    bookmarkedMaterialIds?: string[];
     createdAt?: Date;
     updatedAt?: Date;
     displayName?: string;

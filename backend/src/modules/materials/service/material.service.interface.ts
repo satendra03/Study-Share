@@ -1,7 +1,7 @@
 import { type Material, type PageData } from "../material.types.js";
 
 export interface MaterialServiceInterface {
-    createMaterial(data: Omit<Material, "id" | "createdAt" | "updatedAt" | "downloads" | "fileUrl">, file: Express.Multer.File): Promise<Material>;
+    createMaterial(data: Omit<Material, "id" | "createdAt" | "updatedAt" | "downloads" | "fileUrl" | "title">, file: Express.Multer.File): Promise<Material>;
     getAllMaterials(): Promise<Material[]>;
     getMaterialById(id: string): Promise<Material>;
     deleteMaterial(id: string): Promise<void>;
@@ -12,4 +12,8 @@ export interface MaterialServiceInterface {
     getMaterialPages(id: string): Promise<PageData[]>;
     getMaterialPage(id: string, pageNumber: number): Promise<PageData>;
     chatWithMaterial(id: string, message: string, history: { role: string; content: string }[], pageNumber: number): Promise<{ reply: string; history: { role: string; content: string }[] }>;
+    /** Batch fetch for bookmarks / lists without throwing when some ids are stale. */
+    findMaterialsByIds(ids: string[]): Promise<Material[]>;
+    /** Lookup without throwing (e.g. validate bookmark target exists). */
+    findMaterialByIdOrNull(id: string): Promise<Material | null>;
 }

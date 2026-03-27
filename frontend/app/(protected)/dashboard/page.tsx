@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { Material } from "@/types";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { MaterialCard } from "@/components/MaterialCard";
 import { WorkspaceGridBackdrop } from "@/components/WorkspaceGridBackdrop";
@@ -32,17 +32,10 @@ export default function DashboardPage() {
     w._searchTimer = setTimeout(() => setDebouncedSearch(e.target.value), 400);
   };
 
-  const clearSearch = () => {
-    setSearch("");
-    setDebouncedSearch("");
-    const w = window as unknown as { _searchTimer?: ReturnType<typeof setTimeout> };
-    clearTimeout(w._searchTimer);
-  };
-
   const count = materials?.length ?? 0;
 
   return (
-    <div className="relative flex min-h-full flex-col w-full bg-[#030303] text-white antialiased">
+    <div className="relative min-h-screen flex flex-col justify-between w-full bg-[#030303] text-white antialiased">
       <WorkspaceGridBackdrop className="max-h-[min(58vh,560px)] min-h-[400px]" />
 
       <div className="relative z-10 flex flex-col flex-1 px-6 md:px-10 pt-10 pb-16">
@@ -57,7 +50,7 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-right backdrop-blur-sm">
+            <div className="rounded-md border border-white/10 bg-white/5 px-4 py-3 text-right backdrop-blur-sm">
               <p className="text-[10px] uppercase tracking-widest text-gray-500 font-semibold">Showing</p>
               <p className="text-sm font-medium text-white tabular-nums">{isLoading ? "…" : count} items</p>
             </div>
@@ -75,16 +68,6 @@ export default function DashboardPage() {
             placeholder="Search by title, topic, filename…"
             autoComplete="off"
           />
-          {search ? (
-            <button
-              type="button"
-              onClick={clearSearch}
-              className="absolute inset-y-0 right-0 pr-4 flex items-center justify-center text-gray-500 hover:text-white cursor-pointer transition-colors"
-              aria-label="Clear search"
-            >
-              <X className="h-5 w-5" strokeWidth={2} />
-            </button>
-          ) : null}
         </div>
 
         <div className="flex flex-wrap items-center gap-2 mb-10 text-sm text-gray-500">
@@ -113,23 +96,12 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {materials?.map((m, index) => (
-              <MaterialCard key={m._id} material={m} featured={index === 0} />
+            {materials?.map((material, index) => (
+              <MaterialCard key={material._id} material={material} featured={index === 0} />
             ))}
           </div>
         )}
 
-        <footer className="mt-auto pt-16 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-gray-500 border-t border-white/10">
-          <p>StudyShare — built for focused learning.</p>
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            <Link href="/docs/api" className="hover:text-[#a8a4fc] transition-colors">
-              API docs
-            </Link>
-            <Link href="/" className="hover:text-[#a8a4fc] transition-colors">
-              Home
-            </Link>
-          </div>
-        </footer>
       </div>
     </div>
   );

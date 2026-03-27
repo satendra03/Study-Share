@@ -21,7 +21,7 @@ export default function BookmarksPage() {
   const list = materials ?? [];
 
   return (
-    <div className="relative min-h-full bg-[#030303] text-white antialiased">
+    <div className="relative min-h-screen flex flex-col justify-between bg-[#030303] text-white antialiased">
       <WorkspaceGridBackdrop />
 
       <div className="relative z-10 px-6 md:px-10 pt-10 pb-16">

@@ -1,4 +1,5 @@
 import { db } from "@/config/firebase.config.js";
+import { FieldValue } from "firebase-admin/firestore";
 import type { User } from "@/modules/user/user.model.js";
 import { getDisplayName } from "@/modules/user/user.model.js";
 import type { UserRepositoryInterface } from "./user.repository.interface.js";
@@ -8,6 +9,7 @@ const usersCollection = db.collection("users");
 export class UserRepository implements UserRepositoryInterface {
     /** Find a user by their Firebase UID */
     findByFirebaseUid = async (firebaseUid: string): Promise<User | null> => {
+        console.log("Firebase UID: ", firebaseUid);
         const doc = await usersCollection.doc(firebaseUid).get();
         if (!doc.exists) return null;
         const data = doc.data() as User;
@@ -151,6 +153,18 @@ export class UserRepository implements UserRepositoryInterface {
         if (!photoURL) return;
         await usersCollection.doc(firebaseUid).update({
             photoURL,
+            updatedAt: new Date(),
+        });
+    }
+
+    /** Add or remove a material bookmark */
+    toggleBookmark = async (userId: string, materialId: string, add: boolean): Promise<void> => {
+        const updatedMaterials = add
+            ? FieldValue.arrayUnion(materialId)
+            : FieldValue.arrayRemove(materialId);
+        
+        await usersCollection.doc(userId).update({
+            bookmarkedMaterialIds: updatedMaterials,
             updatedAt: new Date(),
         });
     }

@@ -2,6 +2,7 @@ import mongoose, { Schema, type Document } from 'mongoose';
 import type { Material } from './material.types.js';
 
 const MaterialSchema = new Schema<Material & Document>({
+    title: { type: String },
     year: { type: String, required: true },
     description: { type: String, required: true },
     fileUrl: { type: String, required: true },
@@ -9,6 +10,7 @@ const MaterialSchema = new Schema<Material & Document>({
     fileType: { type: String, required: true },
     fileSize: { type: Number, required: true },
     uploaderId: { type: String, required: true },
+    uploaderName: { type: String },
     downloads: { type: Number, default: 0 },
     status: { type: String, enum: ["processing", "done", "failed"], default: "processing" },
     subject: { type: String },

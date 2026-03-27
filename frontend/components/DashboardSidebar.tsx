@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Home, FileUp, Bookmark, Plus, HelpCircle, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import packageJson from "../package.json";
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
@@ -15,6 +16,7 @@ export default function DashboardSidebar() {
     { name: "My uploads", href: "/my-uploads", icon: FileUp },
     { name: "Bookmarks", href: "/bookmarks", icon: Bookmark },
   ];
+
 
   const branch = appUser?.studentProfile?.branch;
 
@@ -35,17 +37,15 @@ export default function DashboardSidebar() {
               </span>
             </Link>
             <span
-              className="text-[9px] font-mono font-medium uppercase tracking-[0.15em] text-gray-500 bg-white/5 border border-white/10 px-1.5 py-px rounded leading-none"
-              title="Live search on library"
+              className="text-[10px] font-mono font-medium uppercase tracking-[0.15em] text-gray-500 bg-white/5 border border-white/10 px-1.5 py-px rounded-lg leading-none"
+              title="Version"
             >
-              Live
+              v{packageJson.version}
             </span>
           </div>
-          <Link href="/dashboard" className="w-fit">
             <span className="text-[10px] tracking-[0.22em] text-[#7a73f5] font-semibold uppercase hover:text-[#a8a4fc] transition-colors">
               Workspace
             </span>
-          </Link>
         </div>
       </div>
 

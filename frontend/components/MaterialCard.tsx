@@ -6,23 +6,24 @@ import { Download, CheckCircle, FileText } from "lucide-react";
 import { Material } from "@/types";
 import { formatFileSize } from "@/lib/utils";
 import api from "@/lib/api";
+import { BorderBeam } from "./ui/border-beam";
 
-function extFromMaterial(m: Material): string {
-  const fromUrl = m.fileUrl?.split(".").pop();
+function extFromMaterial(material: Material): string {
+  const fromUrl = material.fileUrl?.split(".").pop();
   if (fromUrl && fromUrl.length <= 5) return fromUrl.toUpperCase();
-  if (m.fileType?.includes("pdf")) return "PDF";
+  if (material.fileType?.includes("pdf")) return "PDF";
   return "FILE";
 }
 
-function formatUploaded(m: Material): string {
-  if (m.createdAt) {
+function formatUploaded(material: Material): string {
+  if (material.createdAt) {
     try {
-      return new Date(m.createdAt).toLocaleDateString(undefined, { month: "short", year: "numeric" });
+      return new Date(material.createdAt).toLocaleDateString(undefined, { month: "short", year: "numeric" });
     } catch {
       /* fall through */
     }
   }
-  if (m.year) return String(m.year);
+  if (material.year) return String(material.year);
   return "Recently";
 }
 
@@ -54,7 +55,7 @@ export function MaterialCard({
     return (
       <Link
         href={`/materials/${material._id}`}
-        className="block lg:col-span-2 group relative overflow-hidden rounded-2xl border border-white/10 bg-linear-to-br from-[#12121a] to-[#0a0a10] shadow-[0_0_0_1px_rgba(92,85,249,0.08)] transition-all hover:border-[#5C55F9]/40 hover:shadow-[0_20px_60px_-24px_rgba(92,85,249,0.35)]"
+        className={` block lg:col-span-2 group relative overflow-hidden rounded-2xl border border-white/10 bg-linear-to-br from-[#12121a] to-[#0a0a10] shadow-[0_0_0_1px_rgba(92,85,249,0.08)] transition-all hover:border-[#5C55F9]/40 hover:shadow-[0_20px_60px_-24px_rgba(92,85,249,0.35)]`}
       >
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_0%,rgba(92,85,249,0.12),transparent_55%)] pointer-events-none" />
         <div className="relative flex flex-col sm:flex-row min-h-[200px]">
@@ -68,24 +69,27 @@ export function MaterialCard({
 
           <div className="flex-1 p-6 flex flex-col justify-center">
             <div className="flex justify-between items-start gap-3 mb-2">
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-[#5C55F9]/90">Featured</span>
-              {!isProcessing && <CheckCircle className="w-5 h-5 shrink-0 text-emerald-400/90" />}
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-[#5C55F9]/90">Latest Upload</span>
+              {/* {!isProcessing && <CheckCircle className="w-5 h-5 shrink-0 text-emerald-400/90" />} */}
+              {!isProcessing && <span className="text-sm text-gray-400">{material.downloads} Downloads</span>}
               {isProcessing && (
                 <span className="text-[10px] uppercase tracking-wider text-amber-400/90">Processing</span>
               )}
             </div>
-            <h2 className="text-2xl md:text-3xl font-medium tracking-tight text-white leading-snug pr-2 mb-3">{title}</h2>
+            <h2 className="text-2xl md:text-3xl font-medium tracking-tight text-white leading-snug pr-2 mb-3">{title}
+              <p className="text-gray-400 text-xs leading-relaxed line-clamp-3 mb-5">uploaded by {material.uploaderName || material.uploaderId || "Anonymous User"}</p>
+            </h2>
             <p className="text-gray-400 text-sm leading-relaxed line-clamp-3 mb-5">
               {material.description || "Open to read notes, chat with the document, or download."}
             </p>
             <div className="flex flex-wrap gap-2 mb-6">
               {material.branch && (
-                <span className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-medium rounded-full border border-white/10 bg-white/5 text-gray-200">
+                <span className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-medium rounded-full border border-[#5C55F9]/25 text-[#a8a4fc]">
                   {material.branch}
                 </span>
               )}
               {material.semester && (
-                <span className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-medium rounded-full border border-white/10 bg-white/5 text-gray-200">
+                <span className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-medium rounded-full border border-[#5C55F9]/25 text-[#a8a4fc]">
                   Sem {material.semester}
                 </span>
               )}
@@ -109,7 +113,7 @@ export function MaterialCard({
                 <Download className="w-4 h-4" />
                 Download ({formatFileSize(material.fileSize)})
               </button>
-              <span className="text-sm font-medium text-[#a8a4fc]">Open from card →</span>
+              <span className="text-sm font-medium text-[#a8a4fc]">Open →</span>
             </div>
           </div>
         </div>
@@ -124,14 +128,28 @@ export function MaterialCard({
     >
       <div className="flex justify-between items-start gap-2 mb-4">
         <span className="text-[10px] font-mono text-gray-500 tracking-wide truncate max-w-[60%]">
-          {material._id ? `…${material._id.slice(-6)}` : "—"}
+          id: {material._id ? `…${material._id.slice(-6)}` : "—"}
         </span>
-        <span className="text-[10px] font-semibold text-[#5C55F9]/90 shrink-0">.{ext}</span>
+        {material.status !== "failed" ? 
+          (isProcessing ? <span className="text-[10px] uppercase tracking-wider text-amber-400/90">Processing</span> : <span className="text-[10px] font-semibold text-[#5C55F9]/90 shrink-0">.{ext}</span>)
+              : <span className="text-[10px] uppercase tracking-wider text-red-400/90">Failed</span>
+        }
+
       </div>
 
-      <h3 className="text-lg font-medium tracking-tight text-white leading-snug line-clamp-3 mb-1 flex-1">{title}</h3>
+      <h3 className="text-lg font-medium tracking-tight text-white leading-snug flex flex-col gap-0.5">
+        <span className="line-clamp-2">
+          {title}
+        </span>
+        <span className="text-gray-400 text-xs flex items-center gap-1">
+          uploaded by
+          <span className="truncate max-w-[140px] inline-block">
+            {material.uploaderName || material.uploaderId || "Anonymous User"}
+          </span>
+        </span>
+      </h3>
 
-      <div className="flex flex-wrap gap-2 mt-auto pt-4 mb-4">
+      <div className="flex flex-wrap gap-2 mt-auto pb-2">
         {material.branch ? (
           <span className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-medium rounded-full border border-white/10 bg-white/5 text-gray-300">
             {material.branch}
@@ -146,10 +164,27 @@ export function MaterialCard({
             Sem {material.semester}
           </span>
         )}
-        {isProcessing && (
-          <span className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-medium rounded-full border border-amber-500/30 text-amber-400/90">
-            Processing
+        {material.year && (
+          <span className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-medium rounded-full border border-white/10 bg-white/5 text-gray-300">
+            {material.year}
           </span>
+        )}
+      </div>
+      <div className="mb-2">
+        {!isProcessing && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              void handleDownload(e);
+            }}
+            disabled={isProcessing}
+            className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-white text-[#030303] px-2 py-1 text-xs hover:bg-gray-100 transition-colors disabled:opacity-40"
+          >
+            <Download className="w-3 h-3" />
+            Download ({formatFileSize(material.fileSize)})
+          </button>
         )}
       </div>
 
@@ -160,6 +195,7 @@ export function MaterialCard({
         </span>
         <span>{formatUploaded(material)}</span>
       </div>
+      
     </Link>
   );
 }

@@ -154,7 +154,7 @@ export default function CompleteProfilePage() {
               <button
                 type="button"
                 onClick={() => setRole("student")}
-                className="flex flex-col items-center gap-3 p-6 border border-white/10 hover:border-[#5C55F9]/50 rounded-2xl transition-all bg-white/2 hover:bg-[#5C55F9]/5"
+                className="cursor-pointer flex flex-col items-center gap-3 p-6 border border-white/10 hover:border-[#5C55F9]/50 rounded-2xl transition-all bg-white/2 hover:bg-[#5C55F9]/5"
               >
                 <GraduationCap className="w-10 h-10 text-[#a8a4fc]" />
                 <span className="font-semibold text-white">Student</span>
@@ -163,7 +163,7 @@ export default function CompleteProfilePage() {
               <button
                 type="button"
                 onClick={() => setRole("teacher")}
-                className="flex flex-col items-center gap-3 p-6 border border-white/10 hover:border-[#5C55F9]/50 rounded-2xl transition-all bg-white/2 hover:bg-[#5C55F9]/5"
+                className="cursor-pointer flex flex-col items-center gap-3 p-6 border border-white/10 hover:border-[#5C55F9]/50 rounded-2xl transition-all bg-white/2 hover:bg-[#5C55F9]/5"
               >
                 <Briefcase className="w-10 h-10 text-[#a8a4fc]" />
                 <span className="font-semibold text-white">Teacher</span>

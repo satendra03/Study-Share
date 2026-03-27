@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 
 export function LandingNavbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { firebaseUser, appUser, loading, signInWithGoogle } = useAuth();
+  const { firebaseUser, appUser, loading, profileLoaded, signInWithGoogle } = useAuth();
 
   const onSignIn = async () => {
     try {
@@ -17,8 +17,22 @@ export function LandingNavbar() {
     }
   };
 
-  const authActions = loading ? (
-    <span className="text-sm text-gray-500 px-4">…</span>
+  const isProfileComplete = Boolean(
+    appUser?.isProfileComplete ||
+      appUser?.studentProfile ||
+      appUser?.teacherProfile ||
+      false,
+  );
+
+  const isLoadingState = loading || (firebaseUser !== null && !profileLoaded);
+
+  const authActions = isLoadingState ? (
+    <div className="hidden md:flex items-center justify-center px-6 py-2.5 rounded-full border border-gray-600/50 text-sm font-medium text-gray-400 backdrop-blur-sm cursor-not-allowed">
+      <div className="flex items-center gap-2">
+        <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+        Loading...
+      </div>
+    </div>
   ) : !firebaseUser ? (
     <button
       type="button"
@@ -27,7 +41,7 @@ export function LandingNavbar() {
     >
       Sign In
     </button>
-  ) : appUser?.isProfileComplete ? (
+  ) : isProfileComplete ? (
     <CustomLink
       href="/dashboard"
       className="hidden md:flex items-center gap-2 justify-center px-6 py-2.5 rounded-full bg-primary text-white text-sm font-medium hover:bg-[#4d46db] transition-colors shadow-[0_0_24px_-6px_var(--primary)]"
@@ -102,27 +116,12 @@ export function LandingNavbar() {
 
             <div className="h-px w-full bg-white/10 my-1" />
 
-            {!loading && firebaseUser && appUser?.isProfileComplete && (
-              <CustomLink
-                href="/dashboard"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center justify-center w-full px-6 py-3.5 rounded-xl bg-primary text-white font-medium hover:bg-[#4d46db] transition-colors gap-2"
-              >
-                <LayoutDashboard className="w-4 h-4" />
-                Dashboard
-              </CustomLink>
-            )}
-            {!loading && firebaseUser && appUser && !appUser.isProfileComplete && (
-              <CustomLink
-                href="/complete-profile"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center justify-center w-full px-6 py-3.5 rounded-xl border border-indigo-500/40 text-indigo-200 font-medium hover:bg-indigo-500/10 transition-colors gap-2"
-              >
-                <UserCircle className="w-4 h-4" />
-                Complete profile
-              </CustomLink>
-            )}
-            {!loading && !firebaseUser && (
+            {isLoadingState ? (
+              <div className="flex items-center justify-center w-full px-6 py-3.5 rounded-xl border border-gray-600/50 text-gray-400 font-medium cursor-not-allowed gap-2">
+                <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                Loading...
+              </div>
+            ) : !firebaseUser ? (
               <button
                 type="button"
                 onClick={() => {
@@ -133,6 +132,24 @@ export function LandingNavbar() {
               >
                 Sign In
               </button>
+            ) : isProfileComplete ? (
+              <CustomLink
+                href="/dashboard"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-2 justify-center w-full px-6 py-3.5 rounded-xl bg-primary text-white font-medium hover:bg-[#4d46db] transition-colors"
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                Dashboard
+              </CustomLink>
+            ) : (
+              <CustomLink
+                href="/complete-profile"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-2 justify-center w-full px-6 py-3.5 rounded-xl border border-indigo-500/40 text-indigo-200 font-medium hover:bg-indigo-500/10 transition-colors"
+              >
+                <UserCircle className="w-4 h-4" />
+                Complete profile
+              </CustomLink>
             )}
           </div>
         </div>

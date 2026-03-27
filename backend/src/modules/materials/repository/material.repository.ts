@@ -53,6 +53,33 @@ export class MaterialRepository implements MaterialRepositoryInterface {
     return materials;
   };
 
+  searchFullText = async (
+    text: string,
+    filters: { branch?: string; subject?: string; semester?: string },
+    limit: number
+  ): Promise<Material[]> => {
+    const escaped = text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = new RegExp(escaped, "i");
+    const query: Record<string, unknown> = {
+      $or: [
+        { description: re },
+        { fileName: re },
+        { subject: re },
+        { year: re },
+        { title: re },
+      ],
+    };
+    if (filters.branch) query.branch = filters.branch;
+    if (filters.subject) query.subject = filters.subject;
+    if (filters.semester) query.semester = filters.semester;
+
+    const materials = await MaterialModel.find(query)
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+    return materials;
+  };
+
   findByUploaderPaginated = async (uid: string, page: number, limit: number): Promise<{ materials: Material[]; total: number; page: number; limit: number }> => {
     const skip = (page - 1) * limit;
     const [materials, total] = await Promise.all([
@@ -70,5 +97,10 @@ export class MaterialRepository implements MaterialRepositoryInterface {
       page,
       limit,
     };
+  };
+
+  update = async (id: string, data: Partial<Material>): Promise<Material | null> => {
+    const updated = await MaterialModel.findByIdAndUpdate(id, data, { returnDocument: 'after' }).lean();
+    return updated as Material | null;
   };
 }

@@ -21,6 +21,10 @@ export class UserService implements UserServiceInterface {
         return user;
     }
 
+    async getUserByFirebaseUidOrNull(firebaseUid: string): Promise<User | null> {
+        return await this.userRepository.findByFirebaseUid(firebaseUid);
+    }
+
     async getUserByEmail(email: string): Promise<User> {
         const user = await this.userRepository.findByEmail(email);
         if (!user) {
@@ -76,5 +80,9 @@ export class UserService implements UserServiceInterface {
 
     async findUnverifiedTeachers(): Promise<User[]> {
         return this.userRepository.findUnverifiedTeachers();
+    }
+
+    async toggleBookmark(userId: string, materialId: string, add: boolean): Promise<void> {
+        return this.userRepository.toggleBookmark(userId, materialId, add);
     }
 }

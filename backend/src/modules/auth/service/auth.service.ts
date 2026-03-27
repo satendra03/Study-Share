@@ -20,15 +20,13 @@ export class AuthService implements AuthServiceInterface {
         // we will not directly look in the repository
         const existingUser = await userService.getUserByFirebaseUid(firebaseUid);
 
-        if (existingUser && existingUser.isProfileComplete) {
-            // if (picture && existingUser.photoURL !== picture) {
-            //     existingUser.photoURL = picture;
-            //     await userService.updatePhotoUrl(firebaseUid, picture);
-            // }
-            return { status: "existing_user", user: existingUser };
+        if (existingUser) {
+            if (existingUser.isProfileComplete) {
+                return { status: "existing_user", user: existingUser };
+            }
+            return { status: "incomplete_profile", user: existingUser };
         }
 
-        // New user (or signed up but never completed profile)
         return { status: "new_user", firebaseUid, email, name: name || "", photoURL: picture || "" };
     }
     /**

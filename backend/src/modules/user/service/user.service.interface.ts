@@ -2,6 +2,7 @@ import { type User } from "../user.model.js";
 
 export interface UserServiceInterface {
     getUserByFirebaseUid(firebaseUid: string): Promise<User>;
+    getUserByFirebaseUidOrNull(firebaseUid: string): Promise<User | null>;
     getUserByEmail(email: string): Promise<User>;
     getUserById(userId: string): Promise<User>;
     updateUser(userId: string, updates: Partial<User>): Promise<User>;
@@ -13,4 +14,5 @@ export interface UserServiceInterface {
     completeTeacherProfile(firebaseUid: string, profile: { fullName: string; teacherId: string; }): Promise<User>;
     verifyUser(userId: string): Promise<User>;
     findUnverifiedTeachers(): Promise<User[]>;
+    toggleBookmark(userId: string, materialId: string, add: boolean): Promise<void>;
 }

@@ -13,14 +13,14 @@ export class MaterialController {
                 return;
             }
 
-            const { year, description } = req.body;
+            const { year, description, branch, semester, subject, subjectCode, fileType } = req.body;
             const file = req.file;
 
             if (!file) {
                 throw new BadRequestError("Missing required fields: file");
             }
-            if (!year) {
-                throw new BadRequestError("Missing required fields: year");
+            if (!year || !branch || !semester || !subject) {
+                throw new BadRequestError("Missing required fields: year, branch, semester, subject");
             }
 
             const safeName = file.originalname.replace(/[^a-zA-Z0-9]/g, "_");
@@ -28,11 +28,16 @@ export class MaterialController {
             const material = await this.materialService.createMaterial(
                 {
                     year,
-                    description: description || "",
+                    description: description || "No description provided",
                     fileName: safeName,
-                    fileType: file.mimetype || "application/pdf",
+                    fileType: fileType || file.mimetype || "application/pdf",
                     fileSize: file.size,
                     uploaderId: req.appUser.firebaseUid,
+                    uploaderName: req.appUser.displayName || req.appUser.studentProfile?.fullName || req.appUser.teacherProfile?.fullName || req.appUser.email || "Anonymous User",
+                    branch,
+                    semester,
+                    subject,
+                    subjectCode,
                 },
                 file
             );

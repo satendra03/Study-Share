@@ -2,9 +2,13 @@ import { type NextFunction, type Request, type Response } from "express";
 import { ApiResponse } from "@/shared/ApiResponse.js";
 import { type UserServiceInterface } from "./service/user.service.interface.js";
 import { BadRequestError } from "@/shared/ApiError.js";
+import { type MaterialServiceInterface } from "@/modules/materials/service/material.service.interface.js";
 
 export class UserController {
-    constructor(private userService: UserServiceInterface) { }
+    constructor(
+        private userService: UserServiceInterface,
+        private materialService: MaterialServiceInterface
+    ) { }
 
     getById = async (req: Request, res: Response, next: NextFunction) => {
         try {
@@ -46,7 +50,9 @@ export class UserController {
             if(!firebaseUid){
                 throw new BadRequestError("Firebase UID is required");
             }
+            console.log("Firebase UID: (from controller)", firebaseUid);
             const user = await this.userService.getUserByFirebaseUid(firebaseUid);
+            console.log("User: (from controller)", user);
             res.status(200).json(ApiResponse.success({
                 message: "User fetched successfully",
                 data: user
@@ -103,5 +109,46 @@ export class UserController {
             next(error);
         }
     }
-    
+
+    toggleBookmark = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            if (!req.appUser) throw new BadRequestError("User not found");
+            const { materialId, add } = req.body;
+            if (!materialId || typeof add !== "boolean") {
+                throw new BadRequestError("materialId and add are required and add must be boolean");
+            }
+            await this.userService.toggleBookmark(req.appUser.firebaseUid, materialId, add);
+            const updatedUser = await this.userService.getUserByFirebaseUid(req.appUser.firebaseUid);
+            res.status(200).json(ApiResponse.success({
+                message: "Bookmark updated successfully",
+                data: updatedUser
+            }));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    getBookmarks = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            if (!req.appUser) throw new BadRequestError("User not found");
+            
+            const bookmarkIds = req.appUser.bookmarkedMaterialIds || [];
+            if (bookmarkIds.length === 0) {
+                res.status(200).json(ApiResponse.success({
+                    message: "Bookmarks fetched successfully",
+                    data: []
+                }));
+                return;
+            }
+
+            const materials = await this.materialService.findMaterialsByIds(bookmarkIds);
+            
+            res.status(200).json(ApiResponse.success({
+                message: "Bookmarks fetched successfully",
+                data: materials
+            }));
+        } catch (error) {
+            next(error);
+        }
+    }
 }

@@ -7,6 +7,8 @@ const userRouter = Router();
 userRouter.get("/firebase", userController.getByFirebaseUid);
 userRouter.get("/email", userController.getByEmail);
 userRouter.get("/search", userController.searchUsers);
+userRouter.get("/me/bookmarks", verifyFirebaseToken, requireAppUser, userController.getBookmarks);
+userRouter.patch("/me/bookmarks", verifyFirebaseToken, requireAppUser, userController.toggleBookmark);
 userRouter.get("/:id", userController.getById);
 userRouter.put("/:id", verifyFirebaseToken, requireAppUser, userController.updateUser);
 userRouter.delete("/:id", verifyFirebaseToken, requireAppUser, requireAdmin, userController.deleteUser);

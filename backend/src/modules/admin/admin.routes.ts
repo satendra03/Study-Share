@@ -2,20 +2,18 @@ import { Router } from 'express';
 import { adminController } from './admin.module.js';
 import { verifyFirebaseToken, requireAppUser, requireAdmin } from '@/middlewares/auth.middleware.js';
 
-const adminRouter = Router();
+const router = Router();
 
 // All admin routes require admin access
-adminRouter.use(verifyFirebaseToken);
-adminRouter.use(requireAppUser);
-adminRouter.use(requireAdmin);
+router.use(verifyFirebaseToken);
+router.use(requireAppUser);
+router.use(requireAdmin);
 
-adminRouter.get('/stats', adminController.getStats);
-adminRouter.get('/users', adminController.getUsers);
-adminRouter.get('/materials', adminController.getMaterials);
-adminRouter.delete('/materials/:id', adminController.deleteMaterial);
-adminRouter.patch('/users/:id/verify', adminController.verifyUser);
+router.get('/stats', adminController.getStats);
+router.get('/users', adminController.getUsers);
+router.get('/materials', adminController.getMaterials);
 
 export default {
     path: 'admin',
-    router: adminRouter,
+    router,
 };

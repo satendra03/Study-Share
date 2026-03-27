@@ -17,10 +17,21 @@ import { Footer } from "@/components/footer";
 import { LandingNavbar } from "@/components/LandingNavbar";
 
 export default function LandingPage() {
-  const { firebaseUser, appUser, loading, signInWithGoogle } = useAuth();
+  const { firebaseUser, appUser, loading, profileLoaded, signInWithGoogle } = useAuth();
+
+  const heroProfileComplete = Boolean(
+    appUser?.isProfileComplete || appUser?.studentProfile || appUser?.teacherProfile,
+  );
+
+  const heroLoading = loading || (firebaseUser !== null && !profileLoaded);
 
   const heroActions =
-    loading ? null : !firebaseUser ? (
+    heroLoading ? (
+      <div className="flex items-center gap-3 bg-gray-700/50 cursor-not-allowed text-gray-400 px-7 py-3.5 rounded-full font-medium transition-all text-sm md:text-base">
+        <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+        Loading...
+      </div>
+    ) : !firebaseUser ? (
       <button
         type="button"
         onClick={() => void signInWithGoogle()}
@@ -31,7 +42,7 @@ export default function LandingPage() {
           <ArrowRight className="w-4 h-4 text-[#5C55F9]" strokeWidth={3} />
         </div>
       </button>
-    ) : appUser?.isProfileComplete ? (
+    ) : heroProfileComplete ? (
       <Link
         href="/dashboard"
         className="flex items-center gap-3 bg-primary hover:bg-[#4d46db] text-white px-7 py-3.5 rounded-full font-medium transition-all shadow-[0_0_30px_-5px_var(--primary)] text-sm md:text-base"

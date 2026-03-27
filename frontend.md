@@ -1,3 +1,5 @@
+https://www.awwwards.com/sites/finsight Refrence for UI/UX
+
 # Study-Share Frontend Architecture & API Guide
 
 This document outlines the entire structure, architectural recommendations, and API endpoints you need to successfully build the Study-Share frontend.

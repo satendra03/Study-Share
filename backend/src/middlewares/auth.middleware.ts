@@ -10,6 +10,8 @@ declare global {
         interface Request {
             firebaseUid?: string;
             appUser?: User;
+            /** Loaded by loadProfileUser: DB user if any, including incomplete profiles */
+            profileUser?: User | null;
         }
     }
 }
@@ -46,6 +48,28 @@ export async function verifyFirebaseToken(
  * Middleware: requires a fully registered and active app user.
  * Attaches `req.appUser`. Use after `verifyFirebaseToken`.
  */
+/**
+ * After verifyFirebaseToken: attach Firestore user if a document exists (any completion state).
+ * Used for GET /auth/me so the client can route to complete-profile when needed.
+ */
+export async function loadProfileUser(
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> {
+    if (!req.firebaseUid) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+    }
+    try {
+        const user = await userService.getUserByFirebaseUidOrNull(req.firebaseUid);
+        req.profileUser = user ?? null;
+    } catch {
+        req.profileUser = null;
+    }
+    next();
+}
+
 export async function requireAppUser(
     req: Request,
     res: Response,

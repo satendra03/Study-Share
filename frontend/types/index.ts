@@ -36,6 +36,7 @@ export interface Material {
   fileType: string;
   fileSize: number;
   uploaderId: string;
+  uploaderName?: string;
   downloads?: number;
   status?: "processing" | "done" | "failed";
   subject?: string;

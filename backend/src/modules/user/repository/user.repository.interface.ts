@@ -13,4 +13,5 @@ export interface UserRepositoryInterface {
     verifyUser(userId: string): Promise<User | null>;
     findUnverifiedTeachers(): Promise<User[]>;
     updatePhotoUrl(firebaseUid: string, photoURL: string): Promise<void>;
+    toggleBookmark(userId: string, materialId: string, add: boolean): Promise<void>;
 }

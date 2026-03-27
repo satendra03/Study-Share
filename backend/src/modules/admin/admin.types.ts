@@ -14,8 +14,3 @@ export interface AdminMaterialManagement {
     materials: any[];
     total: number;
 }
-
-export interface VerifyUserResult {
-    uid: string;
-    isVerified: boolean;
-}

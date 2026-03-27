@@ -10,6 +10,7 @@ interface AuthContextType {
   firebaseUser: FirebaseUser | null;
   appUser: User | null;
   loading: boolean;
+  profileLoaded: boolean;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   setAppUser: (user: User | null) => void;
@@ -21,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [appUser, setAppUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoaded, setProfileLoaded] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -29,18 +31,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (user) {
         setLoading(true);
         try {
-          const res = await api.get("/auth/me");
-          setAppUser(res.data.data ?? null);
-        } catch {
-          setAppUser(null);
-        } finally {
-          setLoading(false);
-        }
-      } else {
+        const token = await user.getIdToken();
+        const res = await api.get("/auth/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setAppUser(res.data.data ?? null);
+      } catch (error) {
+        console.error("Error fetching profile on auth state change:", error);
         setAppUser(null);
+      } finally {
         setLoading(false);
+        setProfileLoaded(true);
       }
-    });
+    } else {
+      setAppUser(null);
+      setLoading(false);
+      setProfileLoaded(true);
+    }
+  });
     return unsubscribe;
   }, []);
 
@@ -86,7 +96,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ firebaseUser, appUser, loading, signInWithGoogle, logout, setAppUser }}>
+    <AuthContext.Provider
+      value={{
+        firebaseUser,
+        appUser,
+        loading,
+        profileLoaded,
+        signInWithGoogle,
+        logout,
+        setAppUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

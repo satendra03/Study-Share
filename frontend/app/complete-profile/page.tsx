@@ -6,11 +6,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import api from "@/lib/api";
 import { auth } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
-import { BookOpen, GraduationCap, Briefcase, ArrowLeft } from "lucide-react";
+import { GraduationCap, Briefcase, ArrowLeft, ArrowRight, UserPen, Lock } from "lucide-react";
 import { InteractiveGridPattern } from "@/components/ui/interactive-grid-pattern";
 
 type Role = "student" | "teacher" | null;
@@ -44,66 +43,37 @@ export default function CompleteProfilePage() {
   });
 
   useEffect(() => {
+    if (firebaseUser) {
+      const name = firebaseUser.displayName || firebaseUser.email?.split("@")[0] || "";
+      const formatted = name.replace(/[._]/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+      setStudentForm((p) => ({ ...p, fullName: formatted }));
+      setTeacherForm((p) => ({ ...p, fullName: formatted }));
+    }
+  }, [firebaseUser]);
+
+  useEffect(() => {
     if (authLoading) return;
-    if (!firebaseUser) {
-      router.replace("/");
-      return;
-    }
-    // Backend is down — complete-profile can't work, go home
-    if (backendError && !appUser) {
-      router.replace("/");
-      return;
-    }
-    if (appUser?.isProfileComplete) {
-      router.replace("/dashboard");
-    }
+    if (!firebaseUser) { router.replace("/"); return; }
+    if (backendError && !appUser) { router.replace("/"); return; }
+    if (appUser?.isProfileComplete) { router.replace("/dashboard"); }
   }, [authLoading, firebaseUser, appUser, backendError, router]);
 
-  const handleStudentSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const idToken = await resolveIdToken();
-    if (!idToken) {
-      setError("Session expired. Please sign in again from the home page.");
-      return;
-    }
+    if (!idToken) { setError("Session expired. Please sign in again."); return; }
     setLoading(true);
     setError("");
     try {
-      const res = await api.post("/auth/register/student", {
-        idToken,
-        ...studentForm,
-        semester: Number(studentForm.semester),
-      });
+      const endpoint = role === "student" ? "/auth/register/student" : "/auth/register/teacher";
+      const body = role === "student"
+        ? { idToken, ...studentForm, semester: Number(studentForm.semester) }
+        : { idToken, ...teacherForm };
+      const res = await api.post(endpoint, body);
       setAppUser(res.data.data ?? null);
-      sessionStorage.removeItem("pendingIdToken");
-      sessionStorage.removeItem("pendingUser");
       router.push("/dashboard");
-    } catch (err: unknown) {
-      const er = err as { response?: { data?: { message?: string } } };
-      setError(er.response?.data?.message || "Registration failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleTeacherSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const idToken = await resolveIdToken();
-    if (!idToken) {
-      setError("Session expired. Please sign in again from the home page.");
-      return;
-    }
-    setLoading(true);
-    setError("");
-    try {
-      const res = await api.post("/auth/register/teacher", { idToken, ...teacherForm });
-      setAppUser(res.data.data ?? null);
-      sessionStorage.removeItem("pendingIdToken");
-      sessionStorage.removeItem("pendingUser");
-      router.push("/dashboard");
-    } catch (err: unknown) {
-      const er = err as { response?: { data?: { message?: string } } };
-      setError(er.response?.data?.message || "Registration failed");
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -111,129 +81,164 @@ export default function CompleteProfilePage() {
 
   if (authLoading || (firebaseUser && appUser?.isProfileComplete) || (backendError && !appUser)) {
     return (
-      <div className="min-h-screen bg-[#030303] flex items-center justify-center">
-        <div className="w-10 h-10 border-2 border-[#5C55F9] border-t-transparent rounded-full animate-spin" />
+      <div className="h-screen bg-[#030303] flex items-center justify-center">
+        <div className="w-12 h-12 border-[3px] border-[#5C55F9]/20 border-t-[#5C55F9] rounded-full animate-spin" />
       </div>
     );
   }
 
+  const nameValue = role === "student" ? studentForm.fullName : teacherForm.fullName;
+
   return (
-    <main className="min-h-screen relative bg-[#030303] text-white flex items-center justify-center px-4 py-16 selection:bg-indigo-500/30">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <main className="h-screen bg-[#030303] text-white flex items-center justify-center overflow-hidden relative">
+      {/* Full-page grid background */}
+      <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
         <InteractiveGridPattern
-          className="absolute inset-0 opacity-[0.2] mix-blend-screen"
-          width={56}
-          height={56}
-          squares={[36, 36]}
-          squaresClassName="hover:fill-indigo-500/30 transition-colors duration-500"
+          className="absolute inset-0 w-full h-full opacity-[0.18] mix-blend-screen"
+          width={48}
+          height={48}
+          squares={[40, 40]}
+          squaresClassName="hover:fill-indigo-500/20 transition-colors duration-500"
         />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(92,85,249,0.14),transparent_55%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(92,85,249,0.08),transparent_70%)]" />
       </div>
 
-      <div className="relative z-10 w-full max-w-lg mx-auto flex flex-col gap-6">
+      {/* Centered content */}
+      <div className="relative z-10 w-full max-w-md mx-auto flex flex-col items-center gap-6 px-4">
+        {/* Home link - above form, not in corner */}
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors self-start"
+          className="group inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-all self-start bg-white/5 px-4 py-2 rounded-full border border-white/5 hover:border-white/10 backdrop-blur-sm"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Back to home
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+          Return to home
         </Link>
 
-      <Card className="w-full bg-[#0c0c10]/95 border-white/10 text-white shadow-[0_0_80px_-30px_rgba(92,85,249,0.35)] backdrop-blur-md">
-        <CardHeader className="text-center pb-2">
-          <div className="flex justify-center mb-3">
-            <div className="rounded-2xl bg-white/5 border border-white/10 p-3">
-              <BookOpen className="text-[#a8a4fc] w-8 h-8" />
+        {!role ? (
+          /* ── Role selection card ── */
+          <div className="w-full bg-[#0a0a10] border border-white/8 rounded-2xl p-8 shadow-[0_8px_40px_rgba(0,0,0,0.6)] text-center">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-[#5C55F9]/10 border border-[#5C55F9]/20 mb-5">
+              <UserPen className="text-[#a8a4fc] w-5 h-5" />
             </div>
-          </div>
-          <CardTitle className="text-2xl md:text-3xl font-medium tracking-tight">Finish setting up</CardTitle>
-          <p className="text-gray-400 text-sm mt-2 leading-relaxed">
-            After Google sign-in, we need a few details so uploads and bookmarks stay on the right account.
-          </p>
-        </CardHeader>
-        <CardContent>
-          {error && <p className="text-red-300 text-sm mb-4 bg-red-950/50 border border-red-900/40 px-3 py-2 rounded-lg">{error}</p>}
+            <h1 className="text-2xl font-semibold tracking-tight mb-1.5">Complete Your Profile</h1>
+            <p className="text-gray-500 text-sm mb-8">Choose your role to get started</p>
 
-          {!role && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid  grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setRole("student")}
-                className="cursor-pointer flex flex-col items-center gap-3 p-6 border border-white/10 hover:border-[#5C55F9]/50 rounded-2xl transition-all bg-white/2 hover:bg-[#5C55F9]/5"
+                className="group cursor-pointer flex flex-col items-center gap-3 p-6 border border-white/8 hover:border-[#5C55F9]/30 rounded-2xl transition-all bg-[#0f0f18] hover:bg-[#12122a] shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
               >
-                <GraduationCap className="w-10 h-10 text-[#a8a4fc]" />
-                <span className="font-semibold text-white">Student</span>
-                <span className="text-gray-400 text-xs text-center">Browse, bookmark, and download materials</span>
+                <div className="p-3 rounded-xl bg-[#141420] border border-white/5 group-hover:bg-[#5C55F9]/10 group-hover:border-[#5C55F9]/20 transition-colors">
+                  <GraduationCap className="w-6 h-6 text-gray-400 group-hover:text-[#a8a4fc] transition-colors" />
+                </div>
+                <div>
+                  <span className="block text-sm font-medium text-white">Student</span>
+                  <span className="block text-[11px] text-gray-500 mt-0.5">Browse & download</span>
+                </div>
               </button>
               <button
                 type="button"
-                onClick={() => setRole("teacher")}
-                className="cursor-pointer flex flex-col items-center gap-3 p-6 border border-white/10 hover:border-[#5C55F9]/50 rounded-2xl transition-all bg-white/2 hover:bg-[#5C55F9]/5"
+                disabled
+                className="relative cursor-not-allowed group flex flex-col items-center gap-3 p-6 border border-white/8 rounded-2xl bg-[#0f0f18] opacity-50"
               >
-                <Briefcase className="w-10 h-10 text-[#a8a4fc]" />
-                <span className="font-semibold text-white">Teacher</span>
-                <span className="text-gray-400 text-xs text-center">Upload and share learning materials</span>
+                <div className="absolute top-2 right-2 text-[9px] font-semibold uppercase tracking-wider bg-[#5C55F9]/15 text-[#a8a4fc] px-2 py-0.5 rounded-full border border-[#5C55F9]/20">
+                  Coming Soon
+                </div>
+                <div className="p-3 rounded-xl bg-[#141420] border border-white/5">
+                  <Briefcase className="w-6 h-6 text-gray-600" />
+                </div>
+                <div>
+                  <span className="block text-sm font-medium text-gray-500">Teacher</span>
+                  <span className="block text-[11px] text-gray-600 mt-0.5">Upload & share</span>
+                </div>
               </button>
             </div>
-          )}
-
-          {role === "student" && (
-            <form onSubmit={handleStudentSubmit} className="space-y-4">
-              <button type="button" onClick={() => setRole(null)} className="text-sm text-[#a8a4fc] hover:text-white mb-1">
-                ← Change role
+          </div>
+        ) : (
+          /* ── Form card ── */
+          <div className="w-full bg-[#0a0a10] border border-white/8 rounded-2xl p-8 shadow-[0_8px_40px_rgba(0,0,0,0.6)]">
+            <div className="flex items-center gap-3 mb-6">
+              <button type="button" onClick={() => setRole(null)} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors">
+                <ArrowLeft className="w-4 h-4 text-gray-400" />
               </button>
-              {[
-                { label: "Full Name", key: "fullName", placeholder: "Your full name" },
-                { label: "Enrollment Number", key: "enrollmentNumber", placeholder: "e.g. 0101CS221234" },
-                { label: "Branch", key: "branch", placeholder: "e.g. Computer Science" },
-                { label: "Semester", key: "semester", placeholder: "e.g. 4", type: "number" },
-                { label: "College ID / Name", key: "collegeId", placeholder: "Your college" },
-              ].map(({ label, key, placeholder, type }) => (
-                <div key={key}>
-                  <Label className="text-gray-300 text-sm">{label}</Label>
-                  <Input
-                    className="bg-black/30 border-white/10 text-white mt-1.5 rounded-xl"
-                    placeholder={placeholder}
-                    type={type || "text"}
-                    value={(studentForm as Record<string, string>)[key]}
-                    onChange={(e) => setStudentForm((prev) => ({ ...prev, [key]: e.target.value }))}
-                    required
-                  />
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-[#5C55F9]/10">
+                  {role === "student" ? <GraduationCap className="w-4 h-4 text-[#a8a4fc]" /> : <Briefcase className="w-4 h-4 text-[#a8a4fc]" />}
                 </div>
-              ))}
-              <Button type="submit" disabled={loading} className="w-full rounded-xl bg-primary hover:bg-[#4d46db] text-white font-medium mt-2">
-                {loading ? "Saving…" : "Save and continue"}
+                <span className="text-sm font-medium capitalize">{role} Registration</span>
+              </div>
+            </div>
+
+            {error && (
+              <div className="mb-4 px-3 py-2 rounded-xl bg-red-500/5 border border-red-500/10 text-red-400 text-xs">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Locked name */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <Label className="text-[10px] text-gray-500 uppercase tracking-widest font-medium">Full Name</Label>
+                  <span className="flex items-center gap-1 text-[9px] text-[#5C55F9] bg-[#5C55F9]/10 px-1.5 py-px rounded-full">
+                    <Lock className="w-2 h-2" /> Synced
+                  </span>
+                </div>
+                <Input
+                  className="bg-[#0f0f18] border-white/8 text-gray-400 h-10 rounded-lg cursor-not-allowed text-sm"
+                  value={nameValue}
+                  readOnly
+                />
+              </div>
+
+              {role === "student" ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-[10px] text-gray-500 uppercase tracking-widest font-medium block mb-1.5">Enrollment</Label>
+                    <Input placeholder="0101CS..." className="bg-[#0f0f18] border-white/8 text-white h-10 rounded-lg text-sm focus:border-[#5C55F9]/40 transition-colors" value={studentForm.enrollmentNumber} onChange={e => setStudentForm(p => ({ ...p, enrollmentNumber: e.target.value }))} required />
+                  </div>
+                  <div>
+                    <Label className="text-[10px] text-gray-500 uppercase tracking-widest font-medium block mb-1.5">Semester</Label>
+                    <Input type="number" placeholder="1–8" className="bg-[#0f0f18] border-white/8 text-white h-10 rounded-lg text-sm focus:border-[#5C55F9]/40 transition-colors" value={studentForm.semester} onChange={e => setStudentForm(p => ({ ...p, semester: e.target.value }))} required />
+                  </div>
+                  <div className="col-span-2">
+                    <Label className="text-[10px] text-gray-500 uppercase tracking-widest font-medium block mb-1.5">Branch</Label>
+                    <Input placeholder="e.g. Computer Science" className="bg-[#0f0f18] border-white/8 text-white h-10 rounded-lg text-sm focus:border-[#5C55F9]/40 transition-colors" value={studentForm.branch} onChange={e => setStudentForm(p => ({ ...p, branch: e.target.value }))} required />
+                  </div>
+                  <div className="col-span-2">
+                    <Label className="text-[10px] text-gray-500 uppercase tracking-widest font-medium block mb-1.5">College</Label>
+                    <Input placeholder="Your institution" className="bg-[#0f0f18] border-white/8 text-white h-10 rounded-lg text-sm focus:border-[#5C55F9]/40 transition-colors" value={studentForm.collegeId} onChange={e => setStudentForm(p => ({ ...p, collegeId: e.target.value }))} required />
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <Label className="text-[10px] text-gray-500 uppercase tracking-widest font-medium block mb-1.5">Staff / Employee ID</Label>
+                  <Input placeholder="Your ID" className="bg-[#0f0f18] border-white/8 text-white h-10 rounded-lg text-sm focus:border-[#5C55F9]/40 transition-colors" value={teacherForm.teacherId} onChange={e => setTeacherForm(p => ({ ...p, teacherId: e.target.value }))} required />
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full h-11 rounded-xl bg-[#5C55F9] hover:bg-[#4d46db] text-white text-sm font-medium transition-all hover:shadow-lg hover:shadow-[#5C55F9]/15 active:scale-[0.98] mt-2"
+              >
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Creating account...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    Continue
+                    <ArrowRight className="w-4 h-4" />
+                  </span>
+                )}
               </Button>
             </form>
-          )}
+          </div>
+        )}
 
-          {role === "teacher" && (
-            <form onSubmit={handleTeacherSubmit} className="space-y-4">
-              <button type="button" onClick={() => setRole(null)} className="text-sm text-[#a8a4fc] hover:text-white mb-1">
-                ← Change role
-              </button>
-              {[
-                { label: "Full Name", key: "fullName", placeholder: "Your full name" },
-                { label: "Teacher ID", key: "teacherId", placeholder: "Your staff/employee ID" },
-              ].map(({ label, key, placeholder }) => (
-                <div key={key}>
-                  <Label className="text-gray-300 text-sm">{label}</Label>
-                  <Input
-                    className="bg-black/30 border-white/10 text-white mt-1.5 rounded-xl"
-                    placeholder={placeholder}
-                    value={(teacherForm as Record<string, string>)[key]}
-                    onChange={(e) => setTeacherForm((prev) => ({ ...prev, [key]: e.target.value }))}
-                    required
-                  />
-                </div>
-              ))}
-              <Button type="submit" disabled={loading} className="w-full rounded-xl bg-primary hover:bg-[#4d46db] text-white font-medium mt-2">
-                {loading ? "Saving…" : "Save and continue"}
-              </Button>
-            </form>
-          )}
-        </CardContent>
-      </Card>
       </div>
     </main>
   );

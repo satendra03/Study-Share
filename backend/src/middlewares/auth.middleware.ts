@@ -80,15 +80,19 @@ export async function requireAppUser(
         return;
     }
 
-    const user = await userService.getUserByFirebaseUid(req.firebaseUid);
+    try {
+        const user = await userService.getUserByFirebaseUidOrNull(req.firebaseUid);
 
-    if (!user || !user.isProfileComplete) {
-        res.status(403).json({ message: "Profile incomplete", code: AuthCodes.PROFILE_INCOMPLETE });
-        return;
+        if (!user || !user.isProfileComplete) {
+            res.status(403).json({ message: "Profile incomplete", code: AuthCodes.PROFILE_INCOMPLETE });
+            return;
+        }
+
+        req.appUser = user;
+        next();
+    } catch {
+        res.status(500).json({ message: "Failed to load user profile" });
     }
-
-    req.appUser = user;
-    next();
 }
 
 /**

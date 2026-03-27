@@ -41,8 +41,8 @@ export class MaterialService implements MaterialServiceInterface {
     }
 
     createMaterial = async (data: Omit<Material, "id" | "createdAt" | "updatedAt" | "downloads" | "fileUrl" | "title">, file: Express.Multer.File): Promise<Material> => {
-        // Generate title from branch, semester, subject, year
-        const title = `${data.branch} ${data.semester} ${data.subject} ${data.year}`;
+        // Generate title: Branch-Semester-Subject-Year
+        const title = `${data.branch}-${data.semester}-${data.subject}-${data.year}`;
 
         // Upload to Cloudinary directly using the buffer from memoryStorage
         const cloudFile = await uploadFile(file.buffer);
@@ -88,8 +88,8 @@ export class MaterialService implements MaterialServiceInterface {
         return material;
     }
 
-    getAllMaterials = async (): Promise<Material[]> => {
-        return await this.materialRepository.findAll();
+    getAllMaterials = async (filters?: { branch?: string; subject?: string; semester?: string; year?: string }): Promise<Material[]> => {
+        return await this.materialRepository.findAll(filters);
     }
 
     getMaterialById = async (id: string): Promise<Material> => {
@@ -109,7 +109,7 @@ export class MaterialService implements MaterialServiceInterface {
         await this.materialRepository.delete(id);
     }
 
-    search = async (query: string, filters: { branch?: string; subject?: string; semester?: string }, limit: number): Promise<Material[]> => {
+    search = async (query: string, filters: { branch?: string; subject?: string; semester?: string; year?: string }, limit: number): Promise<Material[]> => {
         return await this.materialRepository.searchFullText(query, filters, limit);
     }
 

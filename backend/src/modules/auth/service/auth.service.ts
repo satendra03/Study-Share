@@ -16,11 +16,14 @@ export class AuthService implements AuthServiceInterface {
         if (!email) {
             throw new Error("Firebase token has no email — Google accounts must have an email.");
         }
-        // 2. Look up in our own database
-        // we will not directly look in the repository
-        const existingUser = await userService.getUserByFirebaseUid(firebaseUid);
+        // 2. Look up in our own database (use OrNull to avoid throwing for new users)
+        const existingUser = await userService.getUserByFirebaseUidOrNull(firebaseUid);
 
         if (existingUser) {
+            // Sync photo URL if changed
+            if (picture && picture !== existingUser.photoURL) {
+                await userService.updatePhotoUrl(firebaseUid, picture);
+            }
             if (existingUser.isProfileComplete) {
                 return { status: "existing_user", user: existingUser };
             }

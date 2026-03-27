@@ -1,25 +1,115 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { Material } from "@/types";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal, X, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { MaterialCard } from "@/components/MaterialCard";
 import { WorkspaceGridBackdrop } from "@/components/WorkspaceGridBackdrop";
+import { useAuth } from "@/context/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+} from "@/components/ui/dropdown-menu";
+
+const BRANCHES = ["CSE", "IT", "ECE", "ME", "CE", "EE"];
+const SEMESTERS = ["1", "2", "3", "4", "5", "6", "7", "8"];
+const YEARS = ["2025", "2024", "2023", "2022", "2021", "2020"];
+
+// Reusable filter dropdown component
+function FilterDropdown({
+  label,
+  value,
+  onValueChange,
+  options,
+  allLabel = "All",
+}: {
+  label: string;
+  value: string;
+  onValueChange: (v: string) => void;
+  options: { value: string; label: string }[];
+  allLabel?: string;
+}) {
+  const displayText = value
+    ? options.find((o) => o.value === value)?.label || value
+    : allLabel;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger className="inline-flex items-center gap-2 cursor-pointer bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm hover:bg-white/10 transition-colors focus:outline-none focus:ring-1 focus:ring-[#5C55F9] select-none">
+        <span className="text-gray-400 text-xs mr-0.5">{label}:</span>
+        <span className="text-white font-medium">{displayText}</span>
+        <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="bg-[#0c0c14] border-white/10 min-w-[160px]">
+        <DropdownMenuRadioGroup value={value} onValueChange={onValueChange}>
+          <DropdownMenuRadioItem value="" className="text-gray-300 cursor-pointer focus:bg-[#5C55F9]/10 focus:text-white">
+            {allLabel}
+          </DropdownMenuRadioItem>
+          {options.map((opt) => (
+            <DropdownMenuRadioItem
+              key={opt.value}
+              value={opt.value}
+              className="text-gray-300 cursor-pointer focus:bg-[#5C55F9]/10 focus:text-white"
+            >
+              {opt.label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 export default function DashboardPage() {
+  const { appUser } = useAuth();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  
+  const lastYear = (new Date().getFullYear() - 1).toString();
+
+  const [filters, setFilters] = useState({
+    branch: "",
+    semester: "",
+    year: lastYear,
+    subject: ""
+  });
+
+  // Hydrate filters from user profile on mount
+  useEffect(() => {
+    if (appUser?.studentProfile) {
+      setFilters(prev => ({
+        ...prev,
+        branch: appUser.studentProfile?.branch || "",
+        semester: appUser.studentProfile?.semester?.toString() || ""
+      }));
+    }
+  }, [appUser]);
 
   const { data: materials, isLoading } = useQuery<Material[]>({
-    queryKey: ["materials", debouncedSearch],
+    queryKey: ["materials", debouncedSearch, filters],
     queryFn: async () => {
-      const url = debouncedSearch
-        ? `/materials/search?q=${encodeURIComponent(debouncedSearch)}`
-        : "/materials";
-      const res = await api.get(url);
+      let url = "";
+      const params = new URLSearchParams();
+
+      if (debouncedSearch) {
+        url = "/materials/search";
+        params.append("q", debouncedSearch);
+      } else {
+        url = "/materials";
+      }
+
+      if (filters.branch) params.append("branch", filters.branch);
+      if (filters.semester) params.append("semester", filters.semester);
+      if (filters.year) params.append("year", filters.year);
+      if (filters.subject) params.append("subject", filters.subject);
+
+      const res = await api.get(`${url}?${params.toString()}`);
       const raw = res.data.data;
       return Array.isArray(raw) ? raw : [];
     },
@@ -34,8 +124,17 @@ export default function DashboardPage() {
 
   const count = materials?.length ?? 0;
 
+  const resetFilters = () => {
+    setFilters({
+      branch: appUser?.studentProfile?.branch || "",
+      semester: appUser?.studentProfile?.semester?.toString() || "",
+      year: lastYear,
+      subject: ""
+    });
+  };
+
   return (
-    <div className="relative min-h-screen flex flex-col justify-between w-full bg-[#030303] text-white antialiased">
+    <div className="relative flex flex-col justify-between w-full bg-[#030303] text-white antialiased">
       <WorkspaceGridBackdrop className="max-h-[min(58vh,560px)] min-h-[400px]" />
 
       <div className="relative z-10 flex flex-col flex-1 px-6 md:px-10 pt-10 pb-16">
@@ -46,7 +145,7 @@ export default function DashboardPage() {
               Study materials
             </h1>
             <p className="mt-3 text-lg text-gray-400 font-light max-w-xl leading-relaxed">
-              Browse PDFs shared by the community—same look and feel as the marketing site, powered by live search.
+              Browse PDFs shared by the community—filtered for your branch and semester by default.
             </p>
           </div>
           <div className="flex items-center gap-3 shrink-0">
@@ -57,9 +156,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="relative mb-8">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-          </div>
+        <div className="relative mb-6">
           <input
             type="search"
             value={search}
@@ -68,24 +165,71 @@ export default function DashboardPage() {
             placeholder="Search by title, topic, filename…"
             autoComplete="off"
           />
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+             <Search className="w-5 h-5 text-gray-500" />
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 mb-10 text-sm text-gray-500">
-          <SlidersHorizontal className="w-4 h-4 opacity-70" />
-          <span>Filters coming soon — use search for now.</span>
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-3 mb-10">
+          <div className="flex items-center gap-2 text-sm text-gray-400 mr-1">
+            <SlidersHorizontal className="w-4 h-4 opacity-70" />
+            <span>Refine:</span>
+          </div>
+
+          <FilterDropdown
+            label="Branch"
+            value={filters.branch}
+            onValueChange={(v) => setFilters((f) => ({ ...f, branch: v }))}
+            options={BRANCHES.map((b) => ({ value: b, label: b }))}
+            allLabel="All Branches"
+          />
+
+          <FilterDropdown
+            label="Semester"
+            value={filters.semester}
+            onValueChange={(v) => setFilters((f) => ({ ...f, semester: v }))}
+            options={SEMESTERS.map((s) => ({ value: s, label: `Sem ${s}` }))}
+            allLabel="All Semesters"
+          />
+
+          <FilterDropdown
+            label="Year"
+            value={filters.year}
+            onValueChange={(v) => setFilters((f) => ({ ...f, year: v }))}
+            options={YEARS.map((y) => ({ value: y, label: y }))}
+            allLabel="All Years"
+          />
+
+          <input
+            type="text"
+            placeholder="Subject..."
+            value={filters.subject}
+            onChange={e => setFilters(f => ({ ...f, subject: e.target.value }))}
+            className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5C55F9] placeholder:text-gray-600 w-32 md:w-40"
+          />
+
+          <button
+            onClick={resetFilters}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-500 hover:text-white transition-colors ml-auto"
+          >
+            <X className="w-3 h-3" />
+            Reset
+          </button>
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 h-[280px] rounded-2xl border border-white/10 bg-white/5 animate-pulse" />
-            <div className="h-[260px] rounded-2xl border border-white/10 bg-white/5 animate-pulse" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-[280px] rounded-2xl border border-white/10 bg-white/5 animate-pulse" />
+            ))}
           </div>
         ) : materials?.length === 0 ? (
           <div className="text-center py-24 rounded-2xl border border-dashed border-white/15 bg-white/2">
             <Search className="w-12 h-12 mx-auto mb-4 opacity-40 text-[#5C55F9]" />
             <p className="text-lg text-gray-200 font-medium">No materials yet</p>
             <p className="text-sm text-gray-500 mt-2 max-w-md mx-auto">
-              Try another search or upload the first document for your batch.
+              Try adjusting your filters or search terms.
             </p>
             <Link
               href="/upload"
@@ -97,7 +241,7 @@ export default function DashboardPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {materials?.map((material, index) => (
-              <MaterialCard key={material._id} material={material} featured={index === 0} />
+              <MaterialCard key={material._id} material={material} featured={index === 0 && !debouncedSearch && !filters.branch} />
             ))}
           </div>
         )}

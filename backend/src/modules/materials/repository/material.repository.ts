@@ -14,12 +14,18 @@ export class MaterialRepository implements MaterialRepositoryInterface {
     return material.toObject() as Material;
   };
 
-  findAll = async (): Promise<Material[]> => {
-    const materials = await MaterialModel.find()
+  findAll = async (filters?: { branch?: string; subject?: string; semester?: string; year?: string }): Promise<Material[]> => {
+    const query: Record<string, any> = {};
+    if (filters?.branch) query.branch = filters.branch;
+    if (filters?.semester) query.semester = filters.semester;
+    if (filters?.subject) query.subject = filters.subject;
+    if (filters?.year) query.year = filters.year;
+
+    const materials = await MaterialModel.find(query)
       .sort({ createdAt: -1 })
-      .limit(50)
+      .limit(100)
       .lean();
-    return materials;
+    return materials as Material[];
   };
 
   findById = async (id: string): Promise<Material | null> => {
@@ -55,7 +61,7 @@ export class MaterialRepository implements MaterialRepositoryInterface {
 
   searchFullText = async (
     text: string,
-    filters: { branch?: string; subject?: string; semester?: string },
+    filters: { branch?: string; subject?: string; semester?: string; year?: string },
     limit: number
   ): Promise<Material[]> => {
     const escaped = text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -72,12 +78,13 @@ export class MaterialRepository implements MaterialRepositoryInterface {
     if (filters.branch) query.branch = filters.branch;
     if (filters.subject) query.subject = filters.subject;
     if (filters.semester) query.semester = filters.semester;
+    if (filters.year) query.year = filters.year;
 
     const materials = await MaterialModel.find(query)
       .sort({ createdAt: -1 })
       .limit(limit)
       .lean();
-    return materials;
+    return materials as Material[];
   };
 
   findByUploaderPaginated = async (uid: string, page: number, limit: number): Promise<{ materials: Material[]; total: number; page: number; limit: number }> => {

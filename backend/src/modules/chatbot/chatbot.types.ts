@@ -1,24 +1,29 @@
-export type ChatRole = "user" | "assistant";
-
-export interface ChatTurn {
-  role: ChatRole;
-  content: string;
+export interface ChatSession {
+    _id?: string;
+    userId: string;
+    title: string;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
-export interface ChatWithContextRequest {
-  message: string;
-  /**
-   * Client-supplied history (not stored server-side).
-   * Keep this short (e.g. last 6 turns) to control token usage.
-   */
-  history?: ChatTurn[];
-  /**
-   * Automatically fetch context via pdfId and pageNumber.
-   */
-  pdfId: string;
-  pageNumber: number;
+export interface ChatMessage {
+    _id?: string;
+    sessionId: string;
+    role: 'user' | 'assistant';
+    content: string;
+    createdAt: Date;
 }
 
-export interface ChatWithContextResponse {
-  reply: string;
+export interface CreateSessionRequest {
+    title: string;
+}
+
+export interface SendMessageRequest {
+    content: string;
+}
+
+export interface ChatbotResponse {
+    session?: ChatSession;
+    message?: ChatMessage;
+    sessions?: ChatSession[];
 }

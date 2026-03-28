@@ -1,6 +1,6 @@
 "use client";
-import Link from "next/link";
-import { useAuth } from "@/context/AuthContext";
+import { CustomLink } from "@/components/CustomLink";
+import { useAuthStore } from "@/store/authStore";
 import { BookOpen, LayoutDashboard, Upload, Terminal, MessageSquare, LogOut, User } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
@@ -10,12 +10,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 const navLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/upload", label: "Upload", icon: Upload },
-  { href: "/sandbox", label: "Sandbox", icon: Terminal },
+  { href: "/editor", label: "Editor", icon: Terminal },
   { href: "/chatbot", label: "Chatbot", icon: MessageSquare },
 ];
 
 export default function Navbar() {
-  const { appUser, firebaseUser, logout } = useAuth();
+  const { appUser, firebaseUser, logout } = useAuthStore();
 
   return (
     <nav className="border-b border-gray-800 bg-gray-950 px-6 py-3 flex items-center justify-between sticky top-0 z-50">
@@ -26,7 +26,7 @@ export default function Navbar() {
 
       <div className="hidden md:flex items-center gap-1">
         {navLinks.map(({ href, label, icon: Icon }) => (
-          <Link key={href} href={href}
+          <CustomLink key={href} href={href}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors text-sm">
             <Icon className="w-4 h-4" />
             {label}

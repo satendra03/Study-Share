@@ -6,4 +6,4 @@ const materialRepository = new MaterialRepository();
 const materialService = new MaterialService(materialRepository);
 const materialController = new MaterialController(materialService);
 
-export { materialController, materialService};
+export { materialController, materialService };

@@ -13,26 +13,31 @@ export class MaterialController {
                 return;
             }
 
-            const { title, description } = req.body;
+            const { year, description, branch, semester, subject, subjectCode, fileType } = req.body;
             const file = req.file;
 
             if (!file) {
                 throw new BadRequestError("Missing required fields: file");
             }
-            if (!title) {
-                throw new BadRequestError("Missing required fields: title");
+            if (!year || !branch || !semester || !subject) {
+                throw new BadRequestError("Missing required fields: year, branch, semester, subject");
             }
 
             const safeName = file.originalname.replace(/[^a-zA-Z0-9]/g, "_");
 
             const material = await this.materialService.createMaterial(
                 {
-                    title,
-                    description: description || "",
+                    year,
+                    description: description || "No description provided",
                     fileName: safeName,
-                    fileType: file.mimetype || "application/pdf",
+                    fileType: fileType || file.mimetype || "application/pdf",
                     fileSize: file.size,
                     uploaderId: req.appUser.firebaseUid,
+                    uploaderName: req.appUser.displayName || req.appUser.studentProfile?.fullName || req.appUser.teacherProfile?.fullName || req.appUser.email || "Anonymous User",
+                    branch,
+                    semester,
+                    subject,
+                    subjectCode,
                 },
                 file
             );
@@ -48,7 +53,15 @@ export class MaterialController {
 
     getAllMaterials = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const materials = await this.materialService.getAllMaterials();
+            const { branch, semester, subject, year } = req.query;
+            const filters = {
+                branch: branch as string,
+                semester: semester as string,
+                subject: subject as string,
+                year: year as string
+            };
+
+            const materials = await this.materialService.getAllMaterials(filters);
             res.status(200).json(ApiResponse.success({
                 message: "Materials fetched successfully",
                 data: materials
@@ -107,11 +120,16 @@ export class MaterialController {
 
     searchMaterials = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const { q, branch, subject, semester } = req.query;
+            const { q, branch, subject, semester, year } = req.query;
             const query = q as string;
-            const filters = { branch: branch as string, subject: subject as string, semester: semester as string };
+            const filters = {
+                branch: branch as string,
+                subject: subject as string,
+                semester: semester as string,
+                year: year as string
+            };
 
-            const results = await this.materialService.search(query, filters, 10);
+            const results = await this.materialService.search(query, filters, 20);
             res.status(200).json(ApiResponse.success({
                 message: "Search completed successfully",
                 data: results

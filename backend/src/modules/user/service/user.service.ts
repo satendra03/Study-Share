@@ -5,6 +5,15 @@ import { type User } from "@/modules/user/user.model.js";
 export class UserService implements UserServiceInterface {
     constructor(private userRepository: UserRepositoryInterface) { }
     
+    async getPublicStats(): Promise<{ users: number; status: string }> {
+        const usersCount = await this.userRepository.getUserCount();
+        const baseOffset = 0;
+        return {
+            users: usersCount + baseOffset,
+            status: "online"
+        };
+    }
+
     async getUserById(userId: string): Promise<User> {
         const user = await this.userRepository.findById(userId);
         if (!user) {
@@ -19,6 +28,10 @@ export class UserService implements UserServiceInterface {
             throw new Error("User not found");
         }
         return user;
+    }
+
+    async getUserByFirebaseUidOrNull(firebaseUid: string): Promise<User | null> {
+        return await this.userRepository.findByFirebaseUid(firebaseUid);
     }
 
     async getUserByEmail(email: string): Promise<User> {
@@ -62,7 +75,7 @@ export class UserService implements UserServiceInterface {
         return user;
     }
 
-    async completeTeacherProfile(firebaseUid: string, profile: { fullName: string; teacherId: string }): Promise<User> {
+    async completeTeacherProfile(firebaseUid: string, profile: { fullName: string }): Promise<User> {
         const user = await this.userRepository.completeTeacherProfile(firebaseUid, profile);
         if (!user) throw new Error("Failed to complete teacher profile");
         return user;
@@ -76,5 +89,9 @@ export class UserService implements UserServiceInterface {
 
     async findUnverifiedTeachers(): Promise<User[]> {
         return this.userRepository.findUnverifiedTeachers();
+    }
+
+    async toggleBookmark(userId: string, materialId: string, add: boolean): Promise<void> {
+        return this.userRepository.toggleBookmark(userId, materialId, add);
     }
 }

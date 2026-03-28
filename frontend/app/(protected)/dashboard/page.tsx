@@ -1,127 +1,274 @@
 "use client";
-import { useState } from "react";
+
+import React, { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { Material } from "@/types";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Search, FileText, Download, Eye } from "lucide-react";
+import { Search, SlidersHorizontal, X, ChevronDown } from "lucide-react";
 import Link from "next/link";
+import { MaterialCard } from "@/components/MaterialCard";
+import { WorkspaceGridBackdrop } from "@/components/WorkspaceGridBackdrop";
+import { useAuthStore } from "@/store/authStore";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+} from "@/components/ui/dropdown-menu";
+import { BRANCHES, SEMESTERS, YEARS, semesterOptions, branchOptions, yearOptions } from "@/lib/constants";
 
-function MaterialCard({ material }: { material: Material }) {
-  const isProcessing = material.status === "processing";
+// Reusable filter dropdown component
+// Uses controlled open state so menu stays open after selecting an option.
+// Closes only on click-outside or Escape.
+function FilterDropdown({
+  label,
+  value,
+  onValueChange,
+  options,
+  allLabel = "All",
+  showAll = true,
+}: {
+  label: string;
+  value: string;
+  onValueChange: (v: string) => void;
+  options: { value: string; label: string }[];
+  allLabel?: string;
+  showAll?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const preventCloseRef = useRef(false);
 
-  const handleDownload = async () => {
-    if (isProcessing) return;
-    try {
-      await api.post(`/materials/${material._id}/download`);
-      window.open(material.fileUrl, "_blank");
-    } catch {
-      window.open(material.fileUrl, "_blank");
-    }
-  };
+  const displayText = value
+    ? options.find((o) => o.value === value)?.label || value
+    : allLabel;
 
   return (
-    <div className={`bg-gray-900 border border-gray-800 rounded-xl p-4 transition-all ${isProcessing ? 'opacity-70' : 'hover:border-indigo-800'}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3 flex-1 min-w-0">
-          <FileText className={`w-8 h-8 shrink-0 mt-0.5 ${isProcessing ? 'text-gray-500' : 'text-indigo-400'}`} />
-          <div className="min-w-0">
-            <h3 className="font-semibold text-white text-sm truncate">{material.title}</h3>
-            <p className="text-gray-400 text-xs mt-0.5 line-clamp-2">{material.description}</p>
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {isProcessing && <Badge variant="outline" className="text-xs border-amber-800 text-amber-500 bg-amber-950/30">Processing...</Badge>}
-              {material.branch && <Badge variant="outline" className="text-xs border-gray-700 text-gray-400">{material.branch}</Badge>}
-              {material.semester && <Badge variant="outline" className="text-xs border-gray-700 text-gray-400">Sem {material.semester}</Badge>}
-              {!isProcessing && material.subject && <Badge variant="outline" className="text-xs border-indigo-800 text-indigo-400">{material.subject}</Badge>}
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="flex items-center gap-2 mt-3">
-        {isProcessing ? (
-          <Button size="sm" variant="outline" disabled className="w-full border-gray-700 text-gray-500 text-xs bg-gray-800/50">
-            Processing...
-          </Button>
-        ) : (
-          <Link href={`/materials/${material._id}`} className="flex-1">
-            <Button size="sm" variant="outline" className="w-full border-gray-700 text-gray-300 hover:bg-gray-800 text-xs">
-              <Eye className="w-3 h-3 mr-1" /> View & Chat
-            </Button>
-          </Link>
-        )}
-        <Button size="sm" onClick={handleDownload} disabled={isProcessing} className="bg-indigo-600 hover:bg-indigo-700 text-xs px-3 disabled:bg-gray-700 disabled:text-gray-500">
-          <Download className="w-3 h-3 mr-1" /> Download
-        </Button>
-      </div>
-      {material.downloads !== undefined && !isProcessing && (
-        <p className="text-gray-600 text-xs mt-2 flex items-center gap-1">
-          <Download className="w-3 h-3" /> {material.downloads} downloads
-        </p>
-      )}
-    </div>
+    <DropdownMenu
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen && preventCloseRef.current) {
+          preventCloseRef.current = false;
+          return; // Block the close triggered by item click
+        }
+        setOpen(nextOpen);
+      }}
+    >
+      <DropdownMenuTrigger className="inline-flex items-center gap-2 cursor-pointer bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm hover:bg-white/10 transition-colors focus:outline-none focus:ring-1 focus:ring-[#5C55F9] select-none">
+        <span className="text-gray-400 text-xs mr-0.5">{label}:</span>
+        <span className="text-white font-medium">{displayText}</span>
+        <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="bg-[#0c0c14] border-white/10 min-w-[160px]">
+        <DropdownMenuRadioGroup
+          value={value}
+          onValueChange={(v) => {
+            preventCloseRef.current = true;
+            onValueChange(v);
+          }}
+        >
+          {showAll && (
+            <DropdownMenuRadioItem value="" className="text-gray-300 cursor-pointer focus:bg-[#5C55F9]/10 focus:text-white">
+              {allLabel}
+            </DropdownMenuRadioItem>
+          )}
+          {options.map((opt) => (
+            <DropdownMenuRadioItem
+              key={opt.value}
+              value={opt.value}
+              className="text-gray-300 cursor-pointer focus:bg-[#5C55F9]/10 focus:text-white"
+            >
+              {opt.label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
 export default function DashboardPage() {
+  const { appUser } = useAuthStore();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  
+  const [filters, setFilters] = useState({
+    branch: "",
+    semester: "",
+    year: "",
+    subject: ""
+  });
+
+  // Hydrate filters from user profile on mount
+  useEffect(() => {
+    if (appUser?.studentProfile) {
+      setFilters(prev => ({
+        ...prev,
+        branch: appUser.studentProfile?.branch || BRANCHES[0],
+        semester: appUser.studentProfile?.semester?.toString() || ""
+      }));
+    } else {
+      // No profile — still default to first branch since "All" isn't available
+      setFilters(prev => ({ ...prev, branch: prev.branch || BRANCHES[0] }));
+    }
+  }, [appUser]);
 
   const { data: materials, isLoading } = useQuery<Material[]>({
-    queryKey: ["materials", debouncedSearch],
+    queryKey: ["materials", debouncedSearch, filters],
     queryFn: async () => {
-      const url = debouncedSearch
-        ? `/materials/search?query=${encodeURIComponent(debouncedSearch)}`
-        : "/materials";
-      const res = await api.get(url);
-      return res.data.data || res.data;
-    },
-    refetchInterval: (query) => {
-      const ms = query.state.data as Material[] | undefined;
-      return ms?.some((m) => m.status === "processing") ? 3000 : false;
+      let url = "";
+      const params = new URLSearchParams();
+
+      if (debouncedSearch) {
+        url = "/materials/search";
+        params.append("q", debouncedSearch);
+      } else {
+        url = "/materials";
+      }
+
+      if (filters.branch) params.append("branch", filters.branch);
+      if (filters.semester) params.append("semester", filters.semester);
+      if (filters.year) params.append("year", filters.year);
+      if (filters.subject) params.append("subject", filters.subject);
+
+      const res = await api.get(`${url}?${params.toString()}`);
+      const raw = res.data.data;
+      return Array.isArray(raw) ? raw : [];
     },
   });
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
-    clearTimeout((window as { _searchTimer?: ReturnType<typeof setTimeout> })._searchTimer);
-    (window as { _searchTimer?: ReturnType<typeof setTimeout> })._searchTimer = setTimeout(() => setDebouncedSearch(e.target.value), 400);
+    const w = window as unknown as { _searchTimer?: ReturnType<typeof setTimeout> };
+    clearTimeout(w._searchTimer);
+    w._searchTimer = setTimeout(() => setDebouncedSearch(e.target.value), 400);
+  };
+
+  const count = materials?.length ?? 0;
+
+  const resetFilters = () => {
+    setFilters({
+      branch: appUser?.studentProfile?.branch || "",
+      semester: appUser?.studentProfile?.semester?.toString() || "",
+      year: "",
+      subject: ""
+    });
   };
 
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Study Materials</h1>
-        <p className="text-gray-400 text-sm mt-1">Browse PYQs, notes, and resources</p>
-      </div>
+    <div className="relative flex flex-col justify-between w-full bg-[#030303] text-white antialiased">
+      <WorkspaceGridBackdrop className="max-h-[min(58vh,560px)] min-h-[400px]" />
 
-      <div className="relative mb-6 max-w-lg">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
-        <Input
-          value={search}
-          onChange={handleSearch}
-          placeholder="Search by title, subject, branch..."
-          className="pl-9 bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
-        />
-      </div>
+      <div className="relative z-10 flex flex-col flex-1 px-6 md:px-10 pt-10 pb-16">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-10">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#5C55F9]/90 mb-3">Library</p>
+            <h1 className="text-4xl md:text-5xl font-medium tracking-tight text-white leading-[1.1]">
+              Study materials
+            </h1>
+            <p className="mt-3 text-lg text-gray-400 font-light max-w-xl leading-relaxed">
+              Browse PDFs shared by the community—filtered for your branch and semester by default.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="rounded-md border border-white/10 bg-white/5 px-4 py-3 text-right backdrop-blur-sm">
+              <p className="text-[10px] uppercase tracking-widest text-gray-500 font-semibold">Showing</p>
+              <p className="text-sm font-medium text-white tabular-nums">{isLoading ? "…" : count} items</p>
+            </div>
+          </div>
+        </div>
 
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-gray-900 border border-gray-800 rounded-xl p-4 animate-pulse h-40" />
-          ))}
+        <div className="relative mb-6">
+          <input
+            type="search"
+            value={search}
+            onChange={handleSearch}
+            className={`block w-full pl-12 py-4 rounded-2xl border border-white/10 bg-black/40 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#5C55F9]/35 focus:border-[#5C55F9]/40 transition-all text-base backdrop-blur-md ${search ? "pr-12" : "pr-4"}`}
+            placeholder="Search by title, topic, filename…"
+            autoComplete="off"
+          />
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+             <Search className="w-5 h-5 text-gray-500" />
+          </div>
         </div>
-      ) : materials?.length === 0 ? (
-        <div className="text-center py-16 text-gray-500">
-          <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p>No materials found</p>
+
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-3 mb-10">
+          <div className="flex items-center gap-2 text-sm text-gray-400 mr-1">
+            <SlidersHorizontal className="w-4 h-4 opacity-70" />
+            <span>Refine:</span>
+          </div>
+
+          <FilterDropdown
+            label="Branch"
+            value={filters.branch}
+            onValueChange={(v) => setFilters((f) => ({ ...f, branch: v }))}
+            options={branchOptions}
+            allLabel="All Branches"
+          />
+
+          <FilterDropdown
+            label="Semester"
+            value={filters.semester}
+            onValueChange={(v) => setFilters((f) => ({ ...f, semester: v }))}
+            options={semesterOptions}
+            allLabel="All Semesters"
+          />
+
+          <FilterDropdown
+            label="Year"
+            value={filters.year}
+            onValueChange={(v) => setFilters((f) => ({ ...f, year: v }))}
+            options={yearOptions}
+            allLabel="All Years"
+          />
+
+          <input
+            type="text"
+            placeholder="Subject..."
+            value={filters.subject}
+            onChange={e => setFilters(f => ({ ...f, subject: e.target.value }))}
+            className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5C55F9] placeholder:text-gray-600 w-32 md:w-40"
+          />
+
+          <button
+            onClick={resetFilters}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-500 hover:text-white transition-colors ml-auto"
+          >
+            <X className="w-3 h-3" />
+            Reset
+          </button>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {materials?.map((m) => <MaterialCard key={m._id} material={m} />)}
-        </div>
-      )}
+
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-[280px] rounded-2xl border border-white/10 bg-white/5 animate-pulse" />
+            ))}
+          </div>
+        ) : materials?.length === 0 ? (
+          <div className="text-center py-24 rounded-2xl border border-dashed border-white/15 bg-white/2">
+            <Search className="w-12 h-12 mx-auto mb-4 opacity-40 text-[#5C55F9]" />
+            <p className="text-lg text-gray-200 font-medium">No materials yet</p>
+            <p className="text-sm text-gray-500 mt-2 max-w-md mx-auto">
+              Try adjusting your filters or search terms.
+            </p>
+            <Link
+              href="/upload"
+              className="inline-flex mt-8 rounded-full bg-white px-6 py-2.5 text-sm font-medium text-[#030303] hover:bg-gray-100"
+            >
+              Upload material
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {materials?.map((material, index) => (
+              <MaterialCard key={material._id} material={material} featured={index === 0 && !debouncedSearch && !filters.branch} />
+            ))}
+          </div>
+        )}
+
+      </div>
     </div>
   );
 }

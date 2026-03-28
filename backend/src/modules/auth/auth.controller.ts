@@ -26,6 +26,11 @@ export class AuthController {
                     message: "User already exists", 
                     data: result.user
                  }));
+            } else if (result.status === "incomplete_profile") {
+                res.status(200).json(ApiResponse.success({
+                    message: "Profile must be completed",
+                    data: result.user,
+                }));
             } else {
                 res.status(200).json(ApiResponse.success({
                     message: "New user",
@@ -75,18 +80,18 @@ export class AuthController {
 
     /**
      * POST /api/auth/register/teacher
-     * Body: { tokenId, fullName, teacherId }
+     * Body: { idToken, fullName }
      */
     registerTeacher = async (req: Request, res: Response): Promise<void> => {
         try {
-            const { idToken, fullName, teacherId } = req.body;
+            const { idToken, fullName } = req.body;
 
-            if (!idToken || !fullName || !teacherId) {
-                res.status(400).json(ApiResponse.error("fullName and teacherId are required"));
+            if (!idToken || !fullName) {
+                res.status(400).json(ApiResponse.error("fullName is required"));
                 return;
             }
 
-            const { user } = await this.authService.registerTeacher(idToken, { fullName, teacherId });
+            const { user } = await this.authService.registerTeacher(idToken, { fullName });
 
             res.status(201).json(ApiResponse.success({ message: "Teacher registered successfully", data: user }));
         } catch (error: any) {
@@ -101,11 +106,15 @@ export class AuthController {
      */
     getMe = async (req: Request, res: Response): Promise<void> => {
         try {
-            if (!req.appUser) {
+            if (!req.firebaseUid) {
                 res.status(401).json(ApiResponse.error("Unauthorized"));
                 return;
             }
-            res.status(200).json(ApiResponse.success({ message: "Current user profile", data: req.appUser }));
+            const profile = req.profileUser ?? null;
+            res.status(200).json(ApiResponse.success({
+                message: profile ? "Current user profile" : "No profile registered yet",
+                data: profile,
+            }));
         } catch (error: any) {
             res.status(500).json(ApiResponse.error(error.message));
         }

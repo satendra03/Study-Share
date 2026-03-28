@@ -7,6 +7,11 @@ import { connectRedis } from "./config/redis.config.js";
 
 import app from "./app.js";
 
+// ── Initialize BullMQ workers ───────────────────────────────────
+// Import the queue module to register the worker at startup.
+// The worker auto-starts listening once Redis is connected.
+import "./infrastructure/queue/material.queue.js";
+
 /**
  * Start server with database connections
  */

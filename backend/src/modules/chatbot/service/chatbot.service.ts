@@ -1,55 +1,55 @@
-import { type ChatbotServiceInterface } from "./chatbot.service.interface.js";
-import { BadRequestError, InternalServerError } from "@/shared/ApiError.js";
-import {
-  type ChatTurn,
-  type ChatWithContextRequest,
-  type ChatWithContextResponse,
-} from "../chatbot.types.js";
-import { normalizeHistory, buildPrompt } from "../utils/index.js";
-import { ai } from "@/modules/ai/ai.service.js";
-import { MaterialModel } from "@/modules/materials/material.model.js";
+import { type ChatbotRepositoryInterface } from '../repository/chatbot.repository.interface.js';
+import { type ChatbotServiceInterface } from './chatbot.service.interface.js';
+import { type ChatSession, type ChatMessage, type CreateSessionRequest, type SendMessageRequest } from '../chatbot.types.js';
+import { NotFoundError } from '@/shared/ApiError.js';
 
 export class ChatbotService implements ChatbotServiceInterface {
-  async chat(req: ChatWithContextRequest): Promise<ChatWithContextResponse> {
-    const message = (req.message ?? "").trim();
-    if (!message) throw new BadRequestError("Message is required");
+    constructor(private repository: ChatbotRepositoryInterface) {}
 
-    if (!req.pdfId || typeof req.pageNumber !== "number") {
-      throw new BadRequestError("Valid pdfId and pageNumber are required");
+    async createSession(userId: string, request: CreateSessionRequest): Promise<ChatSession> {
+        return await this.repository.createSession(userId, request.title);
     }
 
-    const material = await MaterialModel.findById(req.pdfId).lean();
-    if (!material) {
-      throw new BadRequestError("Material not found");
+    async getSessions(userId: string): Promise<ChatSession[]> {
+        return await this.repository.getSessionsByUserId(userId);
     }
 
-    const page = material.pages?.find((p: any) => p.pageNumber === req.pageNumber);
-    const contextQuestions = page?.structured?.questions || [];
-    const contextUnit = page?.structured?.unit || "";
+    async getSession(userId: string, sessionId: string): Promise<ChatSession> {
+        const session = await this.repository.getSessionById(sessionId);
+        if (!session || session.userId !== userId) {
+            throw new NotFoundError('Session not found');
+        }
+        return session;
+    }
 
-    const context = {
-      pageNumber: req.pageNumber,
-      unit: contextUnit,
-      questions: contextQuestions,
-    };
+    async deleteSession(userId: string, sessionId: string): Promise<void> {
+        const session = await this.repository.getSessionById(sessionId);
+        if (!session || session.userId !== userId) {
+            throw new NotFoundError('Session not found');
+        }
+        await this.repository.deleteSession(sessionId);
+    }
 
-    const history = normalizeHistory(req.history ?? ([] as ChatTurn[]));
+    async sendMessage(userId: string, sessionId: string, request: SendMessageRequest): Promise<ChatMessage> {
+        // Verify session exists and belongs to user
+        await this.getSession(userId, sessionId);
 
-    const prompt = buildPrompt({ message, history, context });
+        // Save user message
+        const userMessage = await this.repository.createMessage(sessionId, 'user', request.content);
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: prompt }],
-        },
-      ],
-    });
+        // Generate assistant response (placeholder - integrate with LLM later)
+        const assistantResponse = `Thank you for your message: "${request.content}". This is a placeholder response.`;
 
-    const reply = (response.text ?? "").trim();
-    if (!reply) throw new InternalServerError("Empty response from AI model");
+        // Save assistant message
+        const assistantMessage = await this.repository.createMessage(sessionId, 'assistant', assistantResponse);
 
-    return { reply };
-  }
+        return assistantMessage;
+    }
+
+    async getMessages(userId: string, sessionId: string): Promise<ChatMessage[]> {
+        // Verify session exists and belongs to user
+        await this.getSession(userId, sessionId);
+
+        return await this.repository.getMessagesBySessionId(sessionId);
+    }
 }

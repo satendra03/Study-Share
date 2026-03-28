@@ -112,7 +112,7 @@ export class OCRService {
       return detections
         .map((item: any) => item?.text_prediction?.text || "")
         .filter(Boolean)
-        .join(" ");
+        .join("\n");
     }
 
     return "";

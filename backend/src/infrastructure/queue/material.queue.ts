@@ -4,12 +4,29 @@ import { MaterialModel } from "@/modules/materials/material.model.js";
 import { getRedisOptions } from "@/config/redis.config.js";
 import { AIService } from "@/modules/ai/ai.service.js";
 import * as pdfjsLib from "pdfjs-dist";
+import https from "https";
+import http from "http";
 
 // BullMQ expects a Redis connection config object (it manages the client lifecycle internally)
 const connection = getRedisOptions();
 
 // ✅ Export queue so MaterialService can push jobs to it
 export const materialQueue = new Queue("material-processing", { connection });
+
+// ─────────────────────────────────────────────────────────────────
+// Helper: Download file from a URL into a Buffer
+// ─────────────────────────────────────────────────────────────────
+function downloadBuffer(url: string): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const client = url.startsWith("https") ? https : http;
+    client.get(url, (res) => {
+      const chunks: Buffer[] = [];
+      res.on("data", (chunk) => chunks.push(chunk));
+      res.on("end", () => resolve(Buffer.concat(chunks)));
+      res.on("error", reject);
+    }).on("error", reject);
+  });
+}
 
 // ─────────────────────────────────────────────────────────────────
 // Helper: Try pdfjs text extraction first, fall back to OCR
@@ -49,13 +66,13 @@ async function extractTextFromPDF(buffer: Buffer): Promise<{ pageNumber: number;
 const worker = new Worker(
   "material-processing",
   async (job) => {
-    const { materialId, fileBuffer } = job.data;
+    const { materialId, fileUrl } = job.data;
     const logPrefix = `[Queue] Material ${materialId}`;
 
     console.log(`${logPrefix}: Starting processing (attempt ${job.attemptsMade + 1})...`);
 
     try {
-      const buffer = Buffer.from(fileBuffer);
+      const buffer = await downloadBuffer(fileUrl);
 
       // ── Step 1: Extract pages (pdfjs → OCR fallback) ──────────
       console.log(`${logPrefix}: Extracting text from PDF...`);

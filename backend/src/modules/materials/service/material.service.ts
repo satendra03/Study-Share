@@ -41,14 +41,13 @@ export class MaterialService implements MaterialServiceInterface {
                 "process-material",
                 {
                     materialId: material._id as string,
-                    // BullMQ serializes to JSON, so pass the buffer as an array of bytes
-                    fileBuffer: Array.from(file.buffer),
+                    fileUrl: cloudFile.url, // fetch from Cloudinary in worker — don't store buffer in Redis
                 },
                 {
                     attempts: 3,
                     backoff: { type: "exponential", delay: 3000 },
                     removeOnComplete: true,
-                    removeOnFail: false, // keep failed jobs for debugging
+                    removeOnFail: false,
                 }
             );
             console.log(`[MaterialService] Enqueued processing job for material ${material._id}`);

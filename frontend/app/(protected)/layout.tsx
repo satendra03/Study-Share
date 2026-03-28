@@ -4,6 +4,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardFooter from "@/components/DashboardFooter";
+import MobileBottomNav from "@/components/MobileBottomNav";
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const { firebaseUser, appUser, loading, backendError } = useAuthStore();
@@ -98,11 +99,12 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
     <div className="flex min-h-screen items-start bg-[#030303] text-white antialiased">
       <DashboardSidebar />
       <div className="flex flex-col justify-between w-full h-screen overflow-hidden">
-        <main className="flex-1 w-full min-w-0 max-w-full overflow-y-auto flex flex-col pt-0">
+        <main className="flex-1 w-full min-w-0 max-w-full overflow-y-auto flex flex-col pt-0 pb-16 md:pb-0">
           {children}
         </main>
         {!isMaterialViewer && <DashboardFooter />}
       </div>
+      <MobileBottomNav />
     </div>
   );
 }

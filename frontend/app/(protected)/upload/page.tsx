@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import api from "@/lib/api";
-import { Upload, FileText, CheckCircle, Loader, X, FileUp, ArrowLeft, DownloadCloudIcon, ChevronDown, ShieldX } from "lucide-react";
+import { Upload, FileText, CheckCircle, Loader, X, FileUp, ArrowLeft, DownloadCloudIcon, ChevronDown, ShieldX, Info } from "lucide-react";
 import { WorkspaceGridBackdrop } from "@/components/WorkspaceGridBackdrop";
 import Link from "next/link";
 import { useAuthStore } from "@/store/authStore";
@@ -92,9 +92,29 @@ export default function UploadPage() {
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const maxFileSizeMB = form.fileType === "PYQ" ? 5 : 15;
+  const maxFileSizeBytes = maxFileSizeMB * 1024 * 1024;
+
+  const validateAndSetFile = (selected: File) => {
+    if (selected.type !== "application/pdf") {
+      setError("Please select a PDF file.");
+      return;
+    }
+    if (selected.size > maxFileSizeBytes) {
+      setError(`File too large. ${form.fileType === "PYQ" ? "PYQ files" : "Files"} must be under ${maxFileSizeMB}MB.`);
+      return;
+    }
+    setError("");
+    setFile(selected);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) { setError("Please select a file to upload."); return; }
+    if (file.size > maxFileSizeBytes) {
+      setError(`File too large. ${form.fileType === "PYQ" ? "PYQ files" : "Files"} must be under ${maxFileSizeMB}MB.`);
+      return;
+    }
 
     // Validate dropdown fields (not covered by native 'required')
     if (!form.branch || !form.semester || !form.year) {
@@ -141,11 +161,7 @@ export default function UploadPage() {
     e.preventDefault();
     setIsDragging(false);
     const droppedFile = e.dataTransfer.files?.[0];
-    if (droppedFile && droppedFile.type === "application/pdf") {
-      setFile(droppedFile);
-    } else {
-      setError("Please drop a valid PDF file.");
-    }
+    if (droppedFile) validateAndSetFile(droppedFile);
   };
 
   // Block upload for unverified users
@@ -265,20 +281,13 @@ export default function UploadPage() {
                           <FileUp className="w-8 h-8 text-gray-400" strokeWidth={1.5} />
                         </div>
                         <p className="text-gray-200 font-medium mb-1">Click to browse or drag and drop</p>
-                        <p className="text-gray-500 text-sm">PDF files only (Max 15MB)</p>
+                        <p className="text-gray-500 text-sm">PDF files only · Max {maxFileSizeMB}MB</p>
                       </div>
                     )}
                     <input ref={fileRef} type="file" accept=".pdf" className="hidden"
                       onChange={e => {
                         const selected = e.target.files?.[0];
-                        if (selected) {
-                          if (selected.type !== "application/pdf") {
-                            setError("Please select a PDF file.");
-                          } else {
-                            setError("");
-                            setFile(selected);
-                          }
-                        }
+                        if (selected) validateAndSetFile(selected);
                       }} />
                   </div>
                 </div>
@@ -349,15 +358,31 @@ export default function UploadPage() {
 
                   <div className="md:col-span-2 mt-2">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div id="fileType">
+                      <div id="fileType" className="flex flex-col gap-2">
                         <FormDropdown
                           label="File Type"
                           value={form.fileType}
-                          onValueChange={(v) => setForm(p => ({ ...p, fileType: v }))}
+                          onValueChange={(v) => {
+                            setForm(p => ({ ...p, fileType: v }));
+                            // If switching to PYQ and current file is over 5MB, clear it
+                            if (v === "PYQ" && file && file.size > 5 * 1024 * 1024) {
+                              setFile(null);
+                              setError("PYQ files must be under 5MB. Please re-select your file.");
+                              if (fileRef.current) fileRef.current.value = "";
+                            }
+                          }}
                           options={FILE_TYPES.map(ft => ({ value: ft.value, label: ft.label }))}
                           placeholder="Select type"
                           required
                         />
+                        {form.fileType === "PYQ" && (
+                          <div className="flex items-start gap-2.5 px-3 py-2.5 rounded-xl bg-amber-500/8 border border-amber-500/25 text-amber-400">
+                            <Info className="w-4 h-4 shrink-0 mt-0.5" />
+                            <p className="text-xs leading-relaxed">
+                              <span className="font-semibold">Year-wise only.</span> Upload one exam year per file. Do not upload combined or multi-year PYQs.
+                            </p>
+                          </div>
+                        )}
                       </div>
                       <div id="subjectCode">
                         <Label className="text-gray-300 font-medium mb-2 block">Subject Code</Label>
@@ -376,7 +401,7 @@ export default function UploadPage() {
                   <button
                     type="submit"
                     disabled={status === "uploading"}
-                    className="w-full relative group overflow-hidden rounded-xl bg-[#5C55F9] text-white p-px font-medium"
+                    className="w-full cursor-pointer relative group overflow-hidden rounded-xl bg-[#5C55F9] text-white p-px font-medium"
                   >
                     <span className="absolute inset-0 bg-linear-to-r from-[#5C55F9] to-[#7f78fa] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     <div className="relative bg-[#5C55F9] py-2.5 px-6 rounded-xl transition-all duration-300 group-hover:bg-opacity-0 flex items-center justify-center gap-2">

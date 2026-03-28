@@ -92,12 +92,10 @@ export default function DashboardPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   
-  const lastYear = (new Date().getFullYear() - 1).toString();
-
   const [filters, setFilters] = useState({
     branch: "",
     semester: "",
-    year: lastYear,
+    year: "",
     subject: ""
   });
 
@@ -152,7 +150,7 @@ export default function DashboardPage() {
     setFilters({
       branch: appUser?.studentProfile?.branch || "",
       semester: appUser?.studentProfile?.semester?.toString() || "",
-      year: lastYear,
+      year: "",
       subject: ""
     });
   };

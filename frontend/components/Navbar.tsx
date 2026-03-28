@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 const navLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/upload", label: "Upload", icon: Upload },
-  { href: "/sandbox", label: "Sandbox", icon: Terminal },
+  { href: "/editor", label: "Editor", icon: Terminal },
   { href: "/chatbot", label: "Chatbot", icon: MessageSquare },
 ];
 

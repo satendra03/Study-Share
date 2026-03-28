@@ -1,10 +1,11 @@
-import { uploadFile } from "@/config/cloudinary.config.js";
+import { uploadFile, deleteFile } from "@/config/cloudinary.config.js";
 import { type Material, type PageData } from "../material.types.js";
 import { type MaterialRepositoryInterface } from "../repository/material.repository.interface.js";
 import { type MaterialServiceInterface } from "./material.service.interface.js";
 import { NotFoundError } from "@/shared/ApiError.js";
 import { ai } from "@/modules/ai/ai.service.js";
 import { materialQueue } from "@/infrastructure/queue/material.queue.js";
+import { db } from "@/config/firebase.config.js";
 
 export class MaterialService implements MaterialServiceInterface {
     constructor(private materialRepository: MaterialRepositoryInterface) { }
@@ -25,6 +26,7 @@ export class MaterialService implements MaterialServiceInterface {
             fileType: data.fileType,
             fileSize: data.fileSize,
             uploaderId: data.uploaderId,
+            uploaderName: data.uploaderName,
             branch: data.branch,
             semester: data.semester,
             subject: data.subject,
@@ -57,7 +59,32 @@ export class MaterialService implements MaterialServiceInterface {
     }
 
     getAllMaterials = async (filters?: { branch?: string; subject?: string; semester?: string; year?: string }): Promise<Material[]> => {
-        return await this.materialRepository.findAll(filters);
+        const materials = await this.materialRepository.findAll(filters);
+
+        // Backfill uploaderName for legacy materials that were saved without it
+        const missing = materials.filter(m => !m.uploaderName && m.uploaderId);
+        if (missing.length > 0) {
+            const uids = [...new Set(missing.map(m => m.uploaderId))];
+            const nameMap: Record<string, string> = {};
+            await Promise.all(
+                uids.map(async (uid) => {
+                    try {
+                        const doc = await db.collection("users").doc(uid).get();
+                        const data = doc.data();
+                        nameMap[uid] = data?.displayName || data?.studentProfile?.fullName || data?.teacherProfile?.fullName || data?.email || uid;
+                    } catch {
+                        nameMap[uid] = uid;
+                    }
+                })
+            );
+            return materials.map(m =>
+                !m.uploaderName && m.uploaderId
+                    ? { ...m, uploaderName: nameMap[m.uploaderId] }
+                    : m
+            );
+        }
+
+        return materials;
     }
 
     getMaterialById = async (id: string): Promise<Material> => {
@@ -74,6 +101,17 @@ export class MaterialService implements MaterialServiceInterface {
     }
 
     deleteMaterial = async (id: string): Promise<void> => {
+        const material = await this.materialRepository.findById(id);
+        if (material?.fileUrl) {
+            // Extract Cloudinary public ID from the URL
+            // e.g. https://res.cloudinary.com/xxx/image/upload/v123/study-share/materials/file_abc
+            const match = material.fileUrl.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.[^.]+)?$/);
+            if (match?.[1]) {
+                await deleteFile(match[1], "raw").catch((err) =>
+                    console.error(`[Delete] Cloudinary deletion failed for ${match[1]}:`, err)
+                );
+            }
+        }
         await this.materialRepository.delete(id);
     }
 

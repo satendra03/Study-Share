@@ -67,7 +67,25 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <AdminAuthInitializer>
-      <AdminGuard>{children}</AdminGuard>
+      <>
+        {/* Block admin panel on mobile / tablet */}
+        <div className="lg:hidden fixed inset-0 z-[9999] bg-[#030303] flex flex-col items-center justify-center p-8 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-[#5C55F9]/15 border border-[#5C55F9]/25 flex items-center justify-center mb-6">
+            <svg className="w-8 h-8 text-[#b4afff]" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0H3" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-white mb-2">Desktop Only</h2>
+          <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
+            The admin panel requires a screen wider than a tablet. Please open it on a laptop or desktop.
+          </p>
+        </div>
+
+        {/* Actual admin panel — only visible on lg+ */}
+        <div className="hidden lg:block min-h-screen">
+          <AdminGuard>{children}</AdminGuard>
+        </div>
+      </>
     </AdminAuthInitializer>
   );
 }

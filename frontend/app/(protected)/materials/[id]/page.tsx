@@ -35,6 +35,7 @@ export default function MaterialPage() {
 
   const [isDownloading, setIsDownloading] = useState(false);
   const [isBookmarking, setIsBookmarking] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"pdf" | "chat">("pdf");
 
   useEffect(() => {
     const updateWidth = () => {
@@ -152,11 +153,27 @@ export default function MaterialPage() {
     <div className="relative p-4 md:p-6 h-screen w-full max-w-[1600px] mx-auto flex flex-col">
       <WorkspaceGridBackdrop />
 
+      {/* Mobile tab switcher */}
+      <div className="relative z-10 flex lg:hidden shrink-0 mb-3 bg-[#0c0c10]/80 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden">
+        <button
+          onClick={() => setMobileTab("pdf")}
+          className={`flex-1 py-2.5 text-sm font-medium transition-colors cursor-pointer ${mobileTab === "pdf" ? "bg-[#5C55F9]/15 text-[#b4afff]" : "text-gray-500 hover:text-gray-300"}`}
+        >
+          Document
+        </button>
+        <button
+          onClick={() => setMobileTab("chat")}
+          className={`flex-1 py-2.5 text-sm font-medium transition-colors cursor-pointer ${mobileTab === "chat" ? "bg-[#5C55F9]/15 text-[#b4afff]" : "text-gray-500 hover:text-gray-300"}`}
+        >
+          AI Chat
+        </button>
+      </div>
+
       {/* Unified Split Container */}
       <div className="relative z-10 flex-1 flex flex-col lg:flex-row w-full min-h-full bg-[#0c0c10]/80 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden shadow-2xl">
-        
+
         {/* PDF Viewer Section */}
-        <div className="flex-1 flex flex-col min-w-0 h-full">
+        <div className={`flex-1 flex flex-col min-w-0 h-full ${mobileTab === "chat" ? "hidden lg:flex" : "flex"}`}>
           {material?.fileUrl ? (
             <>
               {/* Header */}
@@ -353,7 +370,7 @@ export default function MaterialPage() {
         </div>
 
         {/* Enhanced Chat Sidebar */}
-        <div className="w-full lg:w-[420px] shrink-0 flex flex-col h-full border-t  lg:border-t-0 lg:border-l border-white/10 bg-black/20">
+        <div className={`w-full lg:w-[420px] shrink-0 flex-col h-full border-t lg:border-t-0 lg:border-l border-white/10 bg-black/20 ${mobileTab === "pdf" ? "hidden lg:flex" : "flex"}`}>
           <div className="p-5 h-20 border-b border-white/5 bg-linear-to-r from-[#5C55F9]/10 to-transparent flex items-center justify-between shrink-0">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-xl bg-[#5C55F9]/20 flex items-center justify-center border border-[#5C55F9]/30">

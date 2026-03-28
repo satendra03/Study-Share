@@ -8,7 +8,7 @@ const envSchema = z.object({
     .enum(["development", "production", "test"])
     .default("development"),
 
-  // PORT: z.string().default("5000").transform((val) => parseInt(val, 10)),
+  PORT: z.string().default("5000").transform((val) => parseInt(val, 10)),
 
   MONGODB_ATLAS: z.string().min(1, "MONGODB_ATLAS is required"),
   MONGODB_COMPASS: z.string().min(1, "MONGODB_COMPASS is required"),
@@ -37,7 +37,7 @@ const envSchema = z.object({
     .default("6379")
     .transform((val) => parseInt(val, 10)),
   REDIS_URL: z.string().default(""),
-    
+
   FIREBASE_ADMIN_KEY: z.string().min(1, "FIREBASE_ADMIN_KEY is required"),
 });
 

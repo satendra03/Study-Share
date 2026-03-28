@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { codeController } from './code.module.js';
 import { verifyFirebaseToken, requireAppUser } from '@/middlewares/auth.middleware.js';
+import { codeLimiter } from '@/middlewares/rateLimit.middleware.js';
 
 const router = Router();
 
@@ -8,7 +9,7 @@ const router = Router();
 router.use(verifyFirebaseToken);
 router.use(requireAppUser);
 
-router.post('/execute', codeController.execute);
+router.post('/execute', codeLimiter, codeController.execute);
 
 export default {
     path: 'code',

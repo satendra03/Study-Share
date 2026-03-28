@@ -1,19 +1,20 @@
 import { Router } from "express";
 import { authController } from "@/modules/auth/auth.module.js";
 import { verifyFirebaseToken, requireAppUser, requireAdmin, loadProfileUser } from "@/middlewares/auth.middleware.js";
+import { authLimiter } from "@/middlewares/rateLimit.middleware.js";
 
 const authRouter = Router();
 
 // ── Public routes (only need a valid Firebase token) ────────────────────────
 
 /** Check if user exists in DB after Google sign-in */
-authRouter.post("/signin", authController.signIn);
+authRouter.post("/signin", authLimiter, authController.signIn);
 
 /** Complete profile — student */
-authRouter.post("/register/student", authController.registerStudent);
+authRouter.post("/register/student", authLimiter, authController.registerStudent);
 
 /** Complete profile — teacher */
-authRouter.post("/register/teacher", authController.registerTeacher);
+authRouter.post("/register/teacher", authLimiter, authController.registerTeacher);
 
 // ── Protected routes (must be logged in + profile complete) ─────────────────
 

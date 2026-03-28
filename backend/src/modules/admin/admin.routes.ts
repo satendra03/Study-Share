@@ -1,12 +1,14 @@
 import { Router } from 'express';
 import { adminController } from './admin.module.js';
 import { verifyFirebaseToken, requireAppUser, requireAdmin, requireAdminOrTeacher } from '@/middlewares/auth.middleware.js';
+import { adminLimiter } from '@/middlewares/rateLimit.middleware.js';
 
 const router = Router();
 
 router.use(verifyFirebaseToken);
 router.use(requireAppUser);
 router.use(requireAdminOrTeacher);
+router.use(adminLimiter);
 
 // Stats
 router.get('/stats', adminController.getStats);

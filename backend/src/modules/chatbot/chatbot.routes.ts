@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { chatbotController } from './chatbot.module.js';
 import { verifyFirebaseToken, requireAppUser } from '@/middlewares/auth.middleware.js';
+import { aiLimiter } from '@/middlewares/rateLimit.middleware.js';
 
 const router = Router();
 
@@ -12,7 +13,7 @@ router.get('/sessions', chatbotController.getSessions);
 router.post('/sessions', chatbotController.createSession);
 router.get('/sessions/:id', chatbotController.getSession);
 router.delete('/sessions/:id', chatbotController.deleteSession);
-router.post('/sessions/:id/messages', chatbotController.sendMessage);
+router.post('/sessions/:id/messages', aiLimiter, chatbotController.sendMessage);
 router.get('/sessions/:id/messages', chatbotController.getMessages);
 
 export default {

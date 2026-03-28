@@ -36,6 +36,7 @@ const envSchema = z.object({
     .string()
     .default("6379")
     .transform((val) => parseInt(val, 10)),
+  REDIS_URL: z.string().default(""),
     
   FIREBASE_ADMIN_KEY: z.string().min(1, "FIREBASE_ADMIN_KEY is required"),
 });

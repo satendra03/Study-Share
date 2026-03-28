@@ -6,9 +6,20 @@ import { AIService } from "@/modules/ai/ai.service.js";
 import * as pdfjsLib from "pdfjs-dist";
 import https from "https";
 import http from "http";
+import { env } from "@/config/env.config.js";
 
 // BullMQ expects a Redis connection config object (it manages the client lifecycle internally)
-const connection = getRedisOptions();
+// ✅ Always give BullMQ an object (not string)
+const connection = env.REDIS_URL
+  ? {
+      url: env.REDIS_URL,
+      maxRetriesPerRequest: null,
+    }
+  : {
+      host: env.REDIS_HOST,
+      port: env.REDIS_PORT,
+      maxRetriesPerRequest: null,
+    };
 
 // ✅ Export queue so MaterialService can push jobs to it
 export const materialQueue = new Queue("material-processing", { connection });

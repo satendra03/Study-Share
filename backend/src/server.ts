@@ -1,9 +1,10 @@
 // Main Server
-import { env } from "./config/env.config.js";
-import "./config/firebase.config.js";
-import "./config/cloudinary.config.js";
-import { connectMongoDB } from "./config/mongodb.config.js";
-import { connectRedis } from "./config/redis.config.js";
+import "module-alias/register";
+import { env } from "@/config/env.config.js";
+import "@/config/firebase.config.js";
+import "@/config/cloudinary.config.js";
+import { connectMongoDB } from "@/config/mongodb.config.js";
+import { connectRedis } from "@/config/redis.config.js";
 
 import app from "./app.js";
 

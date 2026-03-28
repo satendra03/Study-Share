@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authController } from "@/modules/auth/auth.module.js";
-import { verifyFirebaseToken, requireAppUser, requireAdmin } from "@/middlewares/auth.middleware.js";
+import { verifyFirebaseToken, requireAppUser, requireAdmin, loadProfileUser } from "@/middlewares/auth.middleware.js";
 
 const authRouter = Router();
 
@@ -17,8 +17,8 @@ authRouter.post("/register/teacher", authController.registerTeacher);
 
 // ── Protected routes (must be logged in + profile complete) ─────────────────
 
-/** Get current user's profile */
-authRouter.get("/me", verifyFirebaseToken, requireAppUser, authController.getMe);
+/** Get current user's profile (complete or incomplete, or null if no Firestore doc yet) */
+authRouter.get("/me", verifyFirebaseToken, loadProfileUser, authController.getMe);
 
 // ── Admin-only routes ────────────────────────────────────────────────────────
 

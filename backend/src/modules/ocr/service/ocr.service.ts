@@ -1,12 +1,13 @@
 import axios from "axios";
 import { config } from "dotenv";
-import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf";
+// @ts-ignore — pdfjs-dist v3 has no exports map; sub-path resolved at runtime
+import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.js";
 import { createRequire } from "module";
 import { type StructuredPaper } from "@/types/paper.types.js";
 import { AIService } from "@/modules/ai/ai.service.js";
 
 const require = createRequire(import.meta.url);
-const pdfjs = (pdfjsLib as any).default;
+const pdfjs = (pdfjsLib as any).default ?? pdfjsLib;
 pdfjs.GlobalWorkerOptions.workerSrc =
   require.resolve("pdfjs-dist/legacy/build/pdf.worker.js");
 
@@ -112,7 +113,7 @@ export class OCRService {
       return detections
         .map((item: any) => item?.text_prediction?.text || "")
         .filter(Boolean)
-        .join(" ");
+        .join("\n");
     }
 
     return "";

@@ -57,10 +57,10 @@ export const AIService = {
         };
     },
 
-    structurePageWithAI: async (rawText: string, pageNumber: number): Promise<{ unit: string; questions: string[] }> => {
+    structurePageWithAI: async (rawText: string, pageNumber: number, subject?: string | null): Promise<{ groups: { unit: string; questions: string[] }[] }> => {
         const maxRetries = 3;
         let attempt = 0;
-        const prompt = getPageStructuringPrompt(rawText, pageNumber);
+        const prompt = getPageStructuringPrompt(rawText, pageNumber, subject);
 
         while (attempt < maxRetries) {
             try {
@@ -80,10 +80,13 @@ export const AIService = {
                     .trim();
 
                 const parsed = JSON.parse(cleaned);
-                return {
-                    unit: parsed.unit || "",
-                    questions: Array.isArray(parsed.questions) ? parsed.questions : []
-                };
+                const groups = Array.isArray(parsed.groups)
+                    ? parsed.groups.map((g: any) => ({
+                        unit: g.unit || "Module-1",
+                        questions: Array.isArray(g.questions) ? g.questions : []
+                    }))
+                    : [];
+                return { groups };
             } catch (error: any) {
                 if (error.status === 503 && attempt < maxRetries - 1) {
                     await new Promise(resolve => setTimeout(resolve, 1000 * (2 ** attempt)));
@@ -94,7 +97,7 @@ export const AIService = {
                 }
             }
         }
-        
-        return { unit: "", questions: [] };
+
+        return { groups: [] };
     }
 }

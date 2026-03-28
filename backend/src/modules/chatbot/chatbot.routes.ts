@@ -8,7 +8,12 @@ const router = Router();
 router.use(verifyFirebaseToken);
 router.use(requireAppUser);
 
-router.post("/chat", chatbotController.chat);
+router.get('/sessions', chatbotController.getSessions);
+router.post('/sessions', chatbotController.createSession);
+router.get('/sessions/:id', chatbotController.getSession);
+router.delete('/sessions/:id', chatbotController.deleteSession);
+router.post('/sessions/:id/messages', chatbotController.sendMessage);
+router.get('/sessions/:id/messages', chatbotController.getMessages);
 
 export default {
     path: 'chatbot',

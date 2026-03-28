@@ -8,7 +8,6 @@ export interface StudentProfile {
 
 export interface TeacherProfile {
   fullName: string;
-  teacherId: string;
 }
 
 export interface User {
@@ -22,19 +21,21 @@ export interface User {
   studentProfile?: StudentProfile | null;
   teacherProfile?: TeacherProfile | null;
   displayName?: string;
+  bookmarkedMaterialIds?: string[];
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface Material {
   _id?: string;
-  title: string;
+  year: string;
   description: string;
   fileUrl: string;
   fileName: string;
   fileType: string;
   fileSize: number;
   uploaderId: string;
+  uploaderName?: string;
   downloads?: number;
   status?: "processing" | "done" | "failed";
   subject?: string;
@@ -43,6 +44,7 @@ export interface Material {
   semester?: string;
   createdAt?: string;
   updatedAt?: string;
+  title?: string;
 }
 
 export interface ChatMessage {

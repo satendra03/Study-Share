@@ -2,13 +2,15 @@ import mongoose, { Schema, type Document } from 'mongoose';
 import type { Material } from './material.types.js';
 
 const MaterialSchema = new Schema<Material & Document>({
-    title: { type: String, required: true },
+    title: { type: String },
+    year: { type: String, required: true },
     description: { type: String, required: true },
     fileUrl: { type: String, required: true },
     fileName: { type: String, required: true },
     fileType: { type: String, required: true },
     fileSize: { type: Number, required: true },
     uploaderId: { type: String, required: true },
+    uploaderName: { type: String },
     downloads: { type: Number, default: 0 },
     status: { type: String, enum: ["processing", "done", "failed"], default: "processing" },
     subject: { type: String },
@@ -24,8 +26,14 @@ const MaterialSchema = new Schema<Material & Document>({
             pageNumber: { type: Number, required: true },
             rawText: { type: String, required: true },
             structured: {
-                unit: { type: String, required: true },
-                questions: { type: [String], default: [] }
+                groups: {
+                    type: Array,
+                    default: [],
+                    of: {
+                        unit: { type: String, required: true },
+                        questions: { type: [String], default: [] }
+                    }
+                }
             }
         }
     },

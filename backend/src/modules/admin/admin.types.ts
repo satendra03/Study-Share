@@ -1,8 +1,15 @@
 export interface AdminStats {
     totalUsers: number;
+    totalStudents: number;
+    totalTeachers: number;
     totalMaterials: number;
+    processingMaterials: number;
+    failedMaterials: number;
+    unverifiedUsers: number;
     unverifiedTeachers: number;
     totalDownloads: number;
+    recentUploads: number; // last 7 days
+    recentUsers: number;   // last 7 days
 }
 
 export interface AdminUserManagement {
@@ -13,9 +20,4 @@ export interface AdminUserManagement {
 export interface AdminMaterialManagement {
     materials: any[];
     total: number;
-}
-
-export interface VerifyUserResult {
-    uid: string;
-    isVerified: boolean;
 }

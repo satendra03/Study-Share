@@ -40,11 +40,33 @@ export const getStructurePrompt = (text: string) => {
   ${text}`;
   }
 
-export const getPageStructuringPrompt = (rawText: string, pageNumber: number) => {
-    return `Extract the unit/section title and a flat array of questions from the following single page text.
-Fix any obvious OCR errors. Do not extract sub-parts as nested arrays, each part must be its own string in the 'questions' array.
-Return ONLY a valid JSON object matching this structure exactly (no markdown, no backticks):
-{ "unit": "must be one of [Module-1, Module-2, Module-3, Module-4, Module-5]", "questions": ["Question 1", "Question 2"] }
+export const getPageStructuringPrompt = (rawText: string, pageNumber: number, subject?: string | null) => {
+    const subjectHint = subject ? `This page is from a "${subject}" exam paper. Use this subject context to resolve any unclear OCR words (e.g. if a word looks like "Binory Trse" and the subject is Data Structures, it is likely "Binary Tree").` : "";
+
+    return `You are extracting questions from a single page of an engineering exam paper.
+${subjectHint}
+
+IMPORTANT: A single page may contain questions from MORE THAN ONE module/unit. Group questions by their module heading.
+
+RULES:
+- Scan the page for module/unit headings (e.g. "Module 1", "Module-2", "UNIT-III"). Each heading starts a new group.
+- If the page has no module heading at all, use "Module-1" as the default group.
+- Extract every question exactly as written — do NOT rephrase, summarize, or rewrite.
+- Only fix obvious OCR character errors (e.g. "Expiain" → "Explain", "tbe" → "the", "iist" → "list"). Keep the rest of the question text untouched.
+- Each sub-part (a), (b), (c) must be a separate entry in the questions array. Drop labels like "1a." or "Q.1(a)" — keep only the question text.
+- If the page is a cover page, blank page, or has no questions, return an empty groups array.
+- Return ONLY valid JSON — no markdown, no backticks, no explanation.
+
+Output structure:
+{ "groups": [ { "unit": "Module-N", "questions": ["question 1", "question 2"] } ] }
+
+Example (page with TWO modules):
+Input: "Module 1  1a. Explain stack with example. 1b. Write program for queue.  Module 2  2a. Expiain binory search tree."
+Output: { "groups": [ { "unit": "Module-1", "questions": ["Explain stack with example.", "Write program for queue."] }, { "unit": "Module-2", "questions": ["Explain binary search tree."] } ] }
+
+Example (page with ONE module):
+Input: "Module 3 - Trees  1a. Expiain binory search tree with exampie. 10M  1b. Wrlte a C progrm to implement inorder traversal."
+Output: { "groups": [ { "unit": "Module-3", "questions": ["Explain binary search tree with example.", "Write a C program to implement inorder traversal."] } ] }
 
 Text (Page ${pageNumber}):
 ${rawText}`;

@@ -16,19 +16,20 @@ export class AuthService implements AuthServiceInterface {
         if (!email) {
             throw new Error("Firebase token has no email — Google accounts must have an email.");
         }
-        // 2. Look up in our own database
-        // we will not directly look in the repository
-        const existingUser = await userService.getUserByFirebaseUid(firebaseUid);
+        // 2. Look up in our own database (use OrNull to avoid throwing for new users)
+        const existingUser = await userService.getUserByFirebaseUidOrNull(firebaseUid);
 
-        if (existingUser && existingUser.isProfileComplete) {
-            // if (picture && existingUser.photoURL !== picture) {
-            //     existingUser.photoURL = picture;
-            //     await userService.updatePhotoUrl(firebaseUid, picture);
-            // }
-            return { status: "existing_user", user: existingUser };
+        if (existingUser) {
+            // Sync photo URL if changed
+            if (picture && picture !== existingUser.photoURL) {
+                await userService.updatePhotoUrl(firebaseUid, picture);
+            }
+            if (existingUser.isProfileComplete) {
+                return { status: "existing_user", user: existingUser };
+            }
+            return { status: "incomplete_profile", user: existingUser };
         }
 
-        // New user (or signed up but never completed profile)
         return { status: "new_user", firebaseUid, email, name: name || "", photoURL: picture || "" };
     }
     /**
@@ -70,7 +71,6 @@ export class AuthService implements AuthServiceInterface {
         idToken: string,
         profile: {
             fullName: string;
-            teacherId: string;
         }
     ): Promise<RegisterResult> => {
         const decoded = await auth.verifyIdToken(idToken);

@@ -99,7 +99,7 @@ export class UserRepository implements UserRepositoryInterface {
         await usersCollection.doc(firebaseUid).update({
             studentProfile: profile,
             isProfileComplete: true,
-            isVerified: true,
+            isVerified: false,
             updatedAt: new Date(),
         });
         return this.findByFirebaseUid(firebaseUid);
@@ -109,7 +109,6 @@ export class UserRepository implements UserRepositoryInterface {
         firebaseUid: string,
         profile: {
             fullName: string;
-            teacherId: string;
         }
     ): Promise<User | null> => {
         await usersCollection.doc(firebaseUid).update({
@@ -151,6 +150,23 @@ export class UserRepository implements UserRepositoryInterface {
         if (!photoURL) return;
         await usersCollection.doc(firebaseUid).update({
             photoURL,
+            updatedAt: new Date(),
+        });
+    }
+
+    /** Get total user count */
+    getUserCount = async (): Promise<number> => {
+        const snapshot = await usersCollection.get();
+        return snapshot.size;
+    }
+
+    /** Toggle bookmark for a material */
+    toggleBookmark = async (userId: string, materialId: string, add: boolean): Promise<void> => {
+        const { FieldValue } = await import("firebase-admin/firestore");
+        await usersCollection.doc(userId).update({
+            bookmarkedMaterialIds: add
+                ? FieldValue.arrayUnion(materialId)
+                : FieldValue.arrayRemove(materialId),
             updatedAt: new Date(),
         });
     }

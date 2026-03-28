@@ -8,7 +8,6 @@ export interface StudentProfile {
 
 export interface TeacherProfile {
     fullName: string;
-    teacherId: string;
 }
 
 export interface User {
@@ -21,6 +20,8 @@ export interface User {
     isProfileComplete: boolean;
     studentProfile?: StudentProfile | null;
     teacherProfile?: TeacherProfile | null;
+    /** Material document IDs saved by the user */
+    bookmarkedMaterialIds?: string[];
     createdAt?: Date;
     updatedAt?: Date;
     displayName?: string;

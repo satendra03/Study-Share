@@ -1,21 +1,29 @@
 import { Router } from 'express';
 import { adminController } from './admin.module.js';
-import { verifyFirebaseToken, requireAppUser, requireAdmin } from '@/middlewares/auth.middleware.js';
+import { verifyFirebaseToken, requireAppUser, requireAdmin, requireAdminOrTeacher } from '@/middlewares/auth.middleware.js';
 
-const adminRouter = Router();
+const router = Router();
 
-// All admin routes require admin access
-adminRouter.use(verifyFirebaseToken);
-adminRouter.use(requireAppUser);
-adminRouter.use(requireAdmin);
+router.use(verifyFirebaseToken);
+router.use(requireAppUser);
+router.use(requireAdminOrTeacher);
 
-adminRouter.get('/stats', adminController.getStats);
-adminRouter.get('/users', adminController.getUsers);
-adminRouter.get('/materials', adminController.getMaterials);
-adminRouter.delete('/materials/:id', adminController.deleteMaterial);
-adminRouter.patch('/users/:id/verify', adminController.verifyUser);
+// Stats
+router.get('/stats', adminController.getStats);
+
+// Users
+router.get('/users', adminController.getUsers);
+router.patch('/users/:userId/verify', adminController.verifyUser);
+router.delete('/users/:userId', adminController.deleteUser);
+
+// Materials
+router.get('/materials', adminController.getMaterials);
+router.delete('/materials/:materialId', adminController.deleteMaterial);
+
+// Teachers — admin only
+router.post('/teachers', requireAdmin, adminController.createTeacher);
 
 export default {
     path: 'admin',
-    router: adminRouter,
+    router,
 };

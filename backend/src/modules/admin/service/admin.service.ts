@@ -1,33 +1,35 @@
-import { type AdminServiceInterface } from "./admin.service.interface.js";
-import { type AdminRepositoryInterface } from "../repository/admin.repository.interface.js";
-import type { AdminStats, AdminMaterialManagement, AdminUserManagement, VerifyUserResult } from "../admin.types.js";
+import { type AdminServiceInterface } from './admin.service.interface.js';
+import { type AdminRepositoryInterface } from '../repository/admin.repository.interface.js';
+import { type AdminStats, type AdminUserManagement, type AdminMaterialManagement } from '../admin.types.js';
 
 export class AdminService implements AdminServiceInterface {
-  constructor(private repository: AdminRepositoryInterface) {}
+    constructor(private repository: AdminRepositoryInterface) {}
 
-  getDashboardStats = async (): Promise<AdminStats> => {
-    return await this.repository.getStats();
-  }
+    async getDashboardStats(): Promise<AdminStats> {
+        return await this.repository.getStats();
+    }
 
-  getAllUsers = async (
-    page: number = 1,
-    limit: number = 10,
-  ): Promise<AdminUserManagement> => {
-    return await this.repository.getUsers(page, limit);
-  }
+    async getAllUsers(page: number = 1, limit: number = 10, role?: string, verified?: string): Promise<AdminUserManagement> {
+        return await this.repository.getUsers(page, limit, role, verified);
+    }
 
-  getAllMaterials = async (
-    page: number = 1,
-    limit: number = 10,
-  ): Promise<AdminMaterialManagement> => {
-    return await this.repository.getMaterials(page, limit);
-  }
+    async getAllMaterials(page: number = 1, limit: number = 10, status?: string): Promise<AdminMaterialManagement> {
+        return await this.repository.getMaterials(page, limit, status);
+    }
 
-  deleteMaterial = async (materialId: string): Promise<void> => {
-    await this.repository.deleteMaterial(materialId);
-  }
+    async verifyUser(userId: string, verified: boolean): Promise<any> {
+        return await this.repository.verifyUser(userId, verified);
+    }
 
-  verifyUser = async (uid: string): Promise<VerifyUserResult> => {
-    return await this.repository.verifyUser(uid);
-  };
+    async deleteUser(userId: string): Promise<void> {
+        return await this.repository.deleteUser(userId);
+    }
+
+    async deleteMaterial(materialId: string): Promise<void> {
+        return await this.repository.deleteMaterial(materialId);
+    }
+
+    async createTeacher(email: string, password: string, fullName: string): Promise<any> {
+        return await this.repository.createTeacher(email, password, fullName);
+    }
 }

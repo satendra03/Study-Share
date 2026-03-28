@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { Material } from "@/types";
@@ -19,6 +19,8 @@ import {
 import { BRANCHES, SEMESTERS, YEARS, semesterOptions, branchOptions, yearOptions } from "@/lib/constants";
 
 // Reusable filter dropdown component
+// Uses controlled open state so menu stays open after selecting an option.
+// Closes only on click-outside or Escape.
 function FilterDropdown({
   label,
   value,
@@ -34,19 +36,37 @@ function FilterDropdown({
   allLabel?: string;
   showAll?: boolean;
 }) {
+  const [open, setOpen] = useState(false);
+  const preventCloseRef = useRef(false);
+
   const displayText = value
     ? options.find((o) => o.value === value)?.label || value
     : allLabel;
 
   return (
-    <DropdownMenu>
+    <DropdownMenu
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen && preventCloseRef.current) {
+          preventCloseRef.current = false;
+          return; // Block the close triggered by item click
+        }
+        setOpen(nextOpen);
+      }}
+    >
       <DropdownMenuTrigger className="inline-flex items-center gap-2 cursor-pointer bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm hover:bg-white/10 transition-colors focus:outline-none focus:ring-1 focus:ring-[#5C55F9] select-none">
         <span className="text-gray-400 text-xs mr-0.5">{label}:</span>
         <span className="text-white font-medium">{displayText}</span>
         <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
       </DropdownMenuTrigger>
       <DropdownMenuContent className="bg-[#0c0c14] border-white/10 min-w-[160px]">
-        <DropdownMenuRadioGroup value={value} onValueChange={onValueChange}>
+        <DropdownMenuRadioGroup
+          value={value}
+          onValueChange={(v) => {
+            preventCloseRef.current = true;
+            onValueChange(v);
+          }}
+        >
           {showAll && (
             <DropdownMenuRadioItem value="" className="text-gray-300 cursor-pointer focus:bg-[#5C55F9]/10 focus:text-white">
               {allLabel}
@@ -186,7 +206,7 @@ export default function DashboardPage() {
             value={filters.branch}
             onValueChange={(v) => setFilters((f) => ({ ...f, branch: v }))}
             options={branchOptions}
-            showAll={false}
+            allLabel="All Branches"
           />
 
           <FilterDropdown

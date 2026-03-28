@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -44,6 +44,9 @@ function FormDropdown({
   options: { value: string; label: string }[];
   placeholder?: string;
 }) {
+  const [open, setOpen] = useState(false);
+  const preventCloseRef = useRef(false);
+
   const displayText = value
     ? options.find((o) => o.value === value)?.label || value
     : placeholder;
@@ -51,13 +54,28 @@ function FormDropdown({
   return (
     <div>
       <Label className="text-[10px] text-gray-500 uppercase tracking-widest font-medium block mb-1.5">{label}</Label>
-      <DropdownMenu>
+      <DropdownMenu
+        open={open}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen && preventCloseRef.current) {
+            preventCloseRef.current = false;
+            return;
+          }
+          setOpen(nextOpen);
+        }}
+      >
         <DropdownMenuTrigger className="inline-flex items-center justify-between w-full cursor-pointer bg-[#0f0f18] border border-white/8 rounded-lg px-3 h-10 text-sm hover:bg-[#13132a] transition-colors focus:outline-none focus:border-[#5C55F9]/40 select-none">
           <span className={value ? "text-white" : "text-gray-500"}>{displayText}</span>
           <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
         </DropdownMenuTrigger>
         <DropdownMenuContent className="bg-[#0c0c14] border-white/10 min-w-[160px]">
-          <DropdownMenuRadioGroup value={value} onValueChange={onValueChange}>
+          <DropdownMenuRadioGroup
+            value={value}
+            onValueChange={(v) => {
+              preventCloseRef.current = true;
+              onValueChange(v);
+            }}
+          >
             {options.map((opt) => (
               <DropdownMenuRadioItem
                 key={opt.value}

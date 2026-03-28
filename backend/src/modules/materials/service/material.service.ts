@@ -3,42 +3,11 @@ import { type Material, type PageData } from "../material.types.js";
 import { type MaterialRepositoryInterface } from "../repository/material.repository.interface.js";
 import { type MaterialServiceInterface } from "./material.service.interface.js";
 import { NotFoundError } from "@/shared/ApiError.js";
-import axios from 'axios';
-// import * as pdfParse from 'pdf-parse';
-import * as pdfjsLib from 'pdfjs-dist';
-import { OCRService } from '@/modules/ocr/service/ocr.service.js';
 import { ai } from "@/modules/ai/ai.service.js";
+import { materialQueue } from "@/infrastructure/queue/material.queue.js";
 
 export class MaterialService implements MaterialServiceInterface {
-    private ocrService = new OCRService();
-
     constructor(private materialRepository: MaterialRepositoryInterface) { }
-
-    private async extractTextFromPDF(buffer: Buffer): Promise<{ pageNumber: number; rawText: string }[]> {
-        // First, try extracting text with pdfjs
-        const getDoc = typeof pdfjsLib.getDocument === "function" ? pdfjsLib.getDocument : (pdfjsLib as any).default?.getDocument;
-        if (!getDoc) throw new Error("pdfjsLib.getDocument is not a function");
-        const uint8Array = new Uint8Array(buffer);
-        const pdf = await getDoc({ data: uint8Array }).promise;
-        const pages: { pageNumber: number; rawText: string }[] = [];
-
-        for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            const textContent = await page.getTextContent();
-            const text = textContent.items.map((item: any) => item.str).join(' ');
-            pages.push({ pageNumber: i, rawText: text });
-        }
-
-        // Check if we have sufficient text (not image-based PDF)
-        const totalText = pages.map(p => p.rawText).join('').trim();
-        if (totalText.length > 100) { // If there's substantial text, use it
-            return pages;
-        }
-
-        // Otherwise, use OCR for image-based PDFs
-        console.log('PDF appears to be image-based, using OCR...');
-        return await this.ocrService.extractPagesFromPDF(buffer);
-    }
 
     createMaterial = async (data: Omit<Material, "id" | "createdAt" | "updatedAt" | "downloads" | "fileUrl" | "title">, file: Express.Multer.File): Promise<Material> => {
         // Generate title: Branch-Semester-Subject-Year
@@ -63,26 +32,26 @@ export class MaterialService implements MaterialServiceInterface {
             status: data.fileType === "PYQ" ? "processing" : "done",
         });
 
-        // After saving, process OCR for PYQs in the background
+        // ── Enqueue background processing via BullMQ ──────────────
+        // For PYQ: extract text → AI structuring → update MongoDB
+        // The job runs in the worker with retry support, concurrency
+        // control, and crash recovery.
         if (data.fileType === "PYQ") {
-            (async () => {
-                try {
-                    // Extract text from PDF per page
-                    const pages = await this.extractTextFromPDF(file.buffer);
-
-                    if (!pages || pages.length === 0) {
-                        await this.materialRepository.update(material._id as string, { status: "failed" });
-                    } else {
-                        await this.materialRepository.update(material._id as string, {
-                            status: "done",
-                            pages: pages as any
-                        });
-                    }
-                } catch (error) {
-                    console.error('Failed to process OCR:', error);
-                    await this.materialRepository.update(material._id as string, { status: "failed" });
+            await materialQueue.add(
+                "process-material",
+                {
+                    materialId: material._id as string,
+                    // BullMQ serializes to JSON, so pass the buffer as an array of bytes
+                    fileBuffer: Array.from(file.buffer),
+                },
+                {
+                    attempts: 3,
+                    backoff: { type: "exponential", delay: 3000 },
+                    removeOnComplete: true,
+                    removeOnFail: false, // keep failed jobs for debugging
                 }
-            })();
+            );
+            console.log(`[MaterialService] Enqueued processing job for material ${material._id}`);
         }
 
         return material;

@@ -27,3 +27,8 @@ export interface ChatbotResponse {
     message?: ChatMessage;
     sessions?: ChatSession[];
 }
+
+export interface ChatTurn {
+    role: "user" | "assistant";
+    content: string;
+}

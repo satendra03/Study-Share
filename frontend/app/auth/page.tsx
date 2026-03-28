@@ -1,21 +1,47 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { ShieldCheck, FileText, CheckCircle2, AlertCircle } from "lucide-react";
+import { ShieldCheck, FileText, CheckCircle2, AlertCircle, Mail, Lock, Eye, EyeOff, GraduationCap } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { InteractiveGridPattern } from "@/components/ui/interactive-grid-pattern";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function AuthPage() {
-  const { signInWithGoogle, firebaseUser, loading } = useAuth();
+  const { signInWithGoogle, signInWithEmail, firebaseUser, loading } = useAuth();
   const router = useRouter();
+  const [tab, setTab] = useState<"google" | "email">("google");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
 
   useEffect(() => {
     if (firebaseUser && !loading) {
       router.push("/dashboard");
     }
   }, [firebaseUser, loading, router]);
+
+  const handleEmailSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEmailError("");
+    setEmailLoading(true);
+    try {
+      await signInWithEmail(email, password);
+    } catch (err: any) {
+      const msg = err?.message || "Sign in failed";
+      if (msg.includes("invalid-credential") || msg.includes("wrong-password") || msg.includes("user-not-found")) {
+        setEmailError("Invalid email or password.");
+      } else if (msg.includes("too-many-requests")) {
+        setEmailError("Too many failed attempts. Please try again later.");
+      } else {
+        setEmailError("Sign in failed. Please check your credentials.");
+      }
+    } finally {
+      setEmailLoading(false);
+    }
+  };
 
   return (
     <main className="min-h-screen relative bg-[#030303] text-white font-sans selection:bg-indigo-500/30 antialiased flex flex-col items-center justify-center p-4">
@@ -42,58 +68,168 @@ export default function AuthPage() {
 
         <div className="bg-[#111116]/80 p-8 rounded-3xl border border-white/10 shadow-[0_0_40px_-15px_rgba(92,85,249,0.2)] backdrop-blur-xl">
           <h1 className="text-2xl md:text-3xl font-medium tracking-tight mb-2 text-center text-white">
-            Create your account
+            Sign in to StudyShare
           </h1>
-          <p className="text-gray-400 text-sm text-center mb-8">
-            Access study materials instantly safely & securely.
+          <p className="text-gray-400 text-sm text-center mb-6">
+            Access study materials instantly safely &amp; securely.
           </p>
 
-          {/* Important Info Box */}
-          <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-2xl p-5 mb-8">
-            <h3 className="text-indigo-300 font-medium text-sm flex items-center gap-2 mb-3">
-              <ShieldCheck className="w-5 h-5 text-indigo-400" />
-              Real Identity Recommended
-            </h3>
-            <p className="text-gray-400 text-xs leading-relaxed mb-4">
-              To keep StudyShare safe and high-quality, please sign up using your real Name and Email ID.
-            </p>
-            <ul className="space-y-3 text-xs text-gray-300">
-              <li className="flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                <span><strong className="text-white font-medium">Unverified profiles</strong> can only upload a maximum of 5 PDFs.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                <span><strong className="text-white font-medium">Verified profiles</strong> can upload and chat with materials an unlimited number of times.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <FileText className="w-4 h-4 text-gray-500 shrink-0 mt-0.5" />
-                <span>Our admins periodically verify signed up profiles manually.</span>
-              </li>
-            </ul>
+          {/* Tabs */}
+          <div className="flex gap-1 bg-white/5 rounded-xl p-1 mb-6">
+            <button
+              type="button"
+              onClick={() => setTab("google")}
+              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+                tab === "google"
+                  ? "bg-[#5C55F9] text-white shadow-[0_0_16px_-4px_rgba(92,85,249,0.6)]"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              Student / Google
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab("email")}
+              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                tab === "email"
+                  ? "bg-[#5C55F9] text-white shadow-[0_0_16px_-4px_rgba(92,85,249,0.6)]"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <GraduationCap className="w-3.5 h-3.5" />
+              Teacher Sign In
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={() => void signInWithGoogle()}
-            disabled={loading}
-            className="w-full cursor-pointer flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-black px-6 py-4 rounded-full font-semibold transition-all shadow-sm active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100"
-          >
-            {loading ? (
-              <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="w-5 h-5">
-                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
-                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
-                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
-                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
-              </svg>
-            )}
-            {loading ? "Please wait..." : "Continue with Google"}
-          </button>
-          
+          {tab === "google" ? (
+            <>
+              {/* Important Info Box */}
+              <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-2xl p-5 mb-6">
+                <h3 className="text-indigo-300 font-medium text-sm flex items-center gap-2 mb-3">
+                  <ShieldCheck className="w-5 h-5 text-indigo-400" />
+                  Real Identity Recommended
+                </h3>
+                <p className="text-gray-400 text-xs leading-relaxed mb-4">
+                  To keep StudyShare safe and high-quality, please sign up using your real Name and Email ID.
+                </p>
+                <ul className="space-y-3 text-xs text-gray-300">
+                  <li className="flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                    <span>
+                      <strong className="text-white font-medium">New accounts</strong> start unverified — read materials only, no uploads.
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>
+                      <strong className="text-white font-medium">Verified profiles</strong> can upload and chat with materials.
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <FileText className="w-4 h-4 text-gray-500 shrink-0 mt-0.5" />
+                    <span>Our admins verify signed-up profiles manually.</span>
+                  </li>
+                </ul>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => void signInWithGoogle()}
+                disabled={loading}
+                className="w-full cursor-pointer flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-black px-6 py-4 rounded-full font-semibold transition-all shadow-sm active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100"
+              >
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="w-5 h-5">
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+                  </svg>
+                )}
+                {loading ? "Please wait..." : "Continue with Google"}
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="bg-purple-900/15 border border-purple-500/20 rounded-2xl p-4 mb-6">
+                <div className="flex items-start gap-2.5">
+                  <GraduationCap className="w-4 h-4 text-purple-400 mt-0.5 shrink-0" />
+                  <p className="text-xs text-gray-300 leading-relaxed">
+                    Use the <strong className="text-white">email and password</strong> provided by your administrator.
+                    Teacher accounts are created and managed by admins.
+                  </p>
+                </div>
+              </div>
+
+              {emailError && (
+                <div className="flex items-start gap-2.5 bg-red-950/40 border border-red-500/20 rounded-xl px-3.5 py-3 text-sm text-red-300 mb-4">
+                  <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
+                  {emailError}
+                </div>
+              )}
+
+              <form onSubmit={handleEmailSignIn} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1.5">Email</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="teacher@college.edu"
+                      required
+                      className="w-full bg-[#12121a] border border-white/10 rounded-xl pl-10 pr-4 h-11 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-[#5C55F9]/50 focus:ring-1 focus:ring-[#5C55F9]/30 transition-colors"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1.5">Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                      className="w-full bg-[#12121a] border border-white/10 rounded-xl pl-10 pr-11 h-11 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-[#5C55F9]/50 focus:ring-1 focus:ring-[#5C55F9]/30 transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={emailLoading}
+                  className="w-full bg-[#5C55F9] hover:bg-[#4d46db] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-full py-3.5 text-sm flex items-center justify-center gap-2 transition-all shadow-[0_0_24px_-6px_rgba(92,85,249,0.5)]"
+                >
+                  {emailLoading ? (
+                    <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  ) : null}
+                  {emailLoading ? "Signing in…" : "Sign In"}
+                </button>
+              </form>
+            </>
+          )}
+
           <p className="mt-6 text-center text-xs text-gray-500">
-            By continuing, you agree to StudyShare's <Link href="/term-of-service" className="text-gray-400 hover:text-white underline underline-offset-2">Terms of Service</Link> and <Link href="/privacy-policy" className="text-gray-400 hover:text-white underline underline-offset-2">Privacy Policy</Link>.
+            By continuing, you agree to StudyShare&apos;s{" "}
+            <Link href="/term-of-service" className="text-gray-400 hover:text-white underline underline-offset-2">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link href="/privacy-policy" className="text-gray-400 hover:text-white underline underline-offset-2">
+              Privacy Policy
+            </Link>
+            .
           </p>
         </div>
       </div>

@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { onAuthStateChanged, User as FirebaseUser, signInWithPopup, signOut } from "firebase/auth";
+import { onAuthStateChanged, User as FirebaseUser, signInWithPopup, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
 import { User } from "@/types";
 import api from "@/lib/api";
@@ -13,6 +13,7 @@ interface AuthContextType {
   profileLoaded: boolean;
   backendError: boolean;
   signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   setAppUser: (user: User | null) => void;
 }
@@ -98,6 +99,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const signInWithEmail = async (email: string, password: string) => {
+    try {
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      const idToken = await result.user.getIdToken();
+      const res = await api.post("/auth/signin", { idToken });
+      const userData = res.data.data as User;
+
+      if (userData?.isProfileComplete === true) {
+        setAppUser(userData as User);
+        router.push("/dashboard");
+        return;
+      }
+
+      sessionStorage.setItem("pendingIdToken", idToken);
+      sessionStorage.setItem("pendingUser", JSON.stringify(userData));
+      setAppUser(null);
+      router.push("/complete-profile");
+    } catch (error) {
+      console.error("Email sign in error:", error);
+      throw error;
+    }
+  };
+
   const logout = async () => {
     await signOut(auth);
     setAppUser(null);
@@ -115,6 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profileLoaded,
         backendError,
         signInWithGoogle,
+        signInWithEmail,
         logout,
         setAppUser,
       }}

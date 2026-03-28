@@ -16,8 +16,8 @@ export function Pricing({ noBorderTop = false }: { noBorderTop?: boolean }) {
             <div
               className="inline-flex items-center p-1.5 bg-[#111111]/80 rounded-full border border-white/10 cursor-not-allowed opacity-70"
             >
-              <button className="px-6 py-2 bg-primary rounded-full text-sm font-medium text-white shadow-sm pointer-events-none">Monthly</button>
-              <button className="px-6 py-2 rounded-full text-sm font-medium text-gray-400 pointer-events-none">Annually</button>
+              <span className="px-6 py-2 bg-primary rounded-full text-sm font-medium text-white shadow-sm pointer-events-none">Monthly</span>
+              <span className="px-6 py-2 rounded-full text-sm font-medium text-gray-400 pointer-events-none">Annually</span>
             </div>
           </TooltipTrigger>
           <TooltipContent className=" text-gray-800 border-gray-800">
@@ -55,7 +55,7 @@ export function Pricing({ noBorderTop = false }: { noBorderTop?: boolean }) {
                 <h3 className="text-xl font-medium text-white/50">Pro</h3>
                 <p className="text-indigo-200/40 text-sm mb-6">For power learners & pros.</p>
                 <div className="text-5xl font-light text-white/50 mb-8 flex items-end gap-1">$12 <span className="text-base text-gray-400/50 font-normal mb-1">/ per month</span></div>
-                <button className="w-full py-3 rounded-full bg-white/10 text-white/50 font-semibold cursor-not-allowed mb-8 border border-white/10 pointer-events-none">Coming Soon</button>
+                <span className="w-full py-3 rounded-full bg-white/10 text-white/50 font-semibold cursor-not-allowed mb-8 border border-white/10 pointer-events-none flex items-center justify-center">Coming Soon</span>
                 <div className="text-sm font-medium text-white/50 mb-4">What you will get</div>
                 <ul className="space-y-3">
                   {["Unlimited note uploads", "Advanced document parsing", "Unlimited AI chat", "Export chat logs"].map((item, i) => (

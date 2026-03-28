@@ -4,9 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import api from "@/lib/api";
-import { Upload, FileText, CheckCircle, Loader, X, FileUp, ArrowLeft, DownloadCloudIcon, ChevronDown } from "lucide-react";
+import { Upload, FileText, CheckCircle, Loader, X, FileUp, ArrowLeft, DownloadCloudIcon, ChevronDown, ShieldX } from "lucide-react";
 import { WorkspaceGridBackdrop } from "@/components/WorkspaceGridBackdrop";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 import { BRANCHES, SEMESTERS, YEARS, FILE_TYPES } from "@/lib/constants";
 import {
   DropdownMenu,
@@ -83,6 +84,7 @@ function FormDropdown({
 }
 
 export default function UploadPage() {
+  const { appUser } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [form, setForm] = useState({ year: "", description: "", subject: "", subjectCode: "", branch: "", semester: "", fileType: "Other" });
@@ -145,6 +147,32 @@ export default function UploadPage() {
       setError("Please drop a valid PDF file.");
     }
   };
+
+  // Block upload for unverified users
+  if (appUser && !appUser.isVerified) {
+    return (
+      <div className="relative min-h-screen flex items-center justify-center bg-[#030303] text-white antialiased">
+        <WorkspaceGridBackdrop />
+        <div className="relative z-10 max-w-md text-center px-6">
+          <div className="w-16 h-16 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mx-auto mb-5">
+            <ShieldX className="w-8 h-8 text-orange-400" />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">Account Not Verified</h2>
+          <p className="text-gray-400 text-sm leading-relaxed mb-6">
+            Your account is pending admin verification. Once verified, you&apos;ll be able to upload study materials.
+            In the meantime, you can browse and read all available materials.
+          </p>
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 bg-[#5C55F9] hover:bg-[#4d46db] text-white font-medium rounded-xl px-5 py-2.5 text-sm transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Browse Materials
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen flex flex-col justify-between bg-[#030303] text-white antialiased">

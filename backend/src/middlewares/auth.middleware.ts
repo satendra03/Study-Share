@@ -83,7 +83,12 @@ export async function requireAppUser(
     try {
         const user = await userService.getUserByFirebaseUidOrNull(req.firebaseUid);
 
-        if (!user || !user.isProfileComplete) {
+        if (!user) {
+            res.status(403).json({ message: "Profile incomplete", code: AuthCodes.PROFILE_INCOMPLETE });
+            return;
+        }
+
+        if (user.role !== "admin" && !user.isProfileComplete) {
             res.status(403).json({ message: "Profile incomplete", code: AuthCodes.PROFILE_INCOMPLETE });
             return;
         }
@@ -127,4 +132,46 @@ export function requireAdmin(
         return;
     }
     next();
+}
+
+/**
+ * Middleware for admin-only routes.
+ * Verifies the Firebase token and checks the email against ADMIN_EMAIL env var.
+ * Does NOT do any Firestore lookup — admin lives in Firebase Auth only.
+ */
+export async function requireAdminToken(
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith("Bearer ")) {
+        res.status(401).json({ message: "Missing Authorization header" });
+        return;
+    }
+    const idToken = authHeader.split("Bearer ")[1]!;
+    try {
+        const decoded = await auth.verifyIdToken(idToken);
+        const adminEmail = process.env.ADMIN_EMAIL?.toLowerCase().trim();
+        if (!adminEmail) {
+            res.status(500).json({ message: "ADMIN_EMAIL not configured on server" });
+            return;
+        }
+        if (decoded.email?.toLowerCase().trim() !== adminEmail) {
+            res.status(403).json({ message: "Admin access required" });
+            return;
+        }
+        req.appUser = {
+            id: decoded.uid,
+            firebaseUid: decoded.uid,
+            email: decoded.email || "",
+            role: "admin",
+            isVerified: true,
+            isProfileComplete: true,
+            displayName: decoded.name || "Admin",
+        } as any;
+        next();
+    } catch {
+        res.status(401).json({ message: "Invalid or expired token" });
+    }
 }

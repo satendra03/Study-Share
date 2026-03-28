@@ -99,7 +99,7 @@ export class UserRepository implements UserRepositoryInterface {
         await usersCollection.doc(firebaseUid).update({
             studentProfile: profile,
             isProfileComplete: true,
-            isVerified: true,
+            isVerified: false,
             updatedAt: new Date(),
         });
         return this.findByFirebaseUid(firebaseUid);
@@ -157,8 +157,8 @@ export class UserRepository implements UserRepositoryInterface {
 
     /** Get total user count */
     getUserCount = async (): Promise<number> => {
-        const snapshot = await usersCollection.count().get();
-        return snapshot.data().count;
+        const snapshot = await usersCollection.get();
+        return snapshot.size;
     }
 
     /** Toggle bookmark for a material */

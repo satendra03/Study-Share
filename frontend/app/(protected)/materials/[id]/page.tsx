@@ -5,7 +5,7 @@ import api from "@/lib/api";
 import { Material, ChatMessage } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Bot, User, FileText, Download, Loader2, ChevronLeft, ChevronRight, Bookmark } from "lucide-react";
+import { Send, Bot, User, FileText, Download, Loader2, ChevronLeft, ChevronRight, Bookmark, Clock } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import ReactMarkdown from "react-markdown";
@@ -364,9 +364,16 @@ export default function MaterialPage() {
                 <p className="text-[11px] text-gray-400 font-medium">Active Assistant</p>
               </div>
             </div>
-            <div className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold tracking-widest uppercase">
-              Online
-            </div>
+            {material?.status === 'processing' ? (
+              <div className="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold tracking-widest uppercase flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                Processing
+              </div>
+            ) : (
+              <div className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold tracking-widest uppercase">
+                Online
+              </div>
+            )}
           </div>
 
           <div className="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar content-start" style={{ minHeight: 0 }}>
@@ -438,6 +445,17 @@ export default function MaterialPage() {
           </div>
 
           <div className="p-4 border-t border-white/5 bg-[#0a0a10]/50 shrink-0 mt-auto">
+            {material?.status === 'processing' ? (
+              <div className="flex flex-col items-center gap-2 py-3 px-4 bg-amber-500/8 border border-amber-500/20 rounded-2xl text-center">
+                <div className="flex items-center gap-2 text-amber-400 text-sm font-medium">
+                  <Clock className="w-4 h-4 animate-spin" />
+                  Document is being processed
+                </div>
+                <p className="text-xs text-gray-500">
+                  AI chat will be available once processing is complete.
+                </p>
+              </div>
+            ) : (
             <div className="relative flex items-center">
               <Input
                 value={input}
@@ -456,6 +474,7 @@ export default function MaterialPage() {
                 {sending ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : <Send className="w-4 h-4 text-white ml-0.5" />}
               </Button>
             </div>
+            )}
             <p className="text-[10px] text-gray-500 font-medium mt-3 text-center tracking-wide uppercase">
               AI responses may be inaccurate
             </p>

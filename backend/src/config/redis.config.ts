@@ -10,15 +10,14 @@ let redisClient: Redis | null = null;
 /**
  * Build Redis connection options using validated environment variables
  */
-function getRedisOptions(): RedisOptions {
+function getRedisOptions(): RedisOptions | string {
+  if(env.REDIS_URL !== ""){
+    return env.REDIS_URL;
+  }
   return {
     host: env.REDIS_HOST,
     port: env.REDIS_PORT,
-    // BullMQ uses blocking commands (BRPOP, BLPOP, etc.), and ioredis requires
-    // maxRetriesPerRequest to be null to avoid losing the connection due to
-    // command timeouts.
     maxRetriesPerRequest: null,
-    // You can add additional options (password, tls, etc.) as needed.
   };
 }
 
@@ -33,10 +32,12 @@ async function connectRedis(): Promise<Redis> {
     return redisClient;
   }
 
-  const options = getRedisOptions();
-  console.log("🔗 Connecting to Redis...", `${options.host}:${options.port}`);
+  // const options = getRedisOptions();
+  // console.log("🔗 Connecting to Redis...", `${options.host}:${options.port}`);
 
-  redisClient = new Redis(options);
+  redisClient = new Redis(env.REDIS_URL, {
+    maxRetriesPerRequest: null,
+  });
 
   redisClient.on("connect", () => {
     console.log("✅ Redis client connected");

@@ -8,8 +8,6 @@ const envSchema = z.object({
     .enum(["development", "production", "test"])
     .default("development"),
 
-  PORT: z.string().default("5000").transform((val) => parseInt(val, 10)),
-
   MONGODB_ATLAS: z.string().min(1, "MONGODB_ATLAS is required"),
   MONGODB_COMPASS: z.string().min(1, "MONGODB_COMPASS is required"),
 

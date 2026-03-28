@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { CustomLink } from "@/components/CustomLink";
 import { useAuthStore } from "@/store/authStore";
 import { BookOpen, LayoutDashboard, Upload, Terminal, MessageSquare, LogOut, User } from "lucide-react";
@@ -30,7 +31,7 @@ export default function Navbar() {
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors text-sm">
             <Icon className="w-4 h-4" />
             {label}
-          </Link>
+          </CustomLink>
         ))}
       </div>
 

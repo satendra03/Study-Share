@@ -1,10 +1,14 @@
 import { type NextFunction, type Request, type Response } from "express";
 import { ApiResponse } from "@/shared/ApiResponse.js";
 import { type UserServiceInterface } from "./service/user.service.interface.js";
+import { type MaterialServiceInterface } from "@/modules/materials/service/material.service.interface.js";
 import { BadRequestError } from "@/shared/ApiError.js";
 
 export class UserController {
-    constructor(private userService: UserServiceInterface) { }
+    constructor(
+        private userService: UserServiceInterface,
+        private materialService: MaterialServiceInterface,
+    ) { }
 
     getPublicStats = async (req: Request, res: Response, next: NextFunction) => {
         try {
@@ -113,5 +117,20 @@ export class UserController {
             next(error);
         }
     }
-    
+
+    getBookmarks = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const ids = req.appUser?.bookmarkedMaterialIds ?? [];
+            const materials = ids.length > 0
+                ? await this.materialService.findMaterialsByIds(ids)
+                : [];
+            res.status(200).json(ApiResponse.success({
+                message: "Bookmarks fetched",
+                data: materials,
+            }));
+        } catch (error) {
+            next(error);
+        }
+    }
+
 }

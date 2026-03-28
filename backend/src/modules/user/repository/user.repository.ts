@@ -109,7 +109,6 @@ export class UserRepository implements UserRepositoryInterface {
         firebaseUid: string,
         profile: {
             fullName: string;
-            teacherId: string;
         }
     ): Promise<User | null> => {
         await usersCollection.doc(firebaseUid).update({

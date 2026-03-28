@@ -80,18 +80,18 @@ export class AuthController {
 
     /**
      * POST /api/auth/register/teacher
-     * Body: { tokenId, fullName, teacherId }
+     * Body: { idToken, fullName }
      */
     registerTeacher = async (req: Request, res: Response): Promise<void> => {
         try {
-            const { idToken, fullName, teacherId } = req.body;
+            const { idToken, fullName } = req.body;
 
-            if (!idToken || !fullName || !teacherId) {
-                res.status(400).json(ApiResponse.error("fullName and teacherId are required"));
+            if (!idToken || !fullName) {
+                res.status(400).json(ApiResponse.error("fullName is required"));
                 return;
             }
 
-            const { user } = await this.authService.registerTeacher(idToken, { fullName, teacherId });
+            const { user } = await this.authService.registerTeacher(idToken, { fullName });
 
             res.status(201).json(ApiResponse.success({ message: "Teacher registered successfully", data: user }));
         } catch (error: any) {

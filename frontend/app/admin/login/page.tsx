@@ -19,7 +19,7 @@ export default function AdminLoginPage() {
     setSigningIn(true);
     try {
       await signIn(email, password);
-      router.push("/admin/dashboard");
+      router.replace("/admin/dashboard");
     } catch (err: any) {
       const msg = err?.message || "Sign in failed";
       if (msg.includes("Access denied")) {

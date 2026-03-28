@@ -221,8 +221,7 @@ export default function CompleteProfilePage() {
                 />
               </div>
 
-              {role === "student" ? (
-                <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label className="text-[10px] text-gray-500 uppercase tracking-widest font-medium block mb-1.5">Enrollment</Label>
                     <Input placeholder="0101CS..." className="bg-[#0f0f18] border-white/8 text-white h-10 rounded-lg text-sm focus:border-[#5C55F9]/40 transition-colors" value={studentForm.enrollmentNumber} onChange={e => setStudentForm(p => ({ ...p, enrollmentNumber: e.target.value }))} required />
@@ -250,8 +249,7 @@ export default function CompleteProfilePage() {
                     <Label className="text-[10px] text-gray-500 uppercase tracking-widest font-medium block mb-1.5">College</Label>
                     <Input placeholder="Your institution" className="bg-[#0f0f18] border-white/8 text-white h-10 rounded-lg text-sm focus:border-[#5C55F9]/40 transition-colors" value={studentForm.collegeId} onChange={e => setStudentForm(p => ({ ...p, collegeId: e.target.value }))} required />
                   </div>
-                </div>
-              }
+              </div>
 
               <Button
                 type="submit"

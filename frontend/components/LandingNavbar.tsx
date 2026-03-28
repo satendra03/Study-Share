@@ -1,7 +1,7 @@
 "use client";
 
 import { CustomLink } from "@/components/CustomLink";
-import { Layers, Menu, X, LayoutDashboard, UserCircle } from "lucide-react";
+import { Layers, Menu, X, LayoutDashboard, UserCircle, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -80,7 +80,14 @@ export function LandingNavbar() {
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
+        <CustomLink
+          href="/admin/login"
+          className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 text-xs font-medium text-gray-500 hover:text-gray-300 hover:border-white/20 transition-all"
+        >
+          <ShieldCheck className="w-3.5 h-3.5" />
+          Admin
+        </CustomLink>
         {authActions}
 
         <button

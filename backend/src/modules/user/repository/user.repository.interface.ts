@@ -10,7 +10,7 @@ export interface UserRepositoryInterface {
     search(query: string): Promise<User[]>;
     createShell(data: { firebaseUid: string; email: string; photoURL?: string; role: "student" | "teacher"; }): Promise<User>;
     completeStudentProfile(firebaseUid: string, profile: { fullName: string; semester: number; branch: string; collegeId: string; enrollmentNumber: string; }): Promise<User | null>;
-    completeTeacherProfile(firebaseUid: string, profile: { fullName: string; teacherId: string; }): Promise<User | null>;
+    completeTeacherProfile(firebaseUid: string, profile: { fullName: string; }): Promise<User | null>;
     verifyUser(userId: string): Promise<User | null>;
     findUnverifiedTeachers(): Promise<User[]>;
     updatePhotoUrl(firebaseUid: string, photoURL: string): Promise<void>;

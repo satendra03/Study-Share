@@ -29,7 +29,7 @@ export class AdminService implements AdminServiceInterface {
         return await this.repository.deleteMaterial(materialId);
     }
 
-    async createTeacher(email: string, password: string, fullName: string, teacherId: string): Promise<any> {
-        return await this.repository.createTeacher(email, password, fullName, teacherId);
+    async createTeacher(email: string, password: string, fullName: string): Promise<any> {
+        return await this.repository.createTeacher(email, password, fullName);
     }
 }

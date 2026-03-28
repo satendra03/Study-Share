@@ -12,10 +12,10 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!loading) {
       if (!adminUser && pathname !== "/admin/login") {
-        router.push("/admin/login");
+        router.replace("/admin/login");
       }
       if (adminUser && pathname === "/admin/login") {
-        router.push("/admin/dashboard");
+        router.replace("/admin/dashboard");
       }
     }
   }, [loading, adminUser, pathname, router]);

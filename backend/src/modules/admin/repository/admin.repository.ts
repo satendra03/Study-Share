@@ -61,7 +61,16 @@ export class AdminRepository implements AdminRepositoryInterface {
 
         const offset = (page - 1) * limit;
         const snapshot = await query.offset(offset).limit(limit).get();
-        const users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const users = snapshot.docs.map(doc => {
+            const data = doc.data() as any;
+            const displayName =
+                data.studentProfile?.fullName ||
+                data.teacherProfile?.fullName ||
+                (data.role === 'admin' ? 'Admin' : null) ||
+                data.email ||
+                '';
+            return { id: doc.id, ...data, displayName };
+        });
 
         return { users, total };
     }
@@ -78,8 +87,36 @@ export class AdminRepository implements AdminRepositoryInterface {
             ? MaterialModel.countDocuments({ status })
             : MaterialModel.countDocuments());
 
-        const materials = await query.sort({ createdAt: -1 }).skip(offset).limit(limit);
-        return { materials: materials.map((m: any) => m.toObject()), total };
+        const raw = await query.sort({ createdAt: -1 }).skip(offset).limit(limit);
+        const materials = raw.map((m: any) => m.toObject());
+
+        // Resolve uploader names from Firestore in one batch
+        const uploaderIds = [...new Set<string>(materials.map((m: any) => m.uploaderId).filter(Boolean))];
+        const nameMap: Record<string, string> = {};
+        if (uploaderIds.length > 0) {
+            await Promise.all(uploaderIds.map(async (uid) => {
+                try {
+                    const doc = await db.collection('users').doc(uid).get();
+                    if (doc.exists) {
+                        const data = doc.data() as any;
+                        nameMap[uid] =
+                            data.studentProfile?.fullName ||
+                            data.teacherProfile?.fullName ||
+                            data.displayName ||
+                            data.email ||
+                            uid;
+                    }
+                } catch { /* skip */ }
+            }));
+        }
+
+        return {
+            materials: materials.map((m: any) => ({
+                ...m,
+                uploaderName: nameMap[m.uploaderId] || m.uploaderName || m.uploaderId,
+            })),
+            total,
+        };
     }
 
     async verifyUser(userId: string, verified: boolean): Promise<any> {
@@ -106,7 +143,7 @@ export class AdminRepository implements AdminRepositoryInterface {
         await MaterialModel.findByIdAndDelete(materialId);
     }
 
-    async createTeacher(email: string, password: string, fullName: string, teacherId: string): Promise<any> {
+    async createTeacher(email: string, password: string, fullName: string): Promise<any> {
         // Create Firebase Auth user
         const firebaseUser = await auth.createUser({
             email,
@@ -126,7 +163,6 @@ export class AdminRepository implements AdminRepositoryInterface {
             isProfileComplete: true,
             teacherProfile: {
                 fullName,
-                teacherId,
             },
             displayName: fullName,
             createdAt: new Date(),

@@ -80,16 +80,16 @@ export class AdminController {
 
     createTeacher = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const { email, password, fullName, teacherId } = req.body;
-            if (!email || !password || !fullName || !teacherId) {
-                res.status(400).json(ApiResponse.error("email, password, fullName and teacherId are required"));
+            const { email, password, fullName } = req.body;
+            if (!email || !password || !fullName) {
+                res.status(400).json(ApiResponse.error("email, password and fullName are required"));
                 return;
             }
             if (password.length < 6) {
                 res.status(400).json(ApiResponse.error("Password must be at least 6 characters"));
                 return;
             }
-            const teacher = await this.adminService.createTeacher(email, password, fullName, teacherId);
+            const teacher = await this.adminService.createTeacher(email, password, fullName);
             res.status(201).json(ApiResponse.success({ message: "Teacher created successfully", data: teacher }));
         } catch (error: any) {
             next(error);

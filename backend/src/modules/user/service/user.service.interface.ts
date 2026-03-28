@@ -12,7 +12,7 @@ export interface UserServiceInterface {
     updatePhotoUrl(firebaseUid: string, photoURL: string): Promise<void>;
     createShell(data: { firebaseUid: string; email: string; photoURL?: string; role: "student" | "teacher"; }): Promise<User>;
     completeStudentProfile(firebaseUid: string, profile: { fullName: string; semester: number; branch: string; collegeId: string; enrollmentNumber: string; }): Promise<User>;
-    completeTeacherProfile(firebaseUid: string, profile: { fullName: string; teacherId: string; }): Promise<User>;
+    completeTeacherProfile(firebaseUid: string, profile: { fullName: string; }): Promise<User>;
     verifyUser(userId: string): Promise<User>;
     findUnverifiedTeachers(): Promise<User[]>;
     toggleBookmark(userId: string, materialId: string, add: boolean): Promise<void>;

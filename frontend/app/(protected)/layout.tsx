@@ -31,7 +31,15 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
       }
 
       // Profile genuinely not complete (appUser exists but incomplete)
-      if (appUser && !appUser.isProfileComplete && !appUser.studentProfile && !appUser.teacherProfile) {
+      // Admins and teachers skip profile completion — they have no student/teacher profile
+      if (
+        appUser &&
+        appUser.role !== "admin" &&
+        appUser.role !== "teacher" &&
+        !appUser.isProfileComplete &&
+        !appUser.studentProfile &&
+        !appUser.teacherProfile
+      ) {
         router.push("/complete-profile");
         return;
       }
@@ -75,8 +83,14 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
   // No DB record (new user) → render nothing (useEffect redirects to complete-profile)
   if (!appUser) return null;
 
-  // Profile not complete → render nothing (useEffect redirects)
-  if (!appUser.isProfileComplete && !appUser.studentProfile && !appUser.teacherProfile) return null;
+  // Profile not complete → render nothing (useEffect redirects) — skip for admin/teacher
+  if (
+    appUser.role !== "admin" &&
+    appUser.role !== "teacher" &&
+    !appUser.isProfileComplete &&
+    !appUser.studentProfile &&
+    !appUser.teacherProfile
+  ) return null;
 
   const isMaterialViewer = pathname?.startsWith("/materials/");
 

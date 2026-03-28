@@ -71,7 +71,6 @@ export class AuthService implements AuthServiceInterface {
         idToken: string,
         profile: {
             fullName: string;
-            teacherId: string;
         }
     ): Promise<RegisterResult> => {
         const decoded = await auth.verifyIdToken(idToken);

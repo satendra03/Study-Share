@@ -75,7 +75,7 @@ export class UserService implements UserServiceInterface {
         return user;
     }
 
-    async completeTeacherProfile(firebaseUid: string, profile: { fullName: string; teacherId: string }): Promise<User> {
+    async completeTeacherProfile(firebaseUid: string, profile: { fullName: string }): Promise<User> {
         const user = await this.userRepository.completeTeacherProfile(firebaseUid, profile);
         if (!user) throw new Error("Failed to complete teacher profile");
         return user;

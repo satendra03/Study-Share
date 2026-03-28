@@ -8,7 +8,6 @@ export interface StudentProfile {
 
 export interface TeacherProfile {
     fullName: string;
-    teacherId: string;
 }
 
 export interface User {

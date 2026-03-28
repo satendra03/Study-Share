@@ -7,5 +7,5 @@ export interface AdminServiceInterface {
     verifyUser(userId: string, verified: boolean): Promise<any>;
     deleteUser(userId: string): Promise<void>;
     deleteMaterial(materialId: string): Promise<void>;
-    createTeacher(email: string, password: string, fullName: string, teacherId: string): Promise<any>;
+    createTeacher(email: string, password: string, fullName: string): Promise<any>;
 }

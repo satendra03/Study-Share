@@ -1,13 +1,12 @@
 import { Router } from 'express';
 import { adminController } from './admin.module.js';
-import { verifyFirebaseToken, requireAppUser, requireAdmin } from '@/middlewares/auth.middleware.js';
+import { verifyFirebaseToken, requireAppUser, requireAdmin, requireAdminOrTeacher } from '@/middlewares/auth.middleware.js';
 
 const router = Router();
 
-// All admin routes require admin access
 router.use(verifyFirebaseToken);
 router.use(requireAppUser);
-router.use(requireAdmin);
+router.use(requireAdminOrTeacher);
 
 // Stats
 router.get('/stats', adminController.getStats);
@@ -21,8 +20,8 @@ router.delete('/users/:userId', adminController.deleteUser);
 router.get('/materials', adminController.getMaterials);
 router.delete('/materials/:materialId', adminController.deleteMaterial);
 
-// Teachers
-router.post('/teachers', adminController.createTeacher);
+// Teachers — admin only
+router.post('/teachers', requireAdmin, adminController.createTeacher);
 
 export default {
     path: 'admin',

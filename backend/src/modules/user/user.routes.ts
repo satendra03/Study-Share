@@ -5,6 +5,7 @@ import { verifyFirebaseToken, requireAppUser, requireAdmin } from "@/middlewares
 const userRouter = Router();
 
 userRouter.get("/stats/public", userController.getPublicStats);
+userRouter.get("/me/bookmarks", verifyFirebaseToken, requireAppUser, userController.getBookmarks);
 userRouter.get("/firebase", userController.getByFirebaseUid);
 userRouter.get("/email", userController.getByEmail);
 userRouter.get("/search", userController.searchUsers);

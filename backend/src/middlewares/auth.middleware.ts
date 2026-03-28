@@ -120,6 +120,21 @@ export function requireVerified(
 }
 
 /**
+ * Middleware: admins or teachers can access this route.
+ */
+export function requireAdminOrTeacher(
+    req: Request,
+    res: Response,
+    next: NextFunction
+): void {
+    if (req.appUser?.role !== "admin" && req.appUser?.role !== "teacher") {
+        res.status(403).json({ message: "Access restricted to admin or teacher" });
+        return;
+    }
+    next();
+}
+
+/**
  * Middleware: only admins can access this route.
  */
 export function requireAdmin(

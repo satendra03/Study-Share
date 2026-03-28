@@ -7,7 +7,7 @@ import api from "@/lib/api";
 import { Upload, FileText, CheckCircle, Loader, X, FileUp, ArrowLeft, DownloadCloudIcon, ChevronDown, ShieldX } from "lucide-react";
 import { WorkspaceGridBackdrop } from "@/components/WorkspaceGridBackdrop";
 import Link from "next/link";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthStore } from "@/store/authStore";
 import { BRANCHES, SEMESTERS, YEARS, FILE_TYPES } from "@/lib/constants";
 import {
   DropdownMenu,
@@ -84,7 +84,7 @@ function FormDropdown({
 }
 
 export default function UploadPage() {
-  const { appUser } = useAuth();
+  const { appUser } = useAuthStore();
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [form, setForm] = useState({ year: "", description: "", subject: "", subjectCode: "", branch: "", semester: "", fileType: "Other" });

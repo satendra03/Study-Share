@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
-import { useAdminAuth } from "@/context/AdminAuthContext";
+import { useAdminAuthStore } from "@/store/adminAuthStore";
 import { auth } from "@/lib/firebase";
 import {
   BarChart,
@@ -105,7 +105,7 @@ function StatCard({
 }
 
 export default function AdminDashboard() {
-  const { adminUser } = useAdminAuth();
+  const { adminUser } = useAdminAuthStore();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

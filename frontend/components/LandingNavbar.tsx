@@ -3,11 +3,11 @@
 import { CustomLink } from "@/components/CustomLink";
 import { Layers, Menu, X, LayoutDashboard, UserCircle, ShieldCheck } from "lucide-react";
 import { useState } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthStore } from "@/store/authStore";
 
 export function LandingNavbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { firebaseUser, appUser, loading, profileLoaded, backendError, signInWithGoogle } = useAuth();
+  const { firebaseUser, appUser, loading, profileLoaded, backendError, signInWithGoogle } = useAuthStore();
 
   const isProfileComplete = Boolean(
     appUser?.isProfileComplete ||

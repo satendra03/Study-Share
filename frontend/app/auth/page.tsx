@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/context/AuthContext";
+import { useAuthStore } from "@/store/authStore";
 import { ShieldCheck, FileText, CheckCircle2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -8,7 +8,7 @@ import { InteractiveGridPattern } from "@/components/ui/interactive-grid-pattern
 import { useEffect } from "react";
 
 export default function AuthPage() {
-  const { signInWithGoogle, firebaseUser, loading } = useAuth();
+  const { signInWithGoogle, firebaseUser, loading } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {

@@ -5,12 +5,12 @@ import api from "@/lib/api";
 import { Material } from "@/types";
 import Link from "next/link";
 import { FileUp, ArrowLeft } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthStore } from "@/store/authStore";
 import { MaterialCard } from "@/components/MaterialCard";
 import { WorkspaceGridBackdrop } from "@/components/WorkspaceGridBackdrop";
 
 export default function MyUploadsPage() {
-  const { appUser } = useAuth();
+  const { appUser } = useAuthStore();
 
   const { data, isLoading } = useQuery({
     queryKey: ["my-uploads", appUser?.firebaseUid],

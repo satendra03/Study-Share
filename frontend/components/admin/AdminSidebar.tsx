@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAdminAuth } from "@/context/AdminAuthContext";
+import { useAdminAuthStore } from "@/store/adminAuthStore";
 import {
   LayoutDashboard,
   Users,
@@ -20,7 +20,7 @@ const navLinks = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
-  const { adminUser, logout } = useAdminAuth();
+  const { adminUser, logout } = useAdminAuthStore();
 
   return (
     <aside className="w-[260px] hidden md:flex flex-col shrink-0 h-svh max-h-svh sticky top-0 self-start overflow-y-auto overflow-x-hidden border-r border-white/6 bg-linear-to-b from-[#0b0b10] via-[#060608] to-[#030303] shadow-[inset_-1px_0_0_rgba(255,255,255,0.05)]">

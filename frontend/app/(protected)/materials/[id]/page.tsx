@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, Bot, User, FileText, Download, Loader2, ChevronLeft, ChevronRight, Bookmark, Clock } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthStore } from "@/store/authStore";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Document, Page, pdfjs } from "react-pdf";
@@ -19,7 +19,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 
 export default function MaterialPage() {
   const { id } = useParams<{ id: string }>();
-  const { appUser, setAppUser } = useAuth();
+  const { appUser, setAppUser } = useAuthStore();
   const bookmarked = Boolean(id && appUser?.bookmarkedMaterialIds?.includes(id));
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");

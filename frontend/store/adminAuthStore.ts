@@ -1,5 +1,4 @@
-"use client";
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { create } from "zustand";
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -17,20 +16,19 @@ interface AdminUser {
   displayName?: string;
 }
 
-interface AdminAuthContextType {
+interface AdminAuthState {
   adminUser: AdminUser | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  initialize: () => () => void;
 }
 
-const AdminAuthContext = createContext<AdminAuthContextType | null>(null);
+export const useAdminAuthStore = create<AdminAuthState>((set) => ({
+  adminUser: null,
+  loading: true,
 
-export function AdminAuthProvider({ children }: { children: ReactNode }) {
-  const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
+  initialize: () => {
     const unsubscribe = onAuthStateChanged(auth, async (user: FirebaseUser | null) => {
       if (user) {
         try {
@@ -40,22 +38,22 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
           });
           const appUser = res.data?.data;
           if (appUser?.role === "admin" || appUser?.role === "teacher") {
-            setAdminUser(appUser as AdminUser);
+            set({ adminUser: appUser as AdminUser });
           } else {
-            setAdminUser(null);
+            set({ adminUser: null });
           }
         } catch {
-          setAdminUser(null);
+          set({ adminUser: null });
         }
       } else {
-        setAdminUser(null);
+        set({ adminUser: null });
       }
-      setLoading(false);
+      set({ loading: false });
     });
     return unsubscribe;
-  }, []);
+  },
 
-  const signIn = async (email: string, password: string) => {
+  signIn: async (email, password) => {
     const result = await signInWithEmailAndPassword(auth, email, password);
     const token = await result.user.getIdToken();
     const res = await api.get("/auth/me", {
@@ -66,23 +64,11 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       await signOut(auth);
       throw new Error("Access denied. Admin accounts only.");
     }
-    setAdminUser(appUser as AdminUser);
-  };
+    set({ adminUser: appUser as AdminUser });
+  },
 
-  const logout = async () => {
+  logout: async () => {
     await signOut(auth);
-    setAdminUser(null);
-  };
-
-  return (
-    <AdminAuthContext.Provider value={{ adminUser, loading, signIn, logout }}>
-      {children}
-    </AdminAuthContext.Provider>
-  );
-}
-
-export function useAdminAuth() {
-  const ctx = useContext(AdminAuthContext);
-  if (!ctx) throw new Error("useAdminAuth must be used within AdminAuthProvider");
-  return ctx;
-}
+    set({ adminUser: null });
+  },
+}));

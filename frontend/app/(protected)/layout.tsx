@@ -1,12 +1,12 @@
 "use client";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthStore } from "@/store/authStore";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import DashboardFooter from "@/components/DashboardFooter";
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
-  const { firebaseUser, appUser, loading, backendError } = useAuth();
+  const { firebaseUser, appUser, loading, backendError } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/context/AuthContext";
+import { useAuthStore } from "@/store/authStore";
 import { Zap, ArrowRight, BookOpen, Layers, Search, MessageSquare, Shield, Clock, HelpCircle, FileText } from "lucide-react";
 import Link from "next/link";
 import { InteractiveGridPattern } from "@/components/ui/interactive-grid-pattern";
@@ -20,7 +20,7 @@ import { Footer } from "@/components/footer";
 import { LandingNavbar } from "@/components/LandingNavbar";
 
 export default function LandingPage() {
-  const { firebaseUser, appUser, loading, profileLoaded, backendError, signInWithGoogle } = useAuth();
+  const { firebaseUser, appUser, loading, profileLoaded, backendError, signInWithGoogle } = useAuthStore();
 
   const [stats, setStats] = useState<{users: number; status: "online" | "offline" | "checking"}>({ 
     users: 0, 

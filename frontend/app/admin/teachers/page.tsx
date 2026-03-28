@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import api from "@/lib/api";
 import { auth } from "@/lib/firebase";
-import { useAdminAuth } from "@/context/AdminAuthContext";
+import { useAdminAuthStore } from "@/store/adminAuthStore";
 import {
   GraduationCap,
   Plus,
@@ -27,7 +27,7 @@ interface Teacher {
 }
 
 export default function AdminTeachersPage() {
-  const { adminUser } = useAdminAuth();
+  const { adminUser } = useAdminAuthStore();
   const isAdmin = adminUser?.role === "admin";
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [total, setTotal] = useState(0);

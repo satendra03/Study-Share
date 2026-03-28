@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthStore } from "@/store/authStore";
 import { Home, FileUp, Bookmark, Plus, HelpCircle, LogOut, Settings, Code2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import packageJson from "../package.json";
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
-  const { appUser, firebaseUser, logout } = useAuth();
+  const { appUser, firebaseUser, logout } = useAuthStore();
 
   const navLinks = [
     { name: "Home", href: "/dashboard", icon: Home },

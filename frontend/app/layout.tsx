@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import "./nprogress.css";
-import { AuthProvider } from "@/context/AuthContext";
 import { QueryProvider } from "@/components/QueryProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { ProgressBar } from "@/components/ProgressBar";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthInitializer } from "@/components/AuthInitializer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -31,10 +31,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ProgressBar />
         <QueryProvider>
           <TooltipProvider>
-            <AuthProvider>
+            <AuthInitializer>
               {children}
               <Toaster />
-            </AuthProvider>
+            </AuthInitializer>
           </TooltipProvider>
         </QueryProvider>
       </body>

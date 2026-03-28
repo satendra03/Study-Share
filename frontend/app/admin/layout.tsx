@@ -1,11 +1,12 @@
 "use client";
-import { AdminAuthProvider, useAdminAuth } from "@/context/AdminAuthContext";
+import { AdminAuthInitializer } from "@/components/AdminAuthInitializer";
+import { useAdminAuthStore } from "@/store/adminAuthStore";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 
 function AdminGuard({ children }: { children: React.ReactNode }) {
-  const { adminUser, loading } = useAdminAuth();
+  const { adminUser, loading } = useAdminAuthStore();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -65,8 +66,8 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AdminAuthProvider>
+    <AdminAuthInitializer>
       <AdminGuard>{children}</AdminGuard>
-    </AdminAuthProvider>
+    </AdminAuthInitializer>
   );
 }

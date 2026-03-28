@@ -1,11 +1,11 @@
 "use client";
 import { useState } from "react";
-import { useAdminAuth } from "@/context/AdminAuthContext";
+import { useAdminAuthStore } from "@/store/adminAuthStore";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Lock, Mail, ShieldCheck, AlertCircle } from "lucide-react";
 
 export default function AdminLoginPage() {
-  const { signIn, loading } = useAdminAuth();
+  const { signIn, loading } = useAdminAuthStore();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import api from "@/lib/api";
 import { auth } from "@/lib/firebase";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthStore } from "@/store/authStore";
 import { GraduationCap, ArrowLeft, ArrowRight, Lock, ChevronDown } from "lucide-react";
 import { InteractiveGridPattern } from "@/components/ui/interactive-grid-pattern";
 import { SEMESTERS, BRANCHES } from "@/lib/constants";
@@ -97,7 +97,7 @@ export default function CompleteProfilePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
-  const { firebaseUser, appUser, loading: authLoading, backendError, setAppUser } = useAuth();
+  const { firebaseUser, appUser, loading: authLoading, backendError, setAppUser } = useAuthStore();
 
   const [studentForm, setStudentForm] = useState({
     fullName: "",

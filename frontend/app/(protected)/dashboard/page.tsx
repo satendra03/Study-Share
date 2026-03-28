@@ -8,7 +8,7 @@ import { Search, SlidersHorizontal, X, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { MaterialCard } from "@/components/MaterialCard";
 import { WorkspaceGridBackdrop } from "@/components/WorkspaceGridBackdrop";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthStore } from "@/store/authStore";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -88,7 +88,7 @@ function FilterDropdown({
 }
 
 export default function DashboardPage() {
-  const { appUser } = useAuth();
+  const { appUser } = useAuthStore();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   

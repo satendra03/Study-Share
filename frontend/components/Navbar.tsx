@@ -1,6 +1,6 @@
 "use client";
 import { CustomLink } from "@/components/CustomLink";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthStore } from "@/store/authStore";
 import { BookOpen, LayoutDashboard, Upload, Terminal, MessageSquare, LogOut, User } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
@@ -15,7 +15,7 @@ const navLinks = [
 ];
 
 export default function Navbar() {
-  const { appUser, firebaseUser, logout } = useAuth();
+  const { appUser, firebaseUser, logout } = useAuthStore();
 
   return (
     <nav className="border-b border-gray-800 bg-gray-950 px-6 py-3 flex items-center justify-between sticky top-0 z-50">

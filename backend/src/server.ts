@@ -1,6 +1,4 @@
 // Main Server
-import "module-alias/register";
-
 import { env } from "./config/env.config.js";
 import "./config/firebase.config.js";
 import "./config/cloudinary.config.js";

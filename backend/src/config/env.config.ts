@@ -26,8 +26,8 @@ const envSchema = z.object({
   NVIDIA_API_KEY: z.string().min(1, "NVIDIA_API_KEY is required"),
   NVIDIA_OCR_URL: z.string().min(1, "NVIDIA_OCR_URL (Model URL) is required"),
 
-  QDRANT_API_KEY: z.string().min(1, "QDRANT_API_KEY is required"),
-  QDRANT_URL: z.string().min(1, "QDRANT_URL is required"),
+  // QDRANT_API_KEY: z.string().min(1, "QDRANT_API_KEY is required"),
+  // QDRANT_URL: z.string().min(1, "QDRANT_URL is required"),
 
   EMBEDDING_SERVER_URL: z.string().min(1, "EMBEDDING_SERVER_URL is required"),
 

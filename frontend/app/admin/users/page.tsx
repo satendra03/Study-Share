@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = "force-dynamic";
 import { useEffect, useState, useCallback } from "react";
 import api from "@/lib/api";
 import { auth } from "@/lib/firebase";
@@ -84,6 +85,7 @@ function FilterSelect({
 }
 
 export default function AdminUsersPage() {
+  const [mounted, setMounted] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -95,7 +97,12 @@ export default function AdminUsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const limit = 20;
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const fetchUsers = useCallback(async () => {
+    if (!mounted) return;
     setLoading(true);
     try {
       const token = await auth.currentUser?.getIdToken();
@@ -170,6 +177,14 @@ export default function AdminUsersPage() {
     if (r === "teacher") return "bg-purple-900/20 text-purple-300 border-purple-500/20";
     return "bg-white/5 text-gray-400 border-white/10";
   };
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-[#030303] flex items-center justify-center">
+        <Loader2 className="w-7 h-7 text-[#5C55F9] animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#030303]">

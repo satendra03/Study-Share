@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = "force-dynamic";
 import { useEffect, useState, useCallback } from "react";
 import api from "@/lib/api";
 import { auth } from "@/lib/firebase";
@@ -72,6 +73,7 @@ function formatSize(bytes: number) {
 }
 
 export default function AdminMaterialsPage() {
+  const [mounted, setMounted] = useState(false);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -81,7 +83,12 @@ export default function AdminMaterialsPage() {
   const [search, setSearch] = useState("");
   const limit = 20;
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const fetchMaterials = useCallback(async () => {
+    if (!mounted) return;
     setLoading(true);
     try {
       const token = await auth.currentUser?.getIdToken();
@@ -131,6 +138,14 @@ export default function AdminMaterialsPage() {
     : materials;
 
   const totalPages = Math.ceil(total / limit);
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-[#030303] flex items-center justify-center">
+        <Loader2 className="w-7 h-7 text-[#5C55F9] animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#030303]">

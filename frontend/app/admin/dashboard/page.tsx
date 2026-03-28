@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { useAdminAuthStore } from "@/store/adminAuthStore";
@@ -63,13 +64,12 @@ function StatCard({
 }) {
   return (
     <div
-      className={`relative rounded-2xl border p-5 bg-[#0c0c14] overflow-hidden transition-all ${
-        warn
+      className={`relative rounded-2xl border p-5 bg-[#0c0c14] overflow-hidden transition-all ${warn
           ? "border-orange-500/20 shadow-[0_0_30px_-10px_rgba(249,115,22,0.2)]"
           : accent
-          ? "border-[#5C55F9]/30 shadow-[0_0_30px_-10px_rgba(92,85,249,0.25)]"
-          : "border-white/6"
-      }`}
+            ? "border-[#5C55F9]/30 shadow-[0_0_30px_-10px_rgba(92,85,249,0.25)]"
+            : "border-white/6"
+        }`}
     >
       <div className="flex items-start justify-between">
         <div>
@@ -80,25 +80,23 @@ function StatCard({
           {sub && <p className="text-xs text-gray-500 mt-1.5">{sub}</p>}
         </div>
         <div
-          className={`flex items-center justify-center w-11 h-11 rounded-xl ${
-            warn
+          className={`flex items-center justify-center w-11 h-11 rounded-xl ${warn
               ? "bg-orange-500/10 text-orange-400"
               : accent
-              ? "bg-[#5C55F9]/15 text-[#b4afff]"
-              : "bg-white/5 text-gray-400"
-          }`}
+                ? "bg-[#5C55F9]/15 text-[#b4afff]"
+                : "bg-white/5 text-gray-400"
+            }`}
         >
           <Icon className="w-5 h-5" strokeWidth={1.75} />
         </div>
       </div>
       <div
-        className={`absolute bottom-0 left-0 right-0 h-0.5 ${
-          warn
+        className={`absolute bottom-0 left-0 right-0 h-0.5 ${warn
             ? "bg-linear-to-r from-transparent via-orange-500/40 to-transparent"
             : accent
-            ? "bg-linear-to-r from-transparent via-[#5C55F9]/40 to-transparent"
-            : "bg-linear-to-r from-transparent via-white/10 to-transparent"
-        }`}
+              ? "bg-linear-to-r from-transparent via-[#5C55F9]/40 to-transparent"
+              : "bg-linear-to-r from-transparent via-white/10 to-transparent"
+          }`}
       />
     </div>
   );
@@ -148,37 +146,37 @@ export default function AdminDashboard() {
 
   const userBreakdown = stats
     ? [
-        { name: "Students", value: stats.totalStudents },
-        { name: "Teachers", value: stats.totalTeachers },
-      ]
+      { name: "Students", value: stats.totalStudents },
+      { name: "Teachers", value: stats.totalTeachers },
+    ]
     : [];
 
   const materialStatus = stats
     ? [
-        {
-          name: "Status",
-          Processing: stats.processingMaterials,
-          Failed: stats.failedMaterials,
-          Done:
-            stats.totalMaterials -
-            stats.processingMaterials -
-            stats.failedMaterials,
-        },
-      ]
+      {
+        name: "Status",
+        Processing: stats.processingMaterials,
+        Failed: stats.failedMaterials,
+        Done:
+          stats.totalMaterials -
+          stats.processingMaterials -
+          stats.failedMaterials,
+      },
+    ]
     : [];
 
   const weeklyData = stats
     ? [
-        { name: "New Users", value: stats.recentUsers },
-        { name: "Uploads", value: stats.recentUploads },
-      ]
+      { name: "New Users", value: stats.recentUsers },
+      { name: "Uploads", value: stats.recentUploads },
+    ]
     : [];
 
   const verificationData = stats
     ? [
-        { name: "Verified", value: stats.totalUsers - stats.unverifiedUsers },
-        { name: "Unverified", value: stats.unverifiedUsers },
-      ]
+      { name: "Verified", value: stats.totalUsers - stats.unverifiedUsers },
+      { name: "Unverified", value: stats.unverifiedUsers },
+    ]
     : [];
 
   const tooltipStyle = {
@@ -383,11 +381,10 @@ export default function AdminDashboard() {
               <a
                 key={action.href}
                 href={action.href}
-                className={`flex flex-col gap-2 p-4 rounded-xl border transition-all hover:bg-white/4 ${
-                  action.warn
+                className={`flex flex-col gap-2 p-4 rounded-xl border transition-all hover:bg-white/4 ${action.warn
                     ? "border-orange-500/20 hover:border-orange-500/30"
                     : "border-white/6 hover:border-white/12"
-                }`}
+                  }`}
               >
                 <action.icon
                   className={`w-5 h-5 ${action.warn ? "text-orange-400" : "text-[#b4afff]"}`}

@@ -99,7 +99,9 @@ export default function DashboardPage() {
     subject: ""
   });
 
-  // Hydrate filters from user profile on mount
+  // Hydrate filters from user profile on mount (optional, only if user has profile)
+  // But keep "All" as default if you want them to see everything first.
+  // The user requested "All Branches" and "All Semesters" back.
   useEffect(() => {
     if (appUser?.studentProfile) {
       setFilters(prev => ({

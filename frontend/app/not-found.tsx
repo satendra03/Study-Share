@@ -1,5 +1,4 @@
-"use client";
-
+// Server Component for NOT FOUND to facilitate prerendering
 import { LandingNavbar } from "@/components/LandingNavbar";
 import { InteractiveGridPattern } from "@/components/ui/interactive-grid-pattern";
 import { Footer } from "@/components/footer";

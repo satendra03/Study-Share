@@ -13,7 +13,7 @@ interface AdminUser {
   id: string;
   firebaseUid: string;
   email: string;
-  role: "admin";
+  role: "admin" | "teacher";
   displayName?: string;
 }
 
@@ -39,7 +39,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
             headers: { Authorization: `Bearer ${token}` },
           });
           const appUser = res.data?.data;
-          if (appUser?.role === "admin") {
+          if (appUser?.role === "admin" || appUser?.role === "teacher") {
             setAdminUser(appUser as AdminUser);
           } else {
             setAdminUser(null);
@@ -62,7 +62,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       headers: { Authorization: `Bearer ${token}` },
     });
     const appUser = res.data?.data;
-    if (!appUser || appUser.role !== "admin") {
+    if (!appUser || (appUser.role !== "admin" && appUser.role !== "teacher")) {
       await signOut(auth);
       throw new Error("Access denied. Admin accounts only.");
     }

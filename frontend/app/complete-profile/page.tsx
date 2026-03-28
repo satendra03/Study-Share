@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import api from "@/lib/api";
 import { auth } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
-import { GraduationCap, Briefcase, ArrowLeft, ArrowRight, UserPen, Lock, ChevronDown } from "lucide-react";
+import { GraduationCap, ArrowLeft, ArrowRight, Lock, ChevronDown } from "lucide-react";
 import { InteractiveGridPattern } from "@/components/ui/interactive-grid-pattern";
 import { SEMESTERS, BRANCHES } from "@/lib/constants";
 import {
@@ -20,7 +20,7 @@ import {
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 
-type Role = "student" | "teacher" | null;
+type Role = "student";
 
 async function resolveIdToken(): Promise<string | null> {
   const pending = sessionStorage.getItem("pendingIdToken");
@@ -93,7 +93,7 @@ function FormDropdown({
 }
 
 export default function CompleteProfilePage() {
-  const [role, setRole] = useState<Role>(null);
+  const [role] = useState<Role>("student");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -109,7 +109,6 @@ export default function CompleteProfilePage() {
 
   const [teacherForm, setTeacherForm] = useState({
     fullName: "",
-    teacherId: "",
   });
 
   useEffect(() => {
@@ -164,7 +163,7 @@ export default function CompleteProfilePage() {
     );
   }
 
-  const nameValue = role === "student" ? studentForm.fullName : teacherForm.fullName;
+  const nameValue = studentForm.fullName;
 
   return (
     <main className="h-screen bg-[#030303] text-white flex items-center justify-center overflow-hidden relative">
@@ -191,60 +190,13 @@ export default function CompleteProfilePage() {
           Return to home
         </Link>
 
-        {!role ? (
-          /* ── Role selection card ── */
-          <div className="w-full bg-[#0a0a10] border border-white/8 rounded-2xl p-8 shadow-[0_8px_40px_rgba(0,0,0,0.6)] text-center">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-[#5C55F9]/10 border border-[#5C55F9]/20 mb-5">
-              <UserPen className="text-[#a8a4fc] w-5 h-5" />
-            </div>
-            <h1 className="text-2xl font-semibold tracking-tight mb-1.5">Complete Your Profile</h1>
-            <p className="text-gray-500 text-sm mb-8">Choose your role to get started</p>
-
-            <div className="grid  grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setRole("student")}
-                className="group cursor-pointer flex flex-col items-center gap-3 p-6 border border-white/8 hover:border-[#5C55F9]/30 rounded-2xl transition-all bg-[#0f0f18] hover:bg-[#12122a] shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
-              >
-                <div className="p-3 rounded-xl bg-[#141420] border border-white/5 group-hover:bg-[#5C55F9]/10 group-hover:border-[#5C55F9]/20 transition-colors">
-                  <GraduationCap className="w-6 h-6 text-gray-400 group-hover:text-[#a8a4fc] transition-colors" />
-                </div>
-                <div>
-                  <span className="block text-sm font-medium text-white">Student</span>
-                  <span className="block text-[11px] text-gray-500 mt-0.5">Browse & download</span>
-                </div>
-              </button>
-              <button
-                type="button"
-                disabled
-                className="relative cursor-not-allowed group flex flex-col items-center gap-3 p-6 border border-white/8 rounded-2xl bg-[#0f0f18] opacity-50"
-              >
-                <div className="absolute top-2 right-2 text-[9px] font-semibold uppercase tracking-wider bg-[#5C55F9]/15 text-[#a8a4fc] px-2 py-0.5 rounded-full border border-[#5C55F9]/20">
-                  Coming Soon
-                </div>
-                <div className="p-3 rounded-xl bg-[#141420] border border-white/5">
-                  <Briefcase className="w-6 h-6 text-gray-600" />
-                </div>
-                <div>
-                  <span className="block text-sm font-medium text-gray-500">Teacher</span>
-                  <span className="block text-[11px] text-gray-600 mt-0.5">Upload & share</span>
-                </div>
-              </button>
-            </div>
-          </div>
-        ) : (
-          /* ── Form card ── */
+          {/* ── Form card ── */}
           <div className="w-full bg-[#0a0a10] border border-white/8 rounded-2xl p-8 shadow-[0_8px_40px_rgba(0,0,0,0.6)]">
-            <div className="flex items-center gap-3 mb-6">
-              <button type="button" onClick={() => setRole(null)} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors">
-                <ArrowLeft className="w-4 h-4 text-gray-400" />
-              </button>
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-[#5C55F9]/10">
-                  {role === "student" ? <GraduationCap className="w-4 h-4 text-[#a8a4fc]" /> : <Briefcase className="w-4 h-4 text-[#a8a4fc]" />}
-                </div>
-                <span className="text-sm font-medium capitalize">{role} Registration</span>
+            <div className="flex items-center gap-2 mb-6">
+              <div className="p-1.5 rounded-lg bg-[#5C55F9]/10">
+                <GraduationCap className="w-4 h-4 text-[#a8a4fc]" />
               </div>
+              <span className="text-sm font-medium">Student Registration</span>
             </div>
 
             {error && (
@@ -299,12 +251,7 @@ export default function CompleteProfilePage() {
                     <Input placeholder="Your institution" className="bg-[#0f0f18] border-white/8 text-white h-10 rounded-lg text-sm focus:border-[#5C55F9]/40 transition-colors" value={studentForm.collegeId} onChange={e => setStudentForm(p => ({ ...p, collegeId: e.target.value }))} required />
                   </div>
                 </div>
-              ) : (
-                <div>
-                  <Label className="text-[10px] text-gray-500 uppercase tracking-widest font-medium block mb-1.5">Staff / Employee ID</Label>
-                  <Input placeholder="Your ID" className="bg-[#0f0f18] border-white/8 text-white h-10 rounded-lg text-sm focus:border-[#5C55F9]/40 transition-colors" value={teacherForm.teacherId} onChange={e => setTeacherForm(p => ({ ...p, teacherId: e.target.value }))} required />
-                </div>
-              )}
+              }
 
               <Button
                 type="submit"
@@ -325,7 +272,6 @@ export default function CompleteProfilePage() {
               </Button>
             </form>
           </div>
-        )}
 
       </div>
     </main>

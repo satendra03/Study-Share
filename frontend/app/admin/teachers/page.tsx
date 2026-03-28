@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import api from "@/lib/api";
 import { auth } from "@/lib/firebase";
+import { useAdminAuth } from "@/context/AdminAuthContext";
 import {
   GraduationCap,
   Plus,
@@ -20,12 +21,14 @@ interface Teacher {
   id: string;
   email: string;
   displayName?: string;
-  teacherProfile?: { fullName: string; teacherId: string };
+  teacherProfile?: { fullName: string };
   isVerified: boolean;
   createdAt?: any;
 }
 
 export default function AdminTeachersPage() {
+  const { adminUser } = useAdminAuth();
+  const isAdmin = adminUser?.role === "admin";
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -34,7 +37,6 @@ export default function AdminTeachersPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [teacherId, setTeacherId] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [creating, setCreating] = useState(false);
   const [formError, setFormError] = useState("");
@@ -70,14 +72,13 @@ export default function AdminTeachersPage() {
       const token = await auth.currentUser?.getIdToken();
       await api.post(
         "/admin/teachers",
-        { email, password, fullName, teacherId },
+        { email, password, fullName },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setFormSuccess(`Teacher account created for ${email}`);
       setEmail("");
       setPassword("");
       setFullName("");
-      setTeacherId("");
       fetchTeachers();
     } catch (err: any) {
       setFormError(err?.response?.data?.message || "Failed to create teacher");
@@ -102,8 +103,8 @@ export default function AdminTeachersPage() {
       </div>
 
       <div className="p-8 grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
-        {/* Create form */}
-        <div className="bg-[#0c0c14] border border-white/6 rounded-2xl p-6">
+        {/* Create form — admin only */}
+        {isAdmin && <div className="bg-[#0c0c14] border border-white/6 rounded-2xl p-6">
           <div className="flex items-center gap-2.5 mb-6">
             <div className="w-9 h-9 rounded-xl bg-[#5C55F9]/15 border border-[#5C55F9]/30 flex items-center justify-center">
               <Plus className="w-4.5 h-4.5 text-[#b4afff]" strokeWidth={2} />
@@ -140,19 +141,6 @@ export default function AdminTeachersPage() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="e.g. Dr. Priya Sharma"
-                  required
-                  className="w-full bg-[#12121a] border border-white/10 rounded-xl px-3 h-11 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-[#5C55F9]/50 focus:ring-1 focus:ring-[#5C55F9]/30 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1.5">
-                  Teacher ID <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={teacherId}
-                  onChange={(e) => setTeacherId(e.target.value)}
-                  placeholder="e.g. TCH-001"
                   required
                   className="w-full bg-[#12121a] border border-white/10 rounded-xl px-3 h-11 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-[#5C55F9]/50 focus:ring-1 focus:ring-[#5C55F9]/30 transition-colors"
                 />
@@ -227,7 +215,7 @@ export default function AdminTeachersPage() {
               )}
             </button>
           </form>
-        </div>
+        </div>}
 
         {/* Teachers list */}
         <div className="bg-[#0c0c14] border border-white/6 rounded-2xl overflow-hidden">
@@ -267,11 +255,6 @@ export default function AdminTeachersPage() {
                       {teacher.teacherProfile?.fullName || teacher.displayName || "—"}
                     </p>
                     <p className="text-xs text-gray-500 truncate">{teacher.email}</p>
-                    {teacher.teacherProfile?.teacherId && (
-                      <p className="text-[10px] text-gray-600 mt-0.5">
-                        ID: {teacher.teacherProfile.teacherId}
-                      </p>
-                    )}
                   </div>
                   <div>
                     {teacher.isVerified ? (

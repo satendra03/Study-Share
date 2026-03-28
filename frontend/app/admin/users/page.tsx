@@ -17,8 +17,18 @@ import {
   UserX,
   RefreshCw,
   ChevronDown,
+  Mail,
+  Calendar,
+  BookOpen,
+  GraduationCap,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface User {
   id: string;
@@ -28,8 +38,9 @@ interface User {
   isVerified: boolean;
   isProfileComplete: boolean;
   displayName?: string;
-  studentProfile?: { fullName: string; branch: string; semester: number; college: string };
-  teacherProfile?: { fullName: string; teacherId: string };
+  photoURL?: string;
+  studentProfile?: { fullName: string; branch: string; semester: number; college: string; enrollmentNumber?: string };
+  teacherProfile?: { fullName: string };
   createdAt?: any;
 }
 
@@ -81,6 +92,7 @@ export default function AdminUsersPage() {
   const [role, setRole] = useState("all");
   const [verified, setVerified] = useState("all");
   const [search, setSearch] = useState("");
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const limit = 20;
 
   const fetchUsers = useCallback(async () => {
@@ -220,15 +232,29 @@ export default function AdminUsersPage() {
                 </thead>
                 <tbody className="divide-y divide-white/4">
                   {filtered.map((user) => (
-                    <tr key={user.id} className="hover:bg-white/2 transition-colors group">
+                    <tr
+                      key={user.id}
+                      className="hover:bg-white/2 transition-colors group cursor-pointer"
+                      onClick={() => setSelectedUser(user)}
+                    >
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-[#1a1a24] border border-white/8 flex items-center justify-center text-sm font-semibold text-gray-300 shrink-0">
-                            {(user.displayName || user.email)[0]?.toUpperCase()}
-                          </div>
+                          {user.photoURL ? (
+                            <img
+                              src={user.photoURL}
+                              alt=""
+                              className="w-9 h-9 rounded-xl object-cover shrink-0 border border-white/8"
+                            />
+                          ) : (
+                            <div className="w-9 h-9 rounded-xl bg-[#1a1a24] border border-white/8 flex items-center justify-center text-sm font-semibold text-gray-300 shrink-0">
+                              {(user.displayName || user.email)[0]?.toUpperCase()}
+                            </div>
+                          )}
                           <div>
                             <p className="text-sm font-medium text-white truncate max-w-[180px]">
-                              {user.displayName || "—"}
+                              {user.role === "admin"
+                                ? "Admin"
+                                : user.studentProfile?.fullName || user.teacherProfile?.fullName || user.displayName || "—"}
                             </p>
                             <p className="text-xs text-gray-500 truncate max-w-[180px]">{user.email}</p>
                           </div>
@@ -261,12 +287,12 @@ export default function AdminUsersPage() {
                           {user.studentProfile
                             ? `${user.studentProfile.branch} · Sem ${user.studentProfile.semester}`
                             : user.teacherProfile
-                            ? `ID: ${user.teacherProfile.teacherId}`
+                            ? user.teacherProfile.fullName
                             : "—"}
                         </p>
                       </td>
                       <td className="px-5 py-4">
-                        <div className="flex items-center gap-2 justify-end">
+                        <div className="flex items-center gap-2 justify-end" onClick={(e) => e.stopPropagation()}>
                           {user.role !== "admin" && (
                             <>
                               {user.isVerified ? (
@@ -356,6 +382,113 @@ export default function AdminUsersPage() {
           </>
         )}
       </div>
+
+      {/* User detail dialog */}
+      <Dialog open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
+        <DialogContent className="bg-[#0c0c14] border border-white/10 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-white text-lg font-semibold">User Details</DialogTitle>
+          </DialogHeader>
+
+          {selectedUser && (
+            <div className="space-y-5 pt-1">
+              {/* Avatar + name */}
+              <div className="flex items-center gap-4">
+                {selectedUser.photoURL ? (
+                  <img
+                    src={selectedUser.photoURL}
+                    alt=""
+                    className="w-16 h-16 rounded-2xl object-cover border border-white/10"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-2xl bg-[#1a1a2e] border border-white/10 flex items-center justify-center text-2xl font-bold text-gray-300">
+                    {(selectedUser.displayName || selectedUser.email)[0]?.toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <p className="text-base font-semibold text-white">
+                    {selectedUser.role === "admin"
+                      ? "Admin"
+                      : selectedUser.studentProfile?.fullName || selectedUser.teacherProfile?.fullName || selectedUser.displayName || "—"}
+                  </p>
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-medium border capitalize mt-1 ${roleColor(selectedUser.role)}`}>
+                    {selectedUser.role === "admin" && <Shield className="w-3 h-3" />}
+                    {selectedUser.role}
+                  </span>
+                </div>
+              </div>
+
+              {/* Info rows */}
+              <div className="space-y-3 bg-white/3 rounded-xl p-4 border border-white/6">
+                <div className="flex items-center gap-3">
+                  <Mail className="w-4 h-4 text-gray-500 shrink-0" />
+                  <span className="text-sm text-gray-300 break-all">{selectedUser.email}</span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  {selectedUser.isVerified ? (
+                    <CheckCircle className="w-4 h-4 text-green-400 shrink-0" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4 text-orange-400 shrink-0" />
+                  )}
+                  <span className={`text-sm ${selectedUser.isVerified ? "text-green-400" : "text-orange-400"}`}>
+                    {selectedUser.isVerified ? "Verified" : "Unverified"}
+                  </span>
+                </div>
+
+                {selectedUser.createdAt && (
+                  <div className="flex items-center gap-3">
+                    <Calendar className="w-4 h-4 text-gray-500 shrink-0" />
+                    <span className="text-sm text-gray-400">
+                      Joined {new Date(selectedUser.createdAt?.seconds ? selectedUser.createdAt.seconds * 1000 : selectedUser.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Student profile */}
+              {selectedUser.studentProfile && (
+                <div className="space-y-2 bg-white/3 rounded-xl p-4 border border-white/6">
+                  <p className="text-[11px] text-gray-500 uppercase tracking-widest font-medium flex items-center gap-1.5 mb-3">
+                    <GraduationCap className="w-3.5 h-3.5" /> Student Profile
+                  </p>
+                  <div className="grid grid-cols-2 gap-y-2 text-sm">
+                    <span className="text-gray-500">Branch</span>
+                    <span className="text-gray-200">{selectedUser.studentProfile.branch}</span>
+                    <span className="text-gray-500">Semester</span>
+                    <span className="text-gray-200">{selectedUser.studentProfile.semester}</span>
+                    {selectedUser.studentProfile.college && (
+                      <>
+                        <span className="text-gray-500">College</span>
+                        <span className="text-gray-200">{selectedUser.studentProfile.college}</span>
+                      </>
+                    )}
+                    {selectedUser.studentProfile.enrollmentNumber && (
+                      <>
+                        <span className="text-gray-500">Enrollment</span>
+                        <span className="text-gray-200">{selectedUser.studentProfile.enrollmentNumber}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Teacher profile */}
+              {selectedUser.teacherProfile && (
+                <div className="space-y-2 bg-white/3 rounded-xl p-4 border border-white/6">
+                  <p className="text-[11px] text-gray-500 uppercase tracking-widest font-medium flex items-center gap-1.5 mb-3">
+                    <BookOpen className="w-3.5 h-3.5" /> Teacher Profile
+                  </p>
+                  <div className="grid grid-cols-2 gap-y-2 text-sm">
+                    <span className="text-gray-500">Full Name</span>
+                    <span className="text-gray-200">{selectedUser.teacherProfile.fullName}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

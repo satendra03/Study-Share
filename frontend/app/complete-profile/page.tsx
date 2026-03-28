@@ -9,8 +9,16 @@ import { Label } from "@/components/ui/label";
 import api from "@/lib/api";
 import { auth } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
-import { GraduationCap, Briefcase, ArrowLeft, ArrowRight, UserPen, Lock } from "lucide-react";
+import { GraduationCap, Briefcase, ArrowLeft, ArrowRight, UserPen, Lock, ChevronDown } from "lucide-react";
 import { InteractiveGridPattern } from "@/components/ui/interactive-grid-pattern";
+import { SEMESTERS, BRANCHES } from "@/lib/constants";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+} from "@/components/ui/dropdown-menu";
 
 type Role = "student" | "teacher" | null;
 
@@ -20,6 +28,50 @@ async function resolveIdToken(): Promise<string | null> {
   const u = auth.currentUser;
   if (!u) return null;
   return u.getIdToken();
+}
+
+/** Reusable form dropdown matching the dashboard style */
+function FormDropdown({
+  label,
+  value,
+  onValueChange,
+  options,
+  placeholder = "Select",
+}: {
+  label: string;
+  value: string;
+  onValueChange: (v: string) => void;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+}) {
+  const displayText = value
+    ? options.find((o) => o.value === value)?.label || value
+    : placeholder;
+
+  return (
+    <div>
+      <Label className="text-[10px] text-gray-500 uppercase tracking-widest font-medium block mb-1.5">{label}</Label>
+      <DropdownMenu>
+        <DropdownMenuTrigger className="inline-flex items-center justify-between w-full cursor-pointer bg-[#0f0f18] border border-white/8 rounded-lg px-3 h-10 text-sm hover:bg-[#13132a] transition-colors focus:outline-none focus:border-[#5C55F9]/40 select-none">
+          <span className={value ? "text-white" : "text-gray-500"}>{displayText}</span>
+          <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="bg-[#0c0c14] border-white/10 min-w-[160px]">
+          <DropdownMenuRadioGroup value={value} onValueChange={onValueChange}>
+            {options.map((opt) => (
+              <DropdownMenuRadioItem
+                key={opt.value}
+                value={opt.value}
+                className="text-gray-300 cursor-pointer focus:bg-[#5C55F9]/10 focus:text-white"
+              >
+                {opt.label}
+              </DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
 }
 
 export default function CompleteProfilePage() {
@@ -60,6 +112,13 @@ export default function CompleteProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate dropdown fields (not covered by native 'required')
+    if (role === "student" && (!studentForm.semester || !studentForm.branch)) {
+      setError("Please select both semester and branch.");
+      return;
+    }
+
     const idToken = await resolveIdToken();
     if (!idToken) { setError("Session expired. Please sign in again."); return; }
     setLoading(true);
@@ -198,14 +257,25 @@ export default function CompleteProfilePage() {
                     <Label className="text-[10px] text-gray-500 uppercase tracking-widest font-medium block mb-1.5">Enrollment</Label>
                     <Input placeholder="0101CS..." className="bg-[#0f0f18] border-white/8 text-white h-10 rounded-lg text-sm focus:border-[#5C55F9]/40 transition-colors" value={studentForm.enrollmentNumber} onChange={e => setStudentForm(p => ({ ...p, enrollmentNumber: e.target.value }))} required />
                   </div>
-                  <div>
-                    <Label className="text-[10px] text-gray-500 uppercase tracking-widest font-medium block mb-1.5">Semester</Label>
-                    <Input type="number" placeholder="1–8" className="bg-[#0f0f18] border-white/8 text-white h-10 rounded-lg text-sm focus:border-[#5C55F9]/40 transition-colors" value={studentForm.semester} onChange={e => setStudentForm(p => ({ ...p, semester: e.target.value }))} required />
-                  </div>
+
+                  <FormDropdown
+                    label="Semester"
+                    value={studentForm.semester}
+                    onValueChange={(v) => setStudentForm(p => ({ ...p, semester: v }))}
+                    options={SEMESTERS.map(s => ({ value: s, label: `Sem ${s}` }))}
+                    placeholder="Select"
+                  />
+
                   <div className="col-span-2">
-                    <Label className="text-[10px] text-gray-500 uppercase tracking-widest font-medium block mb-1.5">Branch</Label>
-                    <Input placeholder="e.g. Computer Science" className="bg-[#0f0f18] border-white/8 text-white h-10 rounded-lg text-sm focus:border-[#5C55F9]/40 transition-colors" value={studentForm.branch} onChange={e => setStudentForm(p => ({ ...p, branch: e.target.value }))} required />
+                    <FormDropdown
+                      label="Branch"
+                      value={studentForm.branch}
+                      onValueChange={(v) => setStudentForm(p => ({ ...p, branch: v }))}
+                      options={BRANCHES.map(b => ({ value: b, label: b }))}
+                      placeholder="Select branch"
+                    />
                   </div>
+
                   <div className="col-span-2">
                     <Label className="text-[10px] text-gray-500 uppercase tracking-widest font-medium block mb-1.5">College</Label>
                     <Input placeholder="Your institution" className="bg-[#0f0f18] border-white/8 text-white h-10 rounded-lg text-sm focus:border-[#5C55F9]/40 transition-colors" value={studentForm.collegeId} onChange={e => setStudentForm(p => ({ ...p, collegeId: e.target.value }))} required />

@@ -16,10 +16,7 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
-
-const BRANCHES = ["CSE", "IT", "ECE", "ME", "CE", "EE"];
-const SEMESTERS = ["1", "2", "3", "4", "5", "6", "7", "8"];
-const YEARS = ["2025", "2024", "2023", "2022", "2021", "2020"];
+import { BRANCHES, SEMESTERS, YEARS, semesterOptions, branchOptions, yearOptions } from "@/lib/constants";
 
 // Reusable filter dropdown component
 function FilterDropdown({
@@ -28,12 +25,14 @@ function FilterDropdown({
   onValueChange,
   options,
   allLabel = "All",
+  showAll = true,
 }: {
   label: string;
   value: string;
   onValueChange: (v: string) => void;
   options: { value: string; label: string }[];
   allLabel?: string;
+  showAll?: boolean;
 }) {
   const displayText = value
     ? options.find((o) => o.value === value)?.label || value
@@ -48,9 +47,11 @@ function FilterDropdown({
       </DropdownMenuTrigger>
       <DropdownMenuContent className="bg-[#0c0c14] border-white/10 min-w-[160px]">
         <DropdownMenuRadioGroup value={value} onValueChange={onValueChange}>
-          <DropdownMenuRadioItem value="" className="text-gray-300 cursor-pointer focus:bg-[#5C55F9]/10 focus:text-white">
-            {allLabel}
-          </DropdownMenuRadioItem>
+          {showAll && (
+            <DropdownMenuRadioItem value="" className="text-gray-300 cursor-pointer focus:bg-[#5C55F9]/10 focus:text-white">
+              {allLabel}
+            </DropdownMenuRadioItem>
+          )}
           {options.map((opt) => (
             <DropdownMenuRadioItem
               key={opt.value}
@@ -85,9 +86,12 @@ export default function DashboardPage() {
     if (appUser?.studentProfile) {
       setFilters(prev => ({
         ...prev,
-        branch: appUser.studentProfile?.branch || "",
+        branch: appUser.studentProfile?.branch || BRANCHES[0],
         semester: appUser.studentProfile?.semester?.toString() || ""
       }));
+    } else {
+      // No profile — still default to first branch since "All" isn't available
+      setFilters(prev => ({ ...prev, branch: prev.branch || BRANCHES[0] }));
     }
   }, [appUser]);
 
@@ -181,15 +185,15 @@ export default function DashboardPage() {
             label="Branch"
             value={filters.branch}
             onValueChange={(v) => setFilters((f) => ({ ...f, branch: v }))}
-            options={BRANCHES.map((b) => ({ value: b, label: b }))}
-            allLabel="All Branches"
+            options={branchOptions}
+            showAll={false}
           />
 
           <FilterDropdown
             label="Semester"
             value={filters.semester}
             onValueChange={(v) => setFilters((f) => ({ ...f, semester: v }))}
-            options={SEMESTERS.map((s) => ({ value: s, label: `Sem ${s}` }))}
+            options={semesterOptions}
             allLabel="All Semesters"
           />
 
@@ -197,7 +201,7 @@ export default function DashboardPage() {
             label="Year"
             value={filters.year}
             onValueChange={(v) => setFilters((f) => ({ ...f, year: v }))}
-            options={YEARS.map((y) => ({ value: y, label: y }))}
+            options={yearOptions}
             allLabel="All Years"
           />
 

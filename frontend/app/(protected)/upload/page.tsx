@@ -4,11 +4,65 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import api from "@/lib/api";
-import { Upload, FileText, CheckCircle, Loader, X, FileUp, ArrowLeft, DownloadCloudIcon } from "lucide-react";
+import { Upload, FileText, CheckCircle, Loader, X, FileUp, ArrowLeft, DownloadCloudIcon, ChevronDown } from "lucide-react";
 import { WorkspaceGridBackdrop } from "@/components/WorkspaceGridBackdrop";
 import Link from "next/link";
+import { BRANCHES, SEMESTERS, YEARS, FILE_TYPES } from "@/lib/constants";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+} from "@/components/ui/dropdown-menu";
 
 type Status = "idle" | "uploading" | "processing" | "done" | "failed";
+
+/** Reusable form dropdown matching the dashboard style */
+function FormDropdown({
+  label,
+  value,
+  onValueChange,
+  options,
+  placeholder = "Select",
+  required = false,
+}: {
+  label: string;
+  value: string;
+  onValueChange: (v: string) => void;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+  required?: boolean;
+}) {
+  const displayText = value
+    ? options.find((o) => o.value === value)?.label || value
+    : placeholder;
+
+  return (
+    <div>
+      <Label className="text-gray-300 font-medium mb-2 block">{label}{required ? " *" : ""}</Label>
+      <DropdownMenu>
+        <DropdownMenuTrigger className="inline-flex items-center justify-between w-full cursor-pointer bg-[#12121a] border border-white/10 rounded-xl px-3 h-11 text-sm hover:bg-[#16162a] transition-colors focus:outline-none focus:border-[#5C55F9]/50 focus:ring-1 focus:ring-[#5C55F9]/50 select-none">
+          <span className={value ? "text-white" : "text-gray-500"}>{displayText}</span>
+          <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="bg-[#0c0c14] border-white/10 min-w-[160px]">
+          <DropdownMenuRadioGroup value={value} onValueChange={onValueChange}>
+            {options.map((opt) => (
+              <DropdownMenuRadioItem
+                key={opt.value}
+                value={opt.value}
+                className="text-gray-300 cursor-pointer focus:bg-[#5C55F9]/10 focus:text-white"
+              >
+                {opt.label}
+              </DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -21,6 +75,13 @@ export default function UploadPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) { setError("Please select a file to upload."); return; }
+
+    // Validate dropdown fields (not covered by native 'required')
+    if (!form.branch || !form.semester || !form.year) {
+      setError("Please select branch, semester, and year.");
+      return;
+    }
+
     setError("");
     setStatus("uploading");
 
@@ -197,23 +258,23 @@ export default function UploadPage() {
                   </div>
 
                   <div id="branch">
-                    <Label className="text-gray-300 font-medium mb-2 block">Branch *</Label>
-                    <Input
-                      className="bg-[#12121a] border-white/10 text-white focus:border-[#5C55F9]/50 focus:ring-1 focus:ring-[#5C55F9]/50 rounded-xl h-11"
-                      placeholder="e.g. CSE"
+                    <FormDropdown
+                      label="Branch"
                       value={form.branch}
-                      onChange={e => setForm(p => ({ ...p, branch: e.target.value }))}
+                      onValueChange={(v) => setForm(p => ({ ...p, branch: v }))}
+                      options={BRANCHES.map(b => ({ value: b, label: b }))}
+                      placeholder="Select branch"
                       required
                     />
                   </div>
 
                   <div id="semester">
-                    <Label className="text-gray-300 font-medium mb-2 block">Semester *</Label>
-                    <Input
-                      className="bg-[#12121a] border-white/10 text-white focus:border-[#5C55F9]/50 focus:ring-1 focus:ring-[#5C55F9]/50 rounded-xl h-11"
-                      placeholder="e.g. 4"
+                    <FormDropdown
+                      label="Semester"
                       value={form.semester}
-                      onChange={e => setForm(p => ({ ...p, semester: e.target.value }))}
+                      onValueChange={(v) => setForm(p => ({ ...p, semester: v }))}
+                      options={SEMESTERS.map(s => ({ value: s, label: `Sem ${s}` }))}
+                      placeholder="Select semester"
                       required
                     />
                   </div>
@@ -230,31 +291,27 @@ export default function UploadPage() {
                   </div>
 
                   <div id="year">
-                    <Label className="text-gray-300 font-medium mb-2 block">Year *</Label>
-                    <Input
-                      className="bg-[#12121a] border-white/10 text-white focus:border-[#5C55F9]/50 focus:ring-1 focus:ring-[#5C55F9]/50 rounded-xl h-11"
-                      placeholder="e.g. 2023"
+                    <FormDropdown
+                      label="Year"
                       value={form.year}
-                      onChange={e => setForm(p => ({ ...p, year: e.target.value }))}
+                      onValueChange={(v) => setForm(p => ({ ...p, year: v }))}
+                      options={YEARS.map(y => ({ value: y, label: y }))}
+                      placeholder="Select year"
                       required
                     />
                   </div>
 
-
-
                   <div className="md:col-span-2 mt-2">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div id="fileType">
-                        <Label className="text-gray-300 font-medium mb-2 block">File Type *</Label>
-                        <select
-                          className="w-full bg-[#12121a] border border-white/10 text-white focus:border-[#5C55F9]/50 focus:ring-1 focus:ring-[#5C55F9]/50 rounded-xl h-11 px-3 appearance-none outline-none"
+                        <FormDropdown
+                          label="File Type"
                           value={form.fileType}
-                          onChange={e => setForm(p => ({ ...p, fileType: e.target.value }))}
+                          onValueChange={(v) => setForm(p => ({ ...p, fileType: v }))}
+                          options={FILE_TYPES.map(ft => ({ value: ft.value, label: ft.label }))}
+                          placeholder="Select type"
                           required
-                        >
-                          <option value="Other">Other Material (Notes, Books, etc)</option>
-                          <option value="PYQ">PYQ (Previous Year Question Paper)</option>
-                        </select>
+                        />
                       </div>
                       <div id="subjectCode">
                         <Label className="text-gray-300 font-medium mb-2 block">Subject Code</Label>

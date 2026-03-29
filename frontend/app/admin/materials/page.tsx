@@ -105,7 +105,7 @@ export default function AdminMaterialsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, status]);
+  }, [mounted, page, status]);
 
   useEffect(() => {
     fetchMaterials();

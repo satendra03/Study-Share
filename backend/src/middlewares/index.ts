@@ -4,11 +4,12 @@ import cors from "cors";
 import express, { type Application } from "express";
 import { errorMiddleware } from "./error.middleware.js";
 import { notFoundMiddleware } from "./notFound.middleware.js";
+import { corsOptions } from "@/config/cors.config.js";
 // import { requestLogger } from "./logger.middleware.js";
 
 //  CORS, JSON, URL encoded
 export const registerMiddlewares = (app: Application) => {
-    app.use(cors());
+    app.use(cors(corsOptions));
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
     // app.use(requestLogger);

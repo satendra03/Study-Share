@@ -121,7 +121,7 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, role, verified]);
+  }, [mounted, page, role, verified]);
 
   useEffect(() => {
     fetchUsers();

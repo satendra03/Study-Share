@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { useAdminAuthStore } from "@/store/adminAuthStore";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Lock, Mail, ShieldCheck, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, ShieldCheck, AlertCircle, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 export default function AdminLoginPage() {
   const { signIn, loading } = useAdminAuthStore();
@@ -140,6 +141,11 @@ export default function AdminLoginPage() {
             </button>
           </form>
         </div>
+
+        <Link href="/" className="block text-center text-sm text-gray-500 mt-4 hover:text-gray-300 transition-colors">
+          <ArrowLeft className="w-4 h-4 inline-block mr-2" />
+          Back to StudyShare Home
+        </Link>
 
         <p className="text-center text-xs text-gray-600 mt-6">
           This portal is restricted to authorized administrators only.

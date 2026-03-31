@@ -8,44 +8,30 @@ import { InteractiveGridPattern } from "@/components/ui/interactive-grid-pattern
 import { Pricing } from "@/components/pricing";
 import { FaqSection } from "@/components/FaqSection";
 import { faqs } from "@/lib/data";
+import { link } from "fs";
 
 const teamMembers = [
   {
     id: 1,
-    name: "Emma Brooks",
-    role: "Content Creator",
-    image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+    name: "Satendra K. Parteti",
+    role: "Frontend Developer",
+    link: "https://www.linkedin.com/in/connect-satendra/",
+    image: "https://media.licdn.com/dms/image/v2/D5603AQHhVq3jvCrcQA/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1732160847983?e=1776297600&v=beta&t=G97ODCbfkNWhVm7TntBdDZTljiwCg-GnsP1UJDGI00o"
   },
   {
     id: 2,
-    name: "Ethan Collins",
-    role: "Frontend Developer",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+    name: "Shivam Devrani",
+    role: "Backend Developer",
+    link: "https://www.linkedin.com/in/shivam1121/",
+    image: "https://media.licdn.com/dms/image/v2/D4D03AQGuw4yvIXvMrw/profile-displayphoto-shrink_400_400/B4DZn9Ua8FGsAg-/0/1760891613531?e=1776297600&v=beta&t=jILnwMig_qZZDGGebpC52zS7fOF6zSM2-3o7RcYhnR0"
   },
   {
     id: 3,
-    name: "Ryan Mitchell",
-    role: "Product Designer",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+    name: "Krish Gupta",
+    role: "UI UX Designer",
+    link: "https://www.linkedin.com/in/krish-gupta-65ba85250/",
+    image: "https://media.licdn.com/dms/image/v2/D5603AQEj4Ypk6-Gd_Q/profile-displayphoto-shrink_400_400/B56ZTVHroMGsAY-/0/1738742348887?e=1776297600&v=beta&t=q8ZFojGqdOzxOM7d7EWkQxld2ri1R0GTLH9JDTDbxaQ"
   },
-  // {
-  //   id: 4,
-  //   name: "Sarah Jenkins",
-  //   role: "UX Researcher",
-  //   image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
-  // },
-  // {
-  //   id: 5,
-  //   name: "David Chen",
-  //   role: "Backend Engineer",
-  //   image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
-  // },
-  // {
-  //   id: 6,
-  //   name: "Jessica Park",
-  //   role: "Marketing Lead",
-  //   image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
-  // }
 ];
 
 export default function AboutPage() {

@@ -1,4 +1,5 @@
 // Main Server
+import "dotenv/config.js"; // Load environment variables from .env file
 import "./config/firebase.config.js";
 import "./config/cloudinary.config.js";
 import { connectMongoDB } from "./config/mongodb.config.js";

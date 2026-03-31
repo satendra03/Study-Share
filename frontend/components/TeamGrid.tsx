@@ -1,10 +1,11 @@
-import { Linkedin } from "lucide-react";
+import Link from "next/link";
 
 export interface TeamMember {
   id: string | number;
   name: string;
   role: string;
   image: string;
+  link: string;
 }
 
 export interface TeamGridProps {
@@ -27,6 +28,7 @@ export function TeamGrid({ title, description, members }: TeamGridProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
         {members.map((member) => (
+          <Link href={member.link} target="_blank" key={member.id} className="flex flex-col group cursor-pointer">
           <div key={member.id} className="flex flex-col group cursor-pointer">
             <div className="relative w-full aspect-4/3 rounded-[2rem] overflow-hidden mb-5 bg-[#0a0f25] border border-blue-900/30">
               {/* Duotone blue effect using CSS mix-blend modes */}
@@ -40,8 +42,9 @@ export function TeamGrid({ title, description, members }: TeamGridProps) {
             </div>
             
             <h3 className="text-xl font-semibold text-white mb-1 tracking-tight">{member.name}</h3>
-            <span className="text-gray-400 flex items-center gap-2 text-sm font-light">{member.role} • {<Linkedin className="w-4 h-4 text-gray-400" />}</span>
+            <span className="text-gray-400 flex items-center gap-2 text-sm font-light">{member.role}</span>
           </div>
+          </Link>
         ))}
       </div>
     </section>

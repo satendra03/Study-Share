@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" style={{ background: "#030303" }}>
       <head>
         <link
           rel="stylesheet"
@@ -27,7 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           referrerPolicy="no-referrer"
         />
       </head>
-      <body className={`${inter.className} bg-gray-950 text-white min-h-screen`}>
+      <body className={`${inter.className} bg-[#030303] text-white min-h-screen`}>
         <ProgressBar />
         <QueryProvider>
           <TooltipProvider>

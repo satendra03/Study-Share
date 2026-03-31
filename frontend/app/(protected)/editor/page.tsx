@@ -5,7 +5,7 @@ import { Code2, BookOpen, ChevronRight, ChevronDown, X, Lightbulb } from "lucide
 import { SAMPLE_CATEGORIES, type CodeSample } from "./samples";
 
 export default function CodeEditorPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({ sorting: true });
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -63,10 +63,10 @@ export default function CodeEditorPage() {
       </div>
 
       {/* Body */}
-      <div className="flex flex-1 min-h-0">
-        {/* Sidebar */}
+      <div className="flex flex-1 min-h-0 relative">
+        {/* Sidebar — overlay on mobile, inline on md+ */}
         {sidebarOpen && (
-          <div className="w-64 shrink-0 flex flex-col border-r border-white/6 bg-[#05050c] overflow-hidden">
+          <div className="absolute md:relative z-20 w-64 h-full shrink-0 flex flex-col border-r border-white/6 bg-[#05050c] overflow-hidden shadow-2xl">
             {/* Sidebar header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/6">
               <div className="flex items-center gap-2">
@@ -135,6 +135,14 @@ export default function CodeEditorPage() {
               </p>
             </div>
           </div>
+        )}
+
+        {/* Backdrop for mobile sidebar */}
+        {sidebarOpen && (
+          <div
+            className="absolute inset-0 z-10 bg-black/50 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
         )}
 
         {/* OneCompiler iframe */}

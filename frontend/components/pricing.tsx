@@ -35,7 +35,7 @@ export function Pricing({ noBorderTop = false }: { noBorderTop?: boolean }) {
           <button className="w-full py-3 rounded-full border border-gray-700 text-white font-medium hover:bg-white/5 transition-colors mb-8">Get Started</button>
           <div className="text-sm font-medium text-white mb-4">What you will get</div>
           <ul className="space-y-3">
-            {["Basic note uploads", "PDF reading", "5 AI queries/day", "Standard text search"].map((item, i) => (
+            {["Basic note uploads", "PDF reading", "Standard text search"].map((item, i) => (
               <li key={i} className="flex items-center gap-3 text-sm text-gray-400 font-light"><CheckCircle2 className="w-4 h-4 text-gray-500" /> {item}</li>
             ))}
           </ul>

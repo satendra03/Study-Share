@@ -29,7 +29,7 @@ export default function MaterialPage() {
   const [pdfLoading, setPdfLoading] = useState(false);
   const [numPages, setNumPages] = useState<number>();
   const [pageNumber, setPageNumber] = useState(1);
-  const [pageWidth, setPageWidth] = useState<number>(700);
+  const [pageWidth, setPageWidth] = useState<number>(300);
   const pdfViewerRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -37,17 +37,16 @@ export default function MaterialPage() {
   const [isBookmarking, setIsBookmarking] = useState(false);
   const [mobileTab, setMobileTab] = useState<"pdf" | "chat">("pdf");
 
+  // Use ResizeObserver so width is measured when the element actually mounts/resizes
   useEffect(() => {
-    const updateWidth = () => {
-      if (!pdfViewerRef.current) return;
-      const available = pdfViewerRef.current.clientWidth - 32;
-      setPageWidth(Math.max(420, Math.min(available, 900)));
-    };
-
-    updateWidth();
-    window.addEventListener("resize", updateWidth);
-    return () => window.removeEventListener("resize", updateWidth);
-  }, []);
+    const el = pdfViewerRef.current;
+    if (!el) return;
+    const measure = () => setPageWidth(Math.min(el.clientWidth - 16, 900));
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [blobUrl]); // re-run when blobUrl changes so the ref is definitely attached
 
   const { data: material, isLoading } = useQuery<Material>({
     queryKey: ["material", id],
@@ -177,7 +176,7 @@ export default function MaterialPage() {
           {material?.fileUrl ? (
             <>
               {/* Header */}
-              <div className="px-5 h-20 md:px-6 py-5 border-b border-white/5 bg-[#12121a]/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
+              <div className="px-4 md:px-6 py-3 md:py-5 border-b border-white/5 bg-[#12121a]/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 shrink-0">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-2.5">
                     <div className="inline-flex items-center justify-center w-6 h-6 rounded-sm bg-[#5C55F9]/20 border border-[#5C55F9]/30 text-[#5C55F9] shrink-0">
@@ -245,29 +244,29 @@ export default function MaterialPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   <Button
                     size="sm"
                     variant="ghost"
                     disabled={isBookmarking}
                     onClick={() => void toggleBookmark()}
-                    className={`h-10 px-4 rounded-xl transition-all ${bookmarked ? "text-amber-400 bg-amber-500/10 hover:bg-amber-500/20" : "text-gray-300 hover:text-white bg-white/5 hover:bg-white/10"}`}
+                    className={`h-9 px-3 rounded-xl transition-all ${bookmarked ? "text-amber-400 bg-amber-500/10 hover:bg-amber-500/20" : "text-gray-300 hover:text-white bg-white/5 hover:bg-white/10"}`}
                   >
-                    <Bookmark className={`w-4 h-4 mr-2 ${bookmarked ? "fill-current" : ""}`} />
-                    {bookmarked ? "Saved" : "Save"}
+                    <Bookmark className={`w-4 h-4 sm:mr-2 ${bookmarked ? "fill-current" : ""}`} />
+                    <span className="hidden sm:inline">{bookmarked ? "Saved" : "Save"}</span>
                   </Button>
                   <Button
                     size="sm"
                     disabled={isDownloading}
                     onClick={handleDownload}
-                    className="bg-[#5C55F9] hover:bg-[#4b45d6] text-white h-10 px-5 rounded-xl shadow-[0_0_20px_rgba(92,85,249,0.25)] transition-all min-w-[130px]"
+                    className="bg-[#5C55F9] hover:bg-[#4b45d6] text-white h-9 px-3 sm:px-5 rounded-xl shadow-[0_0_20px_rgba(92,85,249,0.25)] transition-all"
                   >
                     {isDownloading ? (
-                      <Loader2 className="w-4 h-4 mr-2.5 animate-spin" />
+                      <Loader2 className="w-4 h-4 sm:mr-2 animate-spin" />
                     ) : (
-                      <Download className="w-4 h-4 mr-2.5" />
+                      <Download className="w-4 h-4 sm:mr-2" />
                     )}
-                    {isDownloading ? "Downloading..." : "Download"}
+                    <span className="hidden sm:inline">{isDownloading ? "Downloading..." : "Download"}</span>
                   </Button>
                 </div>
               </div>
@@ -301,7 +300,7 @@ export default function MaterialPage() {
               {/* PDF Content */}
               <div
                 ref={pdfViewerRef}
-                className="flex-1 overflow-y-auto bg-black/40 p-2 md:p-2 flex flex-col items-center custom-scrollbar scroll-smooth"
+                className="flex-1 overflow-x-hidden overflow-y-auto bg-black/40 p-2 flex flex-col items-center custom-scrollbar scroll-smooth"
                 style={{ minHeight: 0 }}
               >
                 {pdfLoading && (

@@ -11,6 +11,7 @@ import app from "./app.js";
 // Import the queue module to register the worker at startup.
 // The worker auto-starts listening once Redis is connected.
 import "./infrastructure/queue/material.queue.js";
+import "./infrastructure/queue/syllabus.queue.js";
 
 const PORT = process.env.PORT || 5000;
 

@@ -2,7 +2,7 @@ import { type Material, type PageData } from "../material.types.js";
 
 export interface MaterialServiceInterface {
     createMaterial(data: Omit<Material, "id" | "createdAt" | "updatedAt" | "downloads" | "fileUrl" | "title">, file: Express.Multer.File): Promise<Material>;
-    getAllMaterials(filters?: { branch?: string; subject?: string; semester?: string; year?: string }): Promise<Material[]>;
+    getAllMaterials(filters?: { branch?: string; subject?: string; semester?: string; year?: string; fileType?: string }): Promise<Material[]>;
     getMaterialById(id: string): Promise<Material>;
     deleteMaterial(id: string): Promise<void>;
     recordDownload(id: string): Promise<void>;

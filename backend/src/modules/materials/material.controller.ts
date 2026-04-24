@@ -53,12 +53,13 @@ export class MaterialController {
 
     getAllMaterials = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const { branch, semester, subject, year } = req.query;
+            const { branch, semester, subject, year, fileType } = req.query;
             const filters = {
                 branch: branch as string,
                 semester: semester as string,
                 subject: subject as string,
-                year: year as string
+                year: year as string,
+                fileType: fileType as string
             };
 
             const materials = await this.materialService.getAllMaterials(filters);

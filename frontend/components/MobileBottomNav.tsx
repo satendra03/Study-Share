@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, FileUp, Plus, Bookmark, Code2 } from "lucide-react";
+import { Home, FileUp, Plus, Bookmark, Sparkles } from "lucide-react";
 
 const NAV_LINKS = [
-  { href: "/dashboard",   label: "Home",    icon: Home },
-  { href: "/my-uploads",  label: "Uploads", icon: FileUp },
-  { href: "/bookmarks",   label: "Saved",   icon: Bookmark },
-  { href: "/editor",      label: "Editor",  icon: Code2 },
+  { href: "/dashboard",         label: "Home",    icon: Home },
+  { href: "/important-topics",  label: "Topics",  icon: Sparkles },
+  { href: "/bookmarks",         label: "Saved",   icon: Bookmark },
+  { href: "/my-uploads",        label: "Uploads", icon: FileUp },
 ];
 
 export default function MobileBottomNav() {

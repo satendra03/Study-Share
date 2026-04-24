@@ -9,12 +9,14 @@ import {
   GraduationCap,
   LogOut,
   ShieldCheck,
+  BookOpen,
 } from "lucide-react";
 
 const navLinks = [
   { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { name: "Users", href: "/admin/users", icon: Users },
   { name: "Materials", href: "/admin/materials", icon: FileText },
+  { name: "Subjects", href: "/admin/semester-subjects", icon: BookOpen },
   { name: "Teachers", href: "/admin/teachers", icon: GraduationCap },
 ];
 

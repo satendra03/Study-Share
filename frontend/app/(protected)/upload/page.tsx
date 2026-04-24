@@ -1,10 +1,10 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import api from "@/lib/api";
-import { Upload, FileText, CheckCircle, Loader, X, FileUp, ArrowLeft, DownloadCloudIcon, ChevronDown, ShieldX, Info } from "lucide-react";
+import { Upload, FileText, CheckCircle, Loader, X, FileUp, ArrowLeft, DownloadCloudIcon, ChevronDown, ShieldX, Info, Loader2 } from "lucide-react";
 import { WorkspaceGridBackdrop } from "@/components/WorkspaceGridBackdrop";
 import Link from "next/link";
 import { useAuthStore } from "@/store/authStore";
@@ -44,7 +44,9 @@ function FormDropdown({
 
   return (
     <div>
-      <Label className="text-gray-300 font-medium mb-2 block">{label}{required ? " *" : ""}</Label>
+      {label && (
+        <Label className="text-gray-300 font-medium mb-2 block">{label}{required ? " *" : ""}</Label>
+      )}
       <DropdownMenu
         open={open}
         onOpenChange={(nextOpen) => {
@@ -83,6 +85,13 @@ function FormDropdown({
   );
 }
 
+type SubjectOption = {
+  _id: string;
+  semester: string;
+  subject: string;
+  subjectCode?: string;
+};
+
 export default function UploadPage() {
   const { appUser } = useAuthStore();
   const [file, setFile] = useState<File | null>(null);
@@ -91,6 +100,81 @@ export default function UploadPage() {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Subjects fetched per-semester from admin-managed list
+  const [subjects, setSubjects] = useState<SubjectOption[]>([]);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
+
+  // Duplicate-PYQ check (same semester + subject + year already uploaded)
+  const [pyqDuplicate, setPyqDuplicate] = useState<{
+    title?: string;
+    uploaderName?: string;
+  } | null>(null);
+  const [checkingDuplicate, setCheckingDuplicate] = useState(false);
+
+  useEffect(() => {
+    if (!form.semester) {
+      setSubjects([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setLoadingSubjects(true);
+      try {
+        const res = await api.get("/semester-subjects", {
+          params: { semester: form.semester },
+        });
+        if (!cancelled) {
+          setSubjects(res.data.data || []);
+        }
+      } catch {
+        if (!cancelled) setSubjects([]);
+      } finally {
+        if (!cancelled) setLoadingSubjects(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [form.semester]);
+
+  useEffect(() => {
+    // Only meaningful for PYQs with all three keys set
+    if (
+      form.fileType !== "PYQ" ||
+      !form.semester ||
+      !form.subject ||
+      !form.year
+    ) {
+      setPyqDuplicate(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setCheckingDuplicate(true);
+      try {
+        const res = await api.get("/materials", {
+          params: {
+            fileType: "PYQ",
+            semester: form.semester,
+            subject: form.subject,
+            year: form.year,
+          },
+        });
+        if (!cancelled) {
+          const list = res.data.data || [];
+          setPyqDuplicate(list.length > 0 ? list[0] : null);
+        }
+      } catch {
+        if (!cancelled) setPyqDuplicate(null);
+      } finally {
+        if (!cancelled) setCheckingDuplicate(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [form.fileType, form.semester, form.subject, form.year]);
 
   const maxFileSizeMB = form.fileType === "PYQ" ? 5 : 15;
   const maxFileSizeBytes = maxFileSizeMB * 1024 * 1024;
@@ -119,6 +203,14 @@ export default function UploadPage() {
     // Validate dropdown fields (not covered by native 'required')
     if (!form.branch || !form.semester || !form.year) {
       setError("Please select branch, semester, and year.");
+      return;
+    }
+
+    // Block PYQ duplicates proactively — backend will reject too, but this is faster feedback
+    if (form.fileType === "PYQ" && pyqDuplicate) {
+      setError(
+        `A PYQ for ${form.subject} (Sem ${form.semester}, ${form.year}) is already on the platform.`
+      );
       return;
     }
 
@@ -327,7 +419,9 @@ export default function UploadPage() {
                     <FormDropdown
                       label="Semester"
                       value={form.semester}
-                      onValueChange={(v) => setForm(p => ({ ...p, semester: v }))}
+                      onValueChange={(v) =>
+                        setForm(p => ({ ...p, semester: v, subject: "", subjectCode: "" }))
+                      }
                       options={SEMESTERS.map(s => ({ value: s, label: `Sem ${s}` }))}
                       placeholder="Select semester"
                       required
@@ -336,13 +430,39 @@ export default function UploadPage() {
 
                   <div id="subject">
                     <Label className="text-gray-300 font-medium mb-2 block">Subject *</Label>
-                    <Input
-                      className="bg-[#12121a] border-white/10 text-white focus:border-[#5C55F9]/50 focus:ring-1 focus:ring-[#5C55F9]/50 rounded-xl h-11"
-                      placeholder="e.g. Data Structures"
-                      value={form.subject}
-                      onChange={e => setForm(p => ({ ...p, subject: e.target.value }))}
-                      required
-                    />
+                    {!form.semester ? (
+                      <div className="bg-[#12121a] border border-white/10 text-gray-500 rounded-xl h-11 flex items-center px-3 text-sm">
+                        Select semester first
+                      </div>
+                    ) : loadingSubjects ? (
+                      <div className="bg-[#12121a] border border-white/10 text-gray-500 rounded-xl h-11 flex items-center gap-2 px-3 text-sm">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        Loading subjects…
+                      </div>
+                    ) : subjects.length === 0 ? (
+                      <div className="bg-amber-500/8 border border-amber-500/25 text-amber-400 rounded-xl h-11 flex items-center px-3 text-xs">
+                        No subjects found for Sem {form.semester}. Ask your admin to add one.
+                      </div>
+                    ) : (
+                      <FormDropdown
+                        label=""
+                        value={form.subject}
+                        onValueChange={(v) => {
+                          const picked = subjects.find(s => s.subject === v);
+                          setForm(p => ({
+                            ...p,
+                            subject: v,
+                            subjectCode: picked?.subjectCode || p.subjectCode,
+                          }));
+                        }}
+                        options={subjects.map(s => ({
+                          value: s.subject,
+                          label: s.subjectCode ? `${s.subject} (${s.subjectCode})` : s.subject,
+                        }))}
+                        placeholder="Select subject"
+                        required
+                      />
+                    )}
                   </div>
 
                   <div id="year">
@@ -397,16 +517,43 @@ export default function UploadPage() {
                   </div>
                 </div>
 
+                {form.fileType === "PYQ" && checkingDuplicate && (
+                  <div className="flex items-start gap-2.5 px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-gray-400 text-xs">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin mt-0.5" />
+                    Checking if this PYQ is already on the platform…
+                  </div>
+                )}
+                {form.fileType === "PYQ" && pyqDuplicate && !checkingDuplicate && (
+                  <div className="flex items-start gap-2.5 px-3 py-2.5 rounded-xl bg-red-500/8 border border-red-500/25 text-red-400">
+                    <X className="w-4 h-4 shrink-0 mt-0.5" />
+                    <div className="text-xs leading-relaxed">
+                      <p className="font-semibold mb-1">
+                        PYQ already uploaded for {form.subject} (Sem {form.semester}, {form.year}).
+                      </p>
+                      {pyqDuplicate.uploaderName && (
+                        <p className="text-red-300/80">
+                          Contributed by {pyqDuplicate.uploaderName}. Only one PYQ per subject + year is allowed.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <div className="pt-4">
                   <button
                     type="submit"
-                    disabled={status === "uploading"}
-                    className="w-full cursor-pointer relative group overflow-hidden rounded-xl bg-[#5C55F9] text-white p-px font-medium"
+                    disabled={
+                      status === "uploading" ||
+                      (form.fileType === "PYQ" && !!pyqDuplicate)
+                    }
+                    className="w-full cursor-pointer relative group overflow-hidden rounded-xl bg-[#5C55F9] text-white p-px font-medium disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     <span className="absolute inset-0 bg-linear-to-r from-[#5C55F9] to-[#7f78fa] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     <div className="relative bg-[#5C55F9] py-2.5 px-6 rounded-xl transition-all duration-300 group-hover:bg-opacity-0 flex items-center justify-center gap-2">
                       {status === "uploading" ? (
                         <><Loader className="w-5 h-5 animate-spin" /> Processing Upload...</>
+                      ) : form.fileType === "PYQ" && pyqDuplicate ? (
+                        <><X className="w-5 h-5" /> PYQ already exists</>
                       ) : (
                         <><Upload className="w-5 h-5" /> Submit Material</>
                       )}

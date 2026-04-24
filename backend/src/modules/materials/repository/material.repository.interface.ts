@@ -2,7 +2,8 @@ import type { Material } from "../material.types.js";
 
 export interface MaterialRepositoryInterface {
     create(data: Omit<Material, "_id" | "createdAt" | "updatedAt" | "downloads">): Promise<Material>;
-    findAll(filters?: { branch?: string; subject?: string; semester?: string; year?: string }): Promise<Material[]>;
+    findAll(filters?: { branch?: string; subject?: string; semester?: string; year?: string; fileType?: string }): Promise<Material[]>;
+    findExistingPyq(semester: string, subject: string, year: string): Promise<Material | null>;
     findById(id: string): Promise<Material | null>;
     delete(id: string): Promise<void>;
     incrementDownload(id: string): Promise<void>;

@@ -2,7 +2,7 @@ import { uploadFile, deleteFile } from "@/config/cloudinary.config.js";
 import { type Material, type PageData } from "../material.types.js";
 import { type MaterialRepositoryInterface } from "../repository/material.repository.interface.js";
 import { type MaterialServiceInterface } from "./material.service.interface.js";
-import { NotFoundError } from "@/shared/ApiError.js";
+import { BadRequestError, NotFoundError } from "@/shared/ApiError.js";
 import { ai } from "@/modules/ai/ai.service.js";
 import { materialQueue } from "@/infrastructure/queue/material.queue.js";
 import { db } from "@/config/firebase.config.js";
@@ -11,6 +11,20 @@ export class MaterialService implements MaterialServiceInterface {
     constructor(private materialRepository: MaterialRepositoryInterface) { }
 
     createMaterial = async (data: Omit<Material, "id" | "createdAt" | "updatedAt" | "downloads" | "fileUrl" | "title">, file: Express.Multer.File): Promise<Material> => {
+        // Block duplicate PYQs (same semester + subject + year already exists)
+        if (data.fileType === "PYQ" && data.semester && data.subject && data.year) {
+            const existing = await this.materialRepository.findExistingPyq(
+                data.semester,
+                data.subject,
+                data.year
+            );
+            if (existing) {
+                throw new BadRequestError(
+                    `A PYQ for ${data.subject} (Sem ${data.semester}, ${data.year}) is already uploaded.`
+                );
+            }
+        }
+
         // Generate title: Branch-Semester-Subject-Year
         const title = `${data.branch}-${data.semester}-${data.subject}-${data.year}`;
 
@@ -58,7 +72,7 @@ export class MaterialService implements MaterialServiceInterface {
         return material;
     }
 
-    getAllMaterials = async (filters?: { branch?: string; subject?: string; semester?: string; year?: string }): Promise<Material[]> => {
+    getAllMaterials = async (filters?: { branch?: string; subject?: string; semester?: string; year?: string; fileType?: string }): Promise<Material[]> => {
         const materials = await this.materialRepository.findAll(filters);
 
         // Backfill uploaderName for legacy materials that were saved without it

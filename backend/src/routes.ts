@@ -6,6 +6,8 @@ import { userRoute } from "./modules/user/user.routes.js";
 import chatbotRoute from "./modules/chatbot/chatbot.routes.js";
 import adminRoute from "./modules/admin/admin.routes.js";
 import codeRoute from "./modules/code/code.routes.js";
+import semesterSubjectRoute from "./modules/semester-subject/semester-subject.routes.js";
+import importantTopicsRoute from "./modules/important-topics/important-topics.routes.js";
 
 const routes = [
     authRoute,
@@ -14,6 +16,8 @@ const routes = [
     chatbotRoute,
     adminRoute,
     codeRoute,
+    semesterSubjectRoute,
+    importantTopicsRoute,
 ];
 
 export const registerRoutes = (app: Application) => {

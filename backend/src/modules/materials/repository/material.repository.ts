@@ -14,18 +14,29 @@ export class MaterialRepository implements MaterialRepositoryInterface {
     return material.toObject() as Material;
   };
 
-  findAll = async (filters?: { branch?: string; subject?: string; semester?: string; year?: string }): Promise<Material[]> => {
+  findAll = async (filters?: { branch?: string; subject?: string; semester?: string; year?: string; fileType?: string }): Promise<Material[]> => {
     const query: Record<string, any> = {};
     if (filters?.branch) query.branch = filters.branch;
     if (filters?.semester) query.semester = filters.semester;
     if (filters?.subject) query.subject = filters.subject;
     if (filters?.year) query.year = filters.year;
+    if (filters?.fileType) query.fileType = filters.fileType;
 
     const materials = await MaterialModel.find(query)
       .sort({ createdAt: -1 })
       .limit(100)
       .lean();
     return materials as Material[];
+  };
+
+  findExistingPyq = async (semester: string, subject: string, year: string): Promise<Material | null> => {
+    const material = await MaterialModel.findOne({
+      fileType: "PYQ",
+      semester,
+      subject,
+      year,
+    }).lean();
+    return (material as Material) ?? null;
   };
 
   findById = async (id: string): Promise<Material | null> => {

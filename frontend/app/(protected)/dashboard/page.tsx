@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { Material } from "@/types";
-import { Search, SlidersHorizontal, X, ChevronDown } from "lucide-react";
+import { Search, SlidersHorizontal, X, ChevronDown, FileText, FileQuestion, Layers } from "lucide-react";
 import Link from "next/link";
 import { MaterialCard } from "@/components/MaterialCard";
 import { WorkspaceGridBackdrop } from "@/components/WorkspaceGridBackdrop";
@@ -17,6 +17,13 @@ import {
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import { BRANCHES, SEMESTERS, YEARS, semesterOptions, branchOptions, yearOptions } from "@/lib/constants";
+
+type SubjectOption = {
+  _id: string;
+  semester: string;
+  subject: string;
+  subjectCode?: string;
+};
 
 // Reusable filter dropdown component
 // Uses controlled open state so menu stays open after selecting an option.
@@ -96,8 +103,40 @@ export default function DashboardPage() {
     branch: "",
     semester: "",
     year: "",
-    subject: ""
+    subject: "",
+    fileType: "",
   });
+
+  // Subjects fetched per-semester for the dropdown filter
+  const [subjects, setSubjects] = useState<SubjectOption[]>([]);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
+
+  useEffect(() => {
+    if (!filters.semester) {
+      setSubjects([]);
+      // clear stale subject filter if it came from a prior semester
+      if (filters.subject) setFilters(f => ({ ...f, subject: "" }));
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setLoadingSubjects(true);
+      try {
+        const res = await api.get("/semester-subjects", {
+          params: { semester: filters.semester },
+        });
+        if (!cancelled) setSubjects(res.data.data || []);
+      } catch {
+        if (!cancelled) setSubjects([]);
+      } finally {
+        if (!cancelled) setLoadingSubjects(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.semester]);
 
   // Hydrate filters from user profile on mount (optional, only if user has profile)
   // But keep "All" as default if you want them to see everything first.
@@ -132,6 +171,7 @@ export default function DashboardPage() {
       if (filters.semester) params.append("semester", filters.semester);
       if (filters.year) params.append("year", filters.year);
       if (filters.subject) params.append("subject", filters.subject);
+      if (filters.fileType) params.append("fileType", filters.fileType);
 
       const res = await api.get(`${url}?${params.toString()}`);
       const raw = res.data.data;
@@ -153,7 +193,8 @@ export default function DashboardPage() {
       branch: appUser?.studentProfile?.branch || "",
       semester: appUser?.studentProfile?.semester?.toString() || "",
       year: "",
-      subject: ""
+      subject: "",
+      fileType: "",
     });
   };
 
@@ -194,6 +235,44 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* File-type pills — the clearest PYQ filter */}
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <span className="text-xs font-medium text-gray-500 uppercase tracking-widest mr-1">Show</span>
+          <button
+            onClick={() => setFilters((f) => ({ ...f, fileType: "" }))}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
+              filters.fileType === ""
+                ? "bg-[#5C55F9]/15 border-[#5C55F9]/40 text-[#b4afff]"
+                : "bg-white/5 border-white/10 text-gray-400 hover:text-white hover:border-white/20"
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5" />
+            Everything
+          </button>
+          <button
+            onClick={() => setFilters((f) => ({ ...f, fileType: "PYQ" }))}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
+              filters.fileType === "PYQ"
+                ? "bg-amber-500/15 border-amber-500/40 text-amber-300"
+                : "bg-white/5 border-white/10 text-gray-400 hover:text-white hover:border-white/20"
+            }`}
+          >
+            <FileQuestion className="w-3.5 h-3.5" />
+            PYQs only
+          </button>
+          <button
+            onClick={() => setFilters((f) => ({ ...f, fileType: "Other" }))}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
+              filters.fileType === "Other"
+                ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300"
+                : "bg-white/5 border-white/10 text-gray-400 hover:text-white hover:border-white/20"
+            }`}
+          >
+            <FileText className="w-3.5 h-3.5" />
+            Notes &amp; books
+          </button>
+        </div>
+
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3 mb-10">
           <div className="flex items-center gap-2 text-sm text-gray-400 mr-1">
@@ -212,7 +291,9 @@ export default function DashboardPage() {
           <FilterDropdown
             label="Semester"
             value={filters.semester}
-            onValueChange={(v) => setFilters((f) => ({ ...f, semester: v }))}
+            onValueChange={(v) =>
+              setFilters((f) => ({ ...f, semester: v, subject: "" }))
+            }
             options={semesterOptions}
             allLabel="All Semesters"
           />
@@ -225,13 +306,32 @@ export default function DashboardPage() {
             allLabel="All Years"
           />
 
-          <input
-            type="text"
-            placeholder="Subject..."
-            value={filters.subject}
-            onChange={e => setFilters(f => ({ ...f, subject: e.target.value }))}
-            className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5C55F9] placeholder:text-gray-600 w-32 md:w-40"
-          />
+          {filters.semester ? (
+            <FilterDropdown
+              label="Subject"
+              value={filters.subject}
+              onValueChange={(v) => setFilters((f) => ({ ...f, subject: v }))}
+              options={subjects.map((s) => ({
+                value: s.subject,
+                label: s.subjectCode ? `${s.subject} (${s.subjectCode})` : s.subject,
+              }))}
+              allLabel={
+                loadingSubjects
+                  ? "Loading…"
+                  : subjects.length === 0
+                  ? "No subjects"
+                  : "All Subjects"
+              }
+            />
+          ) : (
+            <input
+              type="text"
+              placeholder="Subject…"
+              value={filters.subject}
+              onChange={(e) => setFilters((f) => ({ ...f, subject: e.target.value }))}
+              className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5C55F9] placeholder:text-gray-600 w-32 md:w-40"
+            />
+          )}
 
           <button
             onClick={resetFilters}

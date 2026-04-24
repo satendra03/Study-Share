@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Download, CheckCircle, FileText } from "lucide-react";
+import { Download, CheckCircle, FileText, FileQuestion } from "lucide-react";
 import { Material } from "@/types";
 import { formatFileSize } from "@/lib/utils";
 import api from "@/lib/api";
@@ -35,6 +35,7 @@ export function MaterialCard({
   featured?: boolean;
 }) {
   const isProcessing = material.status === "processing";
+  const isPyq = material.fileType === "PYQ";
   const ext = extFromMaterial(material);
   const title = material.title || material.fileName || "Untitled document";
   const downloads = material.downloads ?? 0;
@@ -69,8 +70,20 @@ export function MaterialCard({
 
           <div className="flex-1 p-6 flex flex-col justify-center">
             <div className="flex justify-between items-start gap-3 mb-2">
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-[#5C55F9]/90">Latest Upload</span>
-              {/* {!isProcessing && <CheckCircle className="w-5 h-5 shrink-0 text-emerald-400/90" />} */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-[#5C55F9]/90">Latest Upload</span>
+                {isPyq ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-amber-500/15 border border-amber-500/35 text-amber-300">
+                    <FileQuestion className="w-3 h-3" />
+                    PYQ
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-emerald-500/15 border border-emerald-500/30 text-emerald-300">
+                    <FileText className="w-3 h-3" />
+                    Notes
+                  </span>
+                )}
+              </div>
               {!isProcessing && <span className="text-sm text-gray-400">{material.downloads} Downloads</span>}
               {isProcessing && (
                 <span className="text-[10px] uppercase tracking-wider text-amber-400/90">Processing</span>
@@ -127,14 +140,26 @@ export function MaterialCard({
       className="group flex flex-col rounded-2xl border border-white/10 bg-[#0c0c10]/90 p-5 min-h-[240px] transition-all hover:border-[#5C55F9]/35 hover:bg-[#12121a]/95"
     >
       <div className="flex justify-between items-start gap-2 mb-4">
-        <span className="text-[10px] font-mono text-gray-500 tracking-wide truncate max-w-[60%]">
-          id: {material._id ? `…${material._id.slice(-6)}` : "—"}
-        </span>
-        {material.status !== "failed" ? 
-          (isProcessing ? <span className="text-[10px] uppercase tracking-wider text-amber-400/90">Processing</span> : <span className="text-[10px] font-semibold text-[#5C55F9]/90 shrink-0">.{ext}</span>)
-              : <span className="text-[10px] uppercase tracking-wider text-red-400/90">Failed</span>
-        }
-
+        {isPyq ? (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-amber-500/15 border border-amber-500/35 text-amber-300">
+            <FileQuestion className="w-3 h-3" />
+            PYQ
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-emerald-500/15 border border-emerald-500/30 text-emerald-300">
+            <FileText className="w-3 h-3" />
+            Notes
+          </span>
+        )}
+        {material.status !== "failed" ? (
+          isProcessing ? (
+            <span className="text-[10px] uppercase tracking-wider text-amber-400/90">Processing</span>
+          ) : (
+            <span className="text-[10px] font-semibold text-[#5C55F9]/90 shrink-0">.{ext}</span>
+          )
+        ) : (
+          <span className="text-[10px] uppercase tracking-wider text-red-400/90">Failed</span>
+        )}
       </div>
 
       <h3 className="text-lg font-medium tracking-tight text-white leading-snug flex flex-col gap-0.5">

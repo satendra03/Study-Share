@@ -30,6 +30,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface User {
   id: string;
@@ -178,6 +179,17 @@ export default function AdminUsersPage() {
     return "bg-white/5 text-gray-400 border-white/10";
   };
 
+  const displayName = (u: User) =>
+    u.role === "admin"
+      ? "Admin"
+      : u.studentProfile?.fullName || u.teacherProfile?.fullName || u.displayName || u.email || "—";
+
+  const avatarInitial = (u: User) => {
+    const source = displayName(u);
+    const char = source && source !== "—" ? source.trim()[0] : u.email?.trim()[0];
+    return (char || "?").toUpperCase();
+  };
+
   if (!mounted) {
     return (
       <div className="min-h-screen bg-[#030303] flex items-center justify-center">
@@ -254,22 +266,22 @@ export default function AdminUsersPage() {
                     >
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
-                          {user.photoURL ? (
-                            <img
-                              src={user.photoURL}
-                              alt=""
-                              className="w-9 h-9 rounded-xl object-cover shrink-0 border border-white/8"
-                            />
-                          ) : (
-                            <div className="w-9 h-9 rounded-xl bg-[#1a1a24] border border-white/8 flex items-center justify-center text-sm font-semibold text-gray-300 shrink-0">
-                              {(user.displayName || user.email)[0]?.toUpperCase()}
-                            </div>
-                          )}
+                          <Avatar className="w-9 h-9 rounded-xl border border-white/8">
+                            {user.photoURL && (
+                              <AvatarImage
+                                src={user.photoURL}
+                                alt=""
+                                referrerPolicy="no-referrer"
+                                className="rounded-xl"
+                              />
+                            )}
+                            <AvatarFallback className="rounded-xl bg-[#1a1a24] text-sm font-semibold text-gray-300">
+                              {avatarInitial(user)}
+                            </AvatarFallback>
+                          </Avatar>
                           <div>
                             <p className="text-sm font-medium text-white truncate max-w-[180px]">
-                              {user.role === "admin"
-                                ? "Admin"
-                                : user.studentProfile?.fullName || user.teacherProfile?.fullName || user.displayName || "—"}
+                              {displayName(user)}
                             </p>
                             <p className="text-xs text-gray-500 truncate max-w-[180px]">{user.email}</p>
                           </div>
@@ -409,22 +421,22 @@ export default function AdminUsersPage() {
             <div className="space-y-5 pt-1">
               {/* Avatar + name */}
               <div className="flex items-center gap-4">
-                {selectedUser.photoURL ? (
-                  <img
-                    src={selectedUser.photoURL}
-                    alt=""
-                    className="w-16 h-16 rounded-2xl object-cover border border-white/10"
-                  />
-                ) : (
-                  <div className="w-16 h-16 rounded-2xl bg-[#1a1a2e] border border-white/10 flex items-center justify-center text-2xl font-bold text-gray-300">
-                    {(selectedUser.displayName || selectedUser.email)[0]?.toUpperCase()}
-                  </div>
-                )}
+                <Avatar className="w-16 h-16 rounded-2xl border border-white/10">
+                  {selectedUser.photoURL && (
+                    <AvatarImage
+                      src={selectedUser.photoURL}
+                      alt=""
+                      referrerPolicy="no-referrer"
+                      className="rounded-2xl"
+                    />
+                  )}
+                  <AvatarFallback className="rounded-2xl bg-[#1a1a2e] text-2xl font-bold text-gray-300">
+                    {avatarInitial(selectedUser)}
+                  </AvatarFallback>
+                </Avatar>
                 <div>
                   <p className="text-base font-semibold text-white">
-                    {selectedUser.role === "admin"
-                      ? "Admin"
-                      : selectedUser.studentProfile?.fullName || selectedUser.teacherProfile?.fullName || selectedUser.displayName || "—"}
+                    {displayName(selectedUser)}
                   </p>
                   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-medium border capitalize mt-1 ${roleColor(selectedUser.role)}`}>
                     {selectedUser.role === "admin" && <Shield className="w-3 h-3" />}

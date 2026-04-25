@@ -80,6 +80,22 @@ export class SemesterSubjectController {
         }
     };
 
+    reprocess = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const id = req.params["id"] as string;
+            if (!id) throw new BadRequestError("Subject ID is required");
+            const updated = await this.service.reprocess(id);
+            res.json(
+                ApiResponse.success({
+                    message: "Syllabus re-processing started",
+                    data: updated,
+                })
+            );
+        } catch (error) {
+            next(error);
+        }
+    };
+
     delete = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const id = req.params["id"] as string;

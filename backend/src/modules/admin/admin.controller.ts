@@ -32,7 +32,8 @@ export class AdminController {
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.limit as string) || 20;
             const status = req.query.status as string | undefined;
-            const materials = await this.adminService.getAllMaterials(page, limit, status);
+            const fileType = req.query.fileType as string | undefined;
+            const materials = await this.adminService.getAllMaterials(page, limit, status, fileType);
             res.json(ApiResponse.success({ message: "Materials retrieved successfully", data: materials }));
         } catch (error: any) {
             next(error);
@@ -73,6 +74,16 @@ export class AdminController {
             const materialId = req.params['materialId'] as string;
             await this.adminService.deleteMaterial(materialId);
             res.json(ApiResponse.success({ message: "Material deleted successfully", data: null }));
+        } catch (error: any) {
+            next(error);
+        }
+    };
+
+    reprocessMaterial = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const materialId = req.params['materialId'] as string;
+            const result = await this.adminService.reprocessMaterial(materialId);
+            res.json(ApiResponse.success({ message: "Material re-processing started", data: result }));
         } catch (error: any) {
             next(error);
         }

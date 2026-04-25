@@ -19,6 +19,7 @@ import {
   X,
   ExternalLink,
   Pencil,
+  RefreshCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SEMESTERS, BRANCHES } from "@/lib/constants";
@@ -204,6 +205,24 @@ export default function AdminSemesterSubjectsPage() {
       fetchItems();
     } catch (e: any) {
       toast.error(e?.response?.data?.message || "Failed to save subject");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleReprocess = async (item: SemesterSubject) => {
+    setActionLoading(item._id + "-reprocess");
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      await api.post(
+        `/semester-subjects/${item._id}/reprocess`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Structuring restarted — refresh in a few seconds to see modules.");
+      fetchItems();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || "Failed to re-run structuring");
     } finally {
       setActionLoading(null);
     }
@@ -451,10 +470,16 @@ export default function AdminSemesterSubjectsPage() {
           <div className="text-center py-32 text-gray-500">
             <BookOpen className="w-10 h-10 mx-auto mb-3 opacity-30" />
             <p className="mb-1">No subjects found</p>
-            <p className="text-xs text-gray-600">
-              Click <span className="text-[#b4afff]">New subject</span> to add
-              one.
+            <p className="text-xs text-gray-600 mb-5">
+              Add your first semester + subject to get started.
             </p>
+            <button
+              onClick={openCreate}
+              className="inline-flex items-center gap-1.5 bg-[#5C55F9] hover:bg-[#4d46db] text-white rounded-xl px-4 h-9 text-sm font-medium transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              New subject
+            </button>
           </div>
         ) : (
           <div className="bg-[#0c0c14] border border-white/6 rounded-2xl overflow-hidden">
@@ -524,6 +549,21 @@ export default function AdminSemesterSubjectsPage() {
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2 justify-end">
+                        {item.syllabusFileUrl && (
+                          <button
+                            onClick={() => handleReprocess(item)}
+                            disabled={!!actionLoading || item.syllabusStatus === "processing"}
+                            title="Re-run syllabus OCR + module structuring on the existing PDF"
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-amber-300 border border-amber-500/25 bg-amber-500/5 hover:bg-amber-500/10 transition-colors disabled:opacity-50"
+                          >
+                            {actionLoading === item._id + "-reprocess" ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <RefreshCcw className="w-3.5 h-3.5" />
+                            )}
+                            Re-run
+                          </button>
+                        )}
                         <button
                           onClick={() => openEdit(item)}
                           disabled={!!actionLoading}

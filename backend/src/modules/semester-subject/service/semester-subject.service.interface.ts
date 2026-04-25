@@ -20,5 +20,6 @@ export interface SemesterSubjectServiceInterface {
     getById(id: string): Promise<SemesterSubject>;
     update(id: string, data: UpdateSemesterSubjectInput, file?: Express.Multer.File): Promise<SemesterSubject>;
     delete(id: string): Promise<void>;
+    reprocess(id: string): Promise<SemesterSubject>;
     getBySemesterAndSubject(semester: string, subject: string): Promise<SemesterSubject | null>;
 }

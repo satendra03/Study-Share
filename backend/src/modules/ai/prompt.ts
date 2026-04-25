@@ -40,6 +40,43 @@ export const getStructurePrompt = (text: string) => {
   ${text}`;
   }
 
+export const getSyllabusStructuringPrompt = (rawText: string, subject: string, semester: string) => {
+    return `You are a syllabus parser for an Indian engineering / computing university.
+
+The raw text below was OCR'd from the official syllabus PDF for "${subject}" (Semester ${semester}). It may contain page numbers, headers, course-outcome blocks, reference-book lists and OCR errors.
+
+Extract ONLY the teaching content, organised MODULE-WISE (a "module" may also be labelled "Unit", "Chapter", "Part", or by roman numeral — treat them all as modules).
+
+Return ONLY a JSON object — no markdown, no commentary.
+
+Schema:
+{
+  "modules": [
+    {
+      "name": "Module 1",
+      "title": "string — heading of the module, or empty if none",
+      "topics": ["string", "string", ...]
+    }
+  ],
+  "courseOutcomes": ["string", ...],
+  "textbooks": ["string", ...]
+}
+
+Rules:
+- One entry in "modules" PER module / unit heading in the syllabus.
+- "name" must be normalised as "Module N" (e.g. "Unit-III" → "Module 3", "I" → "Module 1").
+- "topics" is a flat list of concrete topic names. Split comma-separated lists into individual entries. Drop filler words like "Introduction to" when they're just connective text; keep them when part of the topic name.
+- Preserve technical terms, acronyms, and algorithm names exactly.
+- Fix obvious OCR errors ("tbe" → "the", "Linkd Lst" → "Linked List").
+- Ignore page numbers, course codes, credit hours, teaching hours, marking schemes, institute names.
+- "courseOutcomes" and "textbooks" are optional — return empty arrays if the syllabus doesn't list them.
+- If no module headings exist, put every topic in a single "Module 1" with title "".
+- Cap topics per module at 30; if more, take the most substantive.
+
+Raw syllabus text:
+${rawText}`;
+};
+
 export const getPageStructuringPrompt = (rawText: string, pageNumber: number, subject?: string | null) => {
     const subjectHint = subject ? `This page is from a "${subject}" exam paper. Use this subject context to resolve any unclear OCR words (e.g. if a word looks like "Binory Trse" and the subject is Data Structures, it is likely "Binary Tree").` : "";
 

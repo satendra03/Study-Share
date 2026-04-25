@@ -99,7 +99,8 @@ export class UserRepository implements UserRepositoryInterface {
         await usersCollection.doc(firebaseUid).update({
             studentProfile: profile,
             isProfileComplete: true,
-            isVerified: false,
+            // Students are auto-verified; teachers need admin approval.
+            isVerified: true,
             updatedAt: new Date(),
         });
         return this.findByFirebaseUid(firebaseUid);

@@ -18,6 +18,8 @@ import {
   ChevronDown,
   ExternalLink,
   BookOpen,
+  RefreshCcw,
+  FileQuestion,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -44,6 +46,12 @@ const STATUS_OPTIONS = [
   { value: "done", label: "Done" },
   { value: "processing", label: "Processing" },
   { value: "failed", label: "Failed" },
+];
+
+const TYPE_OPTIONS = [
+  { value: "all", label: "All Types" },
+  { value: "PYQ", label: "PYQs only" },
+  { value: "Other", label: "Notes only" },
 ];
 
 function StatusBadge({ status }: { status: string }) {
@@ -80,6 +88,7 @@ export default function AdminMaterialsPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [status, setStatus] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
   const [search, setSearch] = useState("");
   const limit = 20;
 
@@ -94,6 +103,7 @@ export default function AdminMaterialsPage() {
       const token = await auth.currentUser?.getIdToken();
       const params: Record<string, any> = { page, limit };
       if (status !== "all") params.status = status;
+      if (typeFilter !== "all") params.fileType = typeFilter;
       const res = await api.get("/admin/materials", {
         headers: { Authorization: `Bearer ${token}` },
         params,
@@ -105,11 +115,29 @@ export default function AdminMaterialsPage() {
     } finally {
       setLoading(false);
     }
-  }, [mounted, page, status]);
+  }, [mounted, page, status, typeFilter]);
 
   useEffect(() => {
     fetchMaterials();
   }, [fetchMaterials]);
+
+  const handleReprocess = async (materialId: string) => {
+    setActionLoading(materialId + "-reprocess");
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      await api.post(
+        `/admin/materials/${materialId}/reprocess`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Re-processing started — refresh in a few seconds.");
+      fetchMaterials();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || "Failed to re-run");
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   const handleDelete = async (materialId: string, title: string) => {
     if (!confirm(`Delete "${title || materialId}"? This cannot be undone.`)) return;
@@ -172,6 +200,20 @@ export default function AdminMaterialsPage() {
             </div>
             <div className="relative">
               <select
+                value={typeFilter}
+                onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}
+                className="appearance-none bg-[#12121a] border border-white/10 rounded-xl px-3 h-9 pr-8 text-sm text-white focus:outline-none focus:border-[#5C55F9]/50 cursor-pointer"
+              >
+                {TYPE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value} className="bg-[#12121a]">
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500 pointer-events-none" />
+            </div>
+            <div className="relative">
+              <select
                 value={status}
                 onChange={(e) => { setStatus(e.target.value); setPage(1); }}
                 className="appearance-none bg-[#12121a] border border-white/10 rounded-xl px-3 h-9 pr-8 text-sm text-white focus:outline-none focus:border-[#5C55F9]/50 cursor-pointer"
@@ -224,14 +266,29 @@ export default function AdminMaterialsPage() {
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-xl bg-[#1a1a24] border border-white/8 flex items-center justify-center shrink-0">
-                            <FileText className="w-4 h-4 text-[#b4afff]" strokeWidth={1.5} />
+                            {mat.fileType === "PYQ" ? (
+                              <FileQuestion className="w-4 h-4 text-amber-300" strokeWidth={1.5} />
+                            ) : (
+                              <FileText className="w-4 h-4 text-emerald-300" strokeWidth={1.5} />
+                            )}
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-white truncate max-w-[200px]">
-                              {mat.title || mat.fileName}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {mat.subject || mat.fileType} · {formatSize(mat.fileSize)}
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-medium text-white truncate max-w-[200px]">
+                                {mat.title || mat.fileName}
+                              </p>
+                              {mat.fileType === "PYQ" ? (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider bg-amber-500/10 border border-amber-500/25 text-amber-300">
+                                  PYQ
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/25 text-emerald-300">
+                                  Notes
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              {mat.subject || "—"} · {formatSize(mat.fileSize)}
                             </p>
                           </div>
                         </div>
@@ -264,6 +321,21 @@ export default function AdminMaterialsPage() {
                             <ExternalLink className="w-3.5 h-3.5" />
                             View
                           </a>
+                          {mat.fileType === "PYQ" && (
+                            <button
+                              onClick={() => handleReprocess(mat._id)}
+                              disabled={actionLoading === mat._id + "-reprocess"}
+                              title="Re-run OCR + LLM structuring on this PYQ. Useful if a previous run got stuck or produced empty results."
+                              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-amber-300 border border-amber-500/25 bg-amber-500/5 hover:bg-amber-500/10 transition-colors disabled:opacity-50"
+                            >
+                              {actionLoading === mat._id + "-reprocess" ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <RefreshCcw className="w-3.5 h-3.5" />
+                              )}
+                              Re-run
+                            </button>
+                          )}
                           <button
                             onClick={() => handleDelete(mat._id, mat.title || mat.fileName)}
                             disabled={!!actionLoading}

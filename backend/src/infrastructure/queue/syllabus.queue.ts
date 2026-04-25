@@ -2,6 +2,7 @@ import { Queue, Worker } from "bullmq";
 import https from "https";
 import http from "http";
 import { ocrService } from "@/modules/ocr/ocr.module.js";
+import { AIService } from "@/modules/ai/ai.service.js";
 import { SemesterSubjectModel } from "@/modules/semester-subject/semester-subject.model.js";
 import { env } from "@/config/env.config.js";
 
@@ -56,15 +57,31 @@ const worker = new Worker(
                 .map((p) => `[Page ${p.pageNumber}]\n${p.rawText}`)
                 .join("\n\n");
 
+            // Look up the subject/semester so the LLM has context for OCR-error correction
+            const existing = await SemesterSubjectModel.findById(semesterSubjectId).lean();
+            const subjectName = existing?.subject || "unknown subject";
+            const semester = existing?.semester || "";
+
+            console.log(`${logPrefix}: Structuring syllabus module-wise via Gemini...`);
+            const structured = await AIService.structureSyllabusWithAI(
+                syllabusText,
+                subjectName,
+                semester
+            );
+            console.log(
+                `${logPrefix}: Parsed ${structured.modules.length} modules, ${structured.modules.reduce((n, m) => n + m.topics.length, 0)} topics total`
+            );
+
             await SemesterSubjectModel.findByIdAndUpdate(semesterSubjectId, {
                 syllabusText,
+                syllabusStructured: structured,
                 syllabusStatus: "done",
                 updatedAt: new Date(),
             });
 
-            console.log(`${logPrefix}: ✅ Syllabus OCR complete (${pages.length} pages, ${syllabusText.length} chars)`);
+            console.log(`${logPrefix}: ✅ Syllabus done (${pages.length} pages, ${syllabusText.length} chars, ${structured.modules.length} modules)`);
         } catch (error) {
-            console.error(`${logPrefix}: ❌ OCR failed:`, error);
+            console.error(`${logPrefix}: ❌ OCR/structuring failed:`, error);
             await SemesterSubjectModel.findByIdAndUpdate(semesterSubjectId, {
                 syllabusStatus: "failed",
             });

@@ -3,7 +3,7 @@ import { type AdminStats, type AdminUserManagement, type AdminMaterialManagement
 export interface AdminRepositoryInterface {
     getStats(): Promise<AdminStats>;
     getUsers(page: number, limit: number, role?: string, verified?: string): Promise<AdminUserManagement>;
-    getMaterials(page: number, limit: number, status?: string): Promise<AdminMaterialManagement>;
+    getMaterials(page: number, limit: number, status?: string, fileType?: string): Promise<AdminMaterialManagement>;
     verifyUser(userId: string, verified: boolean): Promise<any>;
     deleteUser(userId: string): Promise<void>;
     deleteMaterial(materialId: string): Promise<void>;

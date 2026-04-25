@@ -18,6 +18,7 @@ router.delete('/users/:userId', adminController.deleteUser);
 
 // Materials
 router.get('/materials', adminController.getMaterials);
+router.post('/materials/:materialId/reprocess', adminController.reprocessMaterial);
 router.delete('/materials/:materialId', adminController.deleteMaterial);
 
 // Teachers — admin only

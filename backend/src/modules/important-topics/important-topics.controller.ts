@@ -24,6 +24,28 @@ export class ImportantTopicsController {
         }
     };
 
+    extractModuleWise = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const { semester, subject } = req.body;
+            if (!semester || !subject) throw new BadRequestError("semester and subject are required");
+            const result = await this.service.extractModuleWise(String(semester), String(subject));
+            res.json(ApiResponse.success({ message: "Module-wise topics generated", data: result }));
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    mindmap = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const { semester, subject } = req.body;
+            if (!semester || !subject) throw new BadRequestError("semester and subject are required");
+            const result = await this.service.generateMindMap(String(semester), String(subject));
+            res.json(ApiResponse.success({ message: "Mind map generated", data: result }));
+        } catch (error) {
+            next(error);
+        }
+    };
+
     answer = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const { topic, semester, subject } = req.body;

@@ -37,6 +37,11 @@ const envSchema = z.object({
   REDIS_URL: z.string().default(""),
 
   FIREBASE_ADMIN_KEY: z.string().min(1, "FIREBASE_ADMIN_KEY is required"),
+
+  // Cerebras is used as a fallback LLM when Gemini is exhausted or saturated.
+  // Optional — if unset, we just give up on Gemini failure.
+  CEREBRAS_API_KEY: z.string().default(""),
+  CEREBRAS_MODEL: z.string().default("llama3.1-8b,qwen-3-235b-a22b-instruct-2507,zai-glm-4.7,gpt-oss-120b"),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

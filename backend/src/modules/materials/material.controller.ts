@@ -23,6 +23,14 @@ export class MaterialController {
                 throw new BadRequestError("Missing required fields: year, branch, semester, subject");
             }
 
+            // req.firebaseUid comes from the verified token and is always set;
+            // req.appUser.firebaseUid can be missing on older Firestore docs.
+            const uploaderId = req.appUser.firebaseUid || req.firebaseUid || req.appUser.id;
+            if (!uploaderId) {
+                res.status(401).json(ApiResponse.error("Cannot determine uploader identity"));
+                return;
+            }
+
             const safeName = file.originalname.replace(/[^a-zA-Z0-9]/g, "_");
 
             const material = await this.materialService.createMaterial(
@@ -32,7 +40,7 @@ export class MaterialController {
                     fileName: safeName,
                     fileType: fileType || file.mimetype || "application/pdf",
                     fileSize: file.size,
-                    uploaderId: req.appUser.firebaseUid,
+                    uploaderId,
                     uploaderName: req.appUser.displayName || req.appUser.studentProfile?.fullName || req.appUser.teacherProfile?.fullName || req.appUser.email || "Anonymous User",
                     branch,
                     semester,
@@ -165,7 +173,12 @@ export class MaterialController {
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.limit as string) || 10;
 
-            const uploads = await this.materialService.getMyUploads(req.appUser.firebaseUid, page, limit);
+            const uid = req.appUser.firebaseUid || req.firebaseUid || req.appUser.id;
+            if (!uid) {
+                res.status(401).json(ApiResponse.error("Cannot determine user identity"));
+                return;
+            }
+            const uploads = await this.materialService.getMyUploads(uid, page, limit);
             res.status(200).json(ApiResponse.success({
                 message: "My uploads fetched successfully",
                 data: uploads

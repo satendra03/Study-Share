@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { materialController } from "@/modules/materials/material.module.js";
-import { verifyFirebaseToken, requireAppUser } from "@/middlewares/auth.middleware.js";
+import { verifyFirebaseToken, requireAppUser, requireVerified } from "@/middlewares/auth.middleware.js";
 import { upload } from "@/config/multer.config.js";
 
 const materialRouter = Router();
@@ -21,8 +21,8 @@ materialRouter.post("/:id/download", materialController.recordDownload);
 materialRouter.delete("/:id", verifyFirebaseToken, requireAppUser, materialController.deleteMaterialById);
 materialRouter.post("/chat/:id", verifyFirebaseToken, requireAppUser, materialController.chatWithMaterial);
 
-// Upload
-materialRouter.post("/", verifyFirebaseToken, requireAppUser, upload.single("file"), materialController.createMaterial);
+// Upload — requires the user to be admin-verified (students auto-verified, teachers after admin approval)
+materialRouter.post("/", verifyFirebaseToken, requireAppUser, requireVerified, upload.single("file"), materialController.createMaterial);
 
 export const materialRoute = {
     path: "materials",

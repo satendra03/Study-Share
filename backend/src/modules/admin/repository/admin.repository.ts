@@ -75,19 +75,14 @@ export class AdminRepository implements AdminRepositoryInterface {
         return { users, total };
     }
 
-    async getMaterials(page: number, limit: number, status?: string): Promise<AdminMaterialManagement> {
+    async getMaterials(page: number, limit: number, status?: string, fileType?: string): Promise<AdminMaterialManagement> {
         const offset = (page - 1) * limit;
-        let query: any = MaterialModel.find();
+        const filter: Record<string, any> = {};
+        if (status && status !== 'all') filter.status = status;
+        if (fileType && fileType !== 'all') filter.fileType = fileType;
 
-        if (status && status !== 'all') {
-            query = MaterialModel.find({ status });
-        }
-
-        const total = await (status && status !== 'all'
-            ? MaterialModel.countDocuments({ status })
-            : MaterialModel.countDocuments());
-
-        const raw = await query.sort({ createdAt: -1 }).skip(offset).limit(limit);
+        const total = await MaterialModel.countDocuments(filter);
+        const raw = await MaterialModel.find(filter).sort({ createdAt: -1 }).skip(offset).limit(limit);
         const materials = raw.map((m: any) => m.toObject());
 
         // Resolve uploader names from Firestore in one batch

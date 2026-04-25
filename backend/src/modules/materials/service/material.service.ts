@@ -3,7 +3,7 @@ import { type Material, type PageData } from "../material.types.js";
 import { type MaterialRepositoryInterface } from "../repository/material.repository.interface.js";
 import { type MaterialServiceInterface } from "./material.service.interface.js";
 import { BadRequestError, NotFoundError } from "@/shared/ApiError.js";
-import { ai } from "@/modules/ai/ai.service.js";
+import { generateWithRetry } from "@/modules/ai/ai.service.js";
 import { materialQueue } from "@/infrastructure/queue/material.queue.js";
 import { db } from "@/config/firebase.config.js";
 
@@ -210,27 +210,17 @@ Rules:
 
 `;
 
-        const contents = history.map(h => ({
-            role: h.role === 'assistant' ? 'model' : 'user',
-            parts: [{ text: h.content }]
-        }));
-
-        contents.push({
-            role: 'user',
-            parts: [{ text: message }]
-        });
-
         try {
-            const response = await ai.models.generateContent({
-                model: "gemini-2.5-flash",
-                contents,
-                config: {
-                    systemInstruction: systemInstruction,
-                    temperature: 0.3,
-                }
-            });
+            const normalizedHistory = history
+                .filter(h => h.role === "user" || h.role === "assistant")
+                .map(h => ({ role: h.role as "user" | "assistant", content: h.content }));
 
-            const reply = response.text || "Sorry, I couldn't generate a response.";
+            const reply = await generateWithRetry(message, {
+                logPrefix: "[Material-Chat]",
+                temperature: 0.3,
+                systemInstruction,
+                history: normalizedHistory,
+            }) || "Sorry, I couldn't generate a response.";
 
             const newHistory = [...history, { role: "user", content: message }, { role: "assistant", content: reply }];
 

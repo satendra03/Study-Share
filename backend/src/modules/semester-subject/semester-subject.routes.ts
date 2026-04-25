@@ -20,6 +20,7 @@ router.get("/:id", semesterSubjectController.getById);
 // Admin-only mutations (with optional syllabus PDF upload)
 router.post("/", requireAdmin, upload.single("syllabus"), semesterSubjectController.create);
 router.put("/:id", requireAdmin, upload.single("syllabus"), semesterSubjectController.update);
+router.post("/:id/reprocess", requireAdmin, semesterSubjectController.reprocess);
 router.delete("/:id", requireAdmin, semesterSubjectController.delete);
 
 export default {

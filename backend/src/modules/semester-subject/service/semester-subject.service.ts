@@ -120,6 +120,7 @@ export class SemesterSubjectService implements SemesterSubjectServiceInterface {
             payload.syllabusCloudinaryPublicId = cloudFile.publicId;
             payload.syllabusStatus = "processing";
             payload.syllabusText = "";
+            payload.syllabusStructured = { modules: [], courseOutcomes: [], textbooks: [] };
         }
 
         const updated = await this.repository.update(id, payload);
@@ -141,6 +142,37 @@ export class SemesterSubjectService implements SemesterSubjectServiceInterface {
             );
         }
 
+        return updated;
+    };
+
+    reprocess = async (id: string): Promise<SemesterSubject> => {
+        const existing = await this.repository.findById(id);
+        if (!existing) throw new NotFoundError("Subject not found");
+        if (!existing.syllabusFileUrl) {
+            throw new BadRequestError("No syllabus uploaded for this subject");
+        }
+
+        const updated = await this.repository.update(id, {
+            syllabusStatus: "processing",
+            syllabusStructured: { modules: [], courseOutcomes: [], textbooks: [] },
+        });
+
+        await syllabusQueue.add(
+            "process-syllabus",
+            {
+                semesterSubjectId: id,
+                fileUrl: existing.syllabusFileUrl,
+            },
+            {
+                attempts: 3,
+                backoff: { type: "exponential", delay: 3000 },
+                removeOnComplete: true,
+                removeOnFail: false,
+            }
+        );
+        console.log(`[SemesterSubjectService] Re-enqueued syllabus structuring for ${id}`);
+
+        if (!updated) throw new NotFoundError("Subject not found");
         return updated;
     };
 

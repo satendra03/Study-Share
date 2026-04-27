@@ -101,7 +101,7 @@ export const generateWithRetry = async (
     if (systemInstruction) geminiConfig.systemInstruction = systemInstruction;
 
     // ── 1) Gemini 2.5-flash ───────────────────────────────────────
-    const GEMINI_RETRIES = 5;
+    const GEMINI_RETRIES = 1; // try only once, as it's fast and we want to failover to Cerebras quickly on any issue (including quota)
     let quotaHit = false;
     for (let attempt = 0; attempt < GEMINI_RETRIES; attempt++) {
         try {

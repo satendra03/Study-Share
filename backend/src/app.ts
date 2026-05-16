@@ -17,7 +17,7 @@ registerMiddlewares(app);
 // Serves the frontend's index.html for all routes.
 // This allows the frontend router to handle all navigation client-side.
 app.get("/", (_req: Request, res: Response) => {
-    res.status(200).sendFile(path.join(__dirname, "index.html"));
+    res.status(200).sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 
